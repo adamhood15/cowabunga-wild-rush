@@ -1,0 +1,272 @@
+/* Stampede: Wild Rush promo popup — standalone, embeddable snippet.
+   Scoped under .swr-popup so it can be dropped onto any typhoontexas.com
+   page without its custom properties or resets leaking into host styles.
+
+   Every rule that sets font-family is written as an ancestor-class +
+   tag-name + own-class compound selector (leaning on #swrPopupTitle's id
+   too, where the element sits inside it) rather than the bare BEM class
+   alone. This is embedded on a live WordPress/Oxygen page whose own
+   generated CSS can otherwise carry higher specificity (Oxygen frequently
+   scopes element styles through ids) and win the cascade on the plain
+   tags (button, p, a, span) these elements are. No property values
+   change here — only selector specificity. */
+
+div.swr-popup{
+  --swr-sky:     #068af6;
+  --swr-blue-dp: #0072d2;
+  --swr-yellow:  #fcea00;
+  --swr-orange:  #fc901e;
+  --swr-white:   #fcf6f0;
+  --swr-pale:    #e4f6f6;
+  --swr-navy:    #1e3048;
+  --swr-ink:     #0a0a0a;
+  --swr-display: "sutro-deluxe-primary","Haettenschweiler","Arial Narrow","Impact",
+                 "Franklin Gothic Bold","Helvetica Neue",Arial,sans-serif;
+  --swr-display-alt: "sutro-deluxe-fill","Haettenschweiler","Arial Narrow","Impact",
+                     "Franklin Gothic Bold","Helvetica Neue",Arial,sans-serif;
+  --swr-display-card: "sutro-open-fill","Franklin Gothic Bold","Helvetica Neue",Arial,sans-serif;
+  --swr-copy:    "sutro","Helvetica Neue",Arial,sans-serif;
+
+  position:fixed;
+  inset:0;
+  z-index:2147483000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  font-family:var(--swr-copy);
+  box-sizing:border-box;
+}
+
+.swr-popup,
+.swr-popup *,
+.swr-popup *::before,
+.swr-popup *::after{
+  box-sizing:border-box;
+}
+
+.swr-popup[hidden]{
+  display:none;
+}
+
+.swr-popup__backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(10,10,10,.72);
+  animation:swrFadeIn .25s ease-out;
+}
+
+.swr-popup__dialog{
+  position:relative;
+  width:100%;
+  max-width:420px;
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  background:radial-gradient(130% 100% at 50% 0%,rgba(48,180,252,.9),rgba(30,48,72,.98)),var(--swr-navy);
+  border:3px solid var(--swr-ink);
+  border-radius:14px;
+  box-shadow:8px 8px 0 var(--swr-ink);
+  padding:28px 22px 24px;
+  text-align:center;
+  color:var(--swr-white);
+  animation:swrPopIn .3s cubic-bezier(.2,.9,.3,1.2);
+}
+
+.swr-popup button.swr-popup__close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:32px;
+  height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--swr-white);
+  color:var(--swr-ink);
+  border:3px solid var(--swr-ink);
+  border-radius:50%;
+  font-family:var(--swr-copy);
+  font-size:16px;
+  line-height:1;
+  cursor:pointer;
+  padding:0;
+}
+
+.swr-popup__close:hover{
+  background:var(--swr-yellow);
+}
+
+.swr-popup__close:focus-visible{
+  outline:3px solid var(--swr-yellow);
+  outline-offset:2px;
+}
+
+.swr-popup__content{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+
+.swr-popup__media{
+  flex:none;
+}
+
+.swr-popup__copy{
+  min-width:0;
+}
+
+.swr-popup__phone{
+  width:min(34vw,140px);
+  height:auto;
+  margin:2px auto 10px;
+  display:block;
+  filter:drop-shadow(4px 6px 0 rgba(10,10,10,.35));
+}
+
+/* Side-by-side (copy left, phone right) once there's room for both
+   columns without cramming — below this the stacked, centered layout
+   (image on top) reads better on phones. */
+@media (min-width:560px){
+  .swr-popup__dialog{
+    max-width:600px;
+  }
+  .swr-popup__content{
+    flex-direction:row-reverse;
+    align-items:center;
+    gap:24px;
+    text-align:left;
+  }
+  .swr-popup__copy{
+    text-align:left;
+  }
+  .swr-popup__phone{
+    width:160px;
+    margin:0;
+  }
+}
+
+.swr-popup__title{
+  margin:0 0 14px;
+}
+
+/* Same two-layer trick index.html's real page titles use (.ride /
+   .ride::before), not landing.css's single-layer h2 — that simpler version
+   reads visibly different because paint-order:stroke fill on
+   sutro-deluxe-primary alone doesn't give the letterforms this deserves.
+   The visible layer stays a transparent, stroke-only sutro-deluxe-primary;
+   a sutro-deluxe-fill ::before behind it (via a duplicated data-text
+   attribute, since generated content can't read element text directly)
+   supplies the solid orange fill. Never swap the visible layer's font. */
+.swr-popup #swrPopupTitle span.swr-popup__rideLine{
+  position:relative;
+  z-index:0;
+  display:block;
+  font-family:var(--swr-display);
+  text-transform:uppercase;
+  transform:skewX(-7deg);
+  font-weight:400;
+  font-size:clamp(30px,8vw,42px);
+  line-height:.84;
+  color:transparent;
+  margin:0;
+  -webkit-text-stroke:3px var(--swr-ink);
+  paint-order:stroke fill;
+}
+
+.swr-popup #swrPopupTitle span.swr-popup__rideLine::before{
+  content:attr(data-text);
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  font-family:"sutro-deluxe-fill",var(--swr-display);
+  white-space:inherit;
+  color:var(--swr-orange);
+}
+
+.swr-popup p.swr-popup__body{
+  font-family:var(--swr-copy);
+  font-size:14px;
+  line-height:1.6;
+  color:var(--swr-pale);
+  margin:0 0 18px;
+}
+
+.swr-popup p.swr-popup__body strong{
+  font-family:var(--swr-copy);
+  color:var(--swr-yellow);
+}
+
+/* Exact recipe from landing.html's .btn, including its hover-free
+   interaction states (active + focus-visible only — no :hover). */
+.swr-popup a.swr-popup__cta{
+  display:block;
+  width:100%;
+  cursor:pointer;
+  font-family:var(--swr-display-card);
+  text-transform:uppercase;
+  transform:skewX(-7deg);
+  font-size:clamp(13px,calc(6vw - 5px),22px);
+  white-space:nowrap;
+  letter-spacing:.03em;
+  color:var(--swr-white);
+  -webkit-text-stroke:2px var(--swr-ink);
+  paint-order:stroke fill;
+  background:var(--swr-yellow);
+  border:3px solid var(--swr-ink);
+  border-radius:4px;
+  padding:13px 10px 15px;
+  margin-top:20px;
+  box-shadow:6px 6px 0 var(--swr-ink);
+  text-decoration:none;
+  text-align:center;
+  transition:transform .08s,box-shadow .08s;
+}
+
+.swr-popup__cta:active{
+  transform:skewX(-7deg) translate(4px,4px);
+  box-shadow:2px 2px 0 var(--swr-ink);
+}
+
+/* Same pressed-down look on hover, gated to real pointers: a touch tap on
+   Android Chrome can leave :hover stuck after release with no mouse to
+   clear it, which would leave the button looking permanently half-pressed
+   on a phone. skewX(-7deg) has to stay in the transform here too, or the
+   hover state would snap the button upright for as long as it's hovered. */
+@media (hover:hover) and (pointer:fine){
+  .swr-popup__cta:hover{
+    transform:skewX(-7deg) translate(4px,4px);
+    box-shadow:2px 2px 0 var(--swr-ink);
+  }
+}
+
+.swr-popup__cta:focus-visible{
+  outline:3px solid var(--swr-white);
+  outline-offset:4px;
+}
+
+.swr-popup p.swr-popup__fine{
+  font-family:var(--swr-copy);
+  margin:14px 0 0;
+  font-size:10px;
+  line-height:1.6;
+  letter-spacing:.02em;
+  color:rgba(252,246,240,.6);
+}
+
+@keyframes swrFadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+@keyframes swrPopIn{
+  from{opacity:0;transform:translateY(14px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .swr-popup__backdrop,
+  .swr-popup__dialog{
+    animation:none;
+  }
+}

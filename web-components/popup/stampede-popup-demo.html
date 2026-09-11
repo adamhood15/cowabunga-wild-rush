@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stampede Popup — Demo Host Page</title>
+<!-- The popup no longer loads its own fonts — the real site already has
+     this kit installed, so the demo stands in for that by loading it here. -->
+<link rel="stylesheet" href="https://use.typekit.net/cmv0fio.css">
+<link rel="stylesheet" href="stampede-popup.css">
+<style>
+  body{font-family:sans-serif;max-width:640px;margin:60px auto;padding:0 20px;line-height:1.6}
+  button{font:inherit;padding:10px 16px;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>Demo host page</h1>
+<p>Stands in for an arbitrary typhoontexas.com page. The popup fires on a
+timer (default 6s) and is otherwise fully self-contained except for fonts —
+it assumes the site's Typekit kit (linked above) is already loaded.</p>
+<button type="button" onclick="window.StampedePopup &amp;&amp; window.StampedePopup.open()">
+  Re-open popup now
+</button>
+<p><small>Uses <code>window.STAMPEDE_POPUP_CONFIG.delayMs = 2000</code> below
+so it fires quickly for testing without feeling instant; production embeds
+should leave the default (6000ms) or set their own.</small></p>
+
+<script>
+  window.STAMPEDE_POPUP_CONFIG = { delayMs: 2000 };
+</script>
+<script src="stampede-popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "stampede-leaderboard-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Redis-backed leaderboard API for Stampede (Typhoon Texas), replacing waterpark-leaderboard's WP REST routes so score reads/writes never share WordPress's PHP-FPM worker pool.",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "node-cron": "^3.0.3"
+  }
+}

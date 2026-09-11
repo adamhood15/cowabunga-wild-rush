@@ -1,0 +1,733 @@
+/* Scoped to #section-2-8663 — the container this content is embedded into
+   on the live gate page (page 8663) — so nothing here (custom properties,
+   box-sizing, fonts/colors, or any of the class rules below) leaks onto the
+   rest of that host page. No rule in this file targets html, body, or a
+   bare *; landing.html gives #section-2-8663 to the same element every
+   other rule here is scoped under, so local testing matches production.
+   Covers both the hand-built .card/.field/.btn look and (further down) the
+   Mailchimp embed markup that reuses it — the two are always loaded
+   together, so they live in one file rather than two. */
+
+
+/* ==========================================================================
+   Tokens + reset
+   ========================================================================== */
+
+#section-2-8663 {
+  --swr-sky: #068af6;
+  --swr-blue-dp: #0072d2;
+  --swr-yellow: #fcea00;
+  --swr-orange: #fc901e;
+  --swr-white: #fcf6f0;
+  --swr-pale: #e4f6f6;
+  --swr-navy: #1e3048;
+  --swr-ink: #0a0a0a;
+
+  --swr-display: "sutro-deluxe-primary", "Haettenschweiler", "Arial Narrow",
+    "Impact", "Franklin Gothic Bold", "Helvetica Neue", Arial, sans-serif;
+  --swr-display-card: "sutro-open-fill", "Franklin Gothic Bold",
+    "Helvetica Neue", Arial, sans-serif;
+  --swr-copy: "sutro", "Helvetica Neue", Arial, sans-serif;
+  --swr-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Roboto Mono",
+    monospace;
+
+  font-family: var(--swr-copy);
+  color: var(--swr-white);
+}
+
+#section-2-8663,
+#section-2-8663 *,
+#section-2-8663 *::before,
+#section-2-8663 *::after {
+  box-sizing: border-box;
+}
+
+
+/* ==========================================================================
+   Background decoration
+   ========================================================================== */
+
+/* Same radial the game uses behind its title/results panels — recognisable
+   without needing the busy park-map illustration front and center. */
+#section-2-8663 .bg {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  background: radial-gradient(
+    130% 100% at 50% 15%,
+    rgba(48, 180, 252, 0.82),
+    rgba(30, 48, 72, 0.97)
+  );
+}
+
+/* Park art as a faint, dark-washed backdrop only — decoration, not content.
+   Heavy overlay + blur keep the detailed illustration from competing with
+   the form, per "don't make the page busy." */
+#section-2-8663 .bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  filter: saturate(0.7) blur(1px);
+  background: url("../../assets/sprites/backdrop/background-western.png")
+    center / cover;
+  mask-image: linear-gradient(180deg, transparent, #000 35%, #000 70%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 35%, #000 70%, transparent);
+}
+
+/* Sun sits fully on-canvas now (was cropped off the top-right corner) —
+   inset far enough that its own glow doesn't clip against .bg's
+   overflow:hidden at narrow widths. */
+#section-2-8663 .decoSun {
+  position: absolute;
+  top: 22px;
+  left: 18px;
+  width: clamp(84px, 24vw, 150px);
+  height: auto;
+  opacity: 0.92;
+  pointer-events: none;
+  z-index: 0;
+  filter: drop-shadow(0 0 40px rgba(252, 234, 0, 0.35));
+}
+
+#section-2-8663 .cloud {
+  position: absolute;
+  height: auto;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+}
+#section-2-8663 .cloud1 {
+  top: 56px;
+  right: -18px;
+  width: clamp(110px, 30vw, 190px);
+  animation: swrLandingDriftX 22s ease-in-out infinite;
+}
+#section-2-8663 .cloud2 {
+  top: 168px;
+  left: -26px;
+  width: clamp(70px, 20vw, 120px);
+  opacity: 0.65;
+  animation: swrLandingDriftX 17s ease-in-out infinite reverse;
+}
+
+@keyframes swrLandingDriftX {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(16px); }
+}
+
+
+/* ==========================================================================
+   Header: logo, park name, ride logo, tagline, mascot
+   ========================================================================== */
+
+#section-2-8663 .wrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+  padding: 48px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+#section-2-8663 .logo {
+  width: min(46vw, 160px);
+  height: auto;
+  margin: 0 0 10px;
+  filter: drop-shadow(0 4px 0 rgba(10, 10, 10, 0.3));
+}
+
+#section-2-8663 .park {
+  font-family: var(--swr-display-card);
+  text-transform: uppercase;
+  transform: skewX(-7deg);
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  color: var(--swr-white);
+  margin: 0 0 4px;
+  -webkit-text-stroke: 2px var(--swr-ink);
+  paint-order: stroke fill;
+}
+
+#section-2-8663 .boardWrap {
+  position: relative;
+  padding: 14px 26px 20px;
+  margin: 2px 0 6px;
+}
+
+#section-2-8663 .rideLogo {
+  width: min(84vw, 340px);
+  height: auto;
+  filter: drop-shadow(4px 6px 0 rgba(10, 10, 10, 0.4));
+}
+
+#section-2-8663 .tag {
+  font-family: var(--swr-copy);
+  margin: 6px 0 4px;
+  font-size: 17px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: var(--swr-pale);
+  max-width: 38ch;
+}
+
+#section-2-8663 .mascot {
+  width: min(48vw, 200px);
+  height: auto;
+  margin: 10px 0 26px;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 10px 0 rgba(10, 10, 10, 0.25));
+}
+
+
+/* ==========================================================================
+   Card + form (hand-built markup)
+   ========================================================================== */
+
+#section-2-8663 .card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin-top: 18px;
+  padding: 26px 20px 24px;
+  background: rgba(30, 48, 72, 0.85);
+  border: 3px solid var(--swr-ink);
+  border-radius: 10px;
+  box-shadow: 6px 6px 0 var(--swr-ink);
+}
+
+#section-2-8663 .row {
+  display: flex;
+  gap: 10px;
+}
+#section-2-8663 .row .field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+#section-2-8663 .field {
+  display: block;
+  text-align: left;
+  margin-bottom: 14px;
+}
+#section-2-8663 .field span {
+  font-family: var(--swr-copy);
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--swr-yellow);
+  margin-bottom: 5px;
+}
+#section-2-8663 .field input {
+  width: 100%;
+  font: inherit;
+  font-family: var(--swr-copy);
+  font-size: 15px;
+  color: var(--swr-ink);
+  background: var(--swr-white);
+  border: 3px solid var(--swr-ink);
+  border-radius: 5px;
+  padding: 10px 11px;
+  box-shadow: 0 3px 0 var(--swr-ink);
+}
+#section-2-8663 .field input::placeholder {
+  font-family: var(--swr-copy);
+  color: #8a8a8a;
+}
+#section-2-8663 .field input:focus {
+  outline: 3px solid var(--swr-yellow);
+  outline-offset: 2px;
+}
+
+#section-2-8663 .optins {
+  margin: 18px 0 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+#section-2-8663 .check {
+  font-family: var(--swr-copy);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--swr-pale);
+  cursor: pointer;
+}
+#section-2-8663 .check input {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin-top: 1px;
+  accent-color: var(--swr-orange);
+}
+
+#section-2-8663 .err {
+  font-family: var(--swr-copy);
+  margin: 8px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--swr-yellow);
+  text-align: left;
+}
+
+#section-2-8663 .btn {
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  font-family: var(--swr-display-card);
+  text-transform: uppercase;
+  transform: skewX(-7deg);
+  font-size: clamp(13px, calc(6vw - 5px), 22px);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-decoration: none;
+  color: var(--swr-white);
+  -webkit-text-stroke: 2px var(--swr-ink);
+  paint-order: stroke fill;
+  background: var(--swr-yellow);
+  border: 3px solid var(--swr-ink);
+  border-radius: 4px;
+  padding: 13px 10px 15px;
+  margin-top: 20px;
+  box-shadow: 6px 6px 0 var(--swr-ink);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+#section-2-8663 .btn:active {
+  transform: skewX(-7deg) translate(4px, 4px);
+  box-shadow: 2px 2px 0 var(--swr-ink);
+}
+#section-2-8663 .btn:focus-visible {
+  outline: 3px solid var(--swr-white);
+  outline-offset: 4px;
+}
+
+#section-2-8663 .fine {
+  font-family: var(--swr-copy);
+  margin: 16px 0 0;
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: rgba(252, 246, 240, 0.55);
+}
+
+
+/* ==========================================================================
+   Card: "done" (post-submit) state
+   ========================================================================== */
+
+#section-2-8663 .card.done {
+  text-align: center;
+  padding: 32px 22px 30px;
+}
+
+#section-2-8663 .card.done .eyebrow {
+  font-family: var(--swr-copy);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--swr-yellow);
+  margin: 0 0 8px;
+}
+
+/* Tried a gradient-fill (background-clip:text) treatment here — it fought
+   with the stroke + shadow layering (the "fill" is a clip trick, not a
+   real opaque paint, so the shadow showed through the letter interior
+   instead of staying behind it) and came out unreadable. Three flat,
+   distinct colors instead: white fill, orange outline, ink shadow — no
+   transparency tricks, no blur, nothing to fight. */
+#section-2-8663 .card.done h2 {
+  font-family: var(--swr-display);
+  text-transform: uppercase;
+  transform: skewX(-7deg);
+  font-weight: 400;
+  font-size: clamp(34px, 10.5vw, 50px);
+  line-height: 1.15;
+  margin: 0 0 14px;
+  color: var(--swr-orange);
+  -webkit-text-stroke: 2px var(--swr-ink);
+  paint-order: stroke fill;
+}
+#section-2-8663 .card.done p {
+  font-family: var(--swr-copy);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--swr-pale);
+  margin: 0;
+}
+#section-2-8663 .card.done .channel {
+  font-family: var(--swr-copy);
+  color: var(--swr-yellow);
+}
+
+
+/* ==========================================================================
+   Narrow-viewport overrides
+   ========================================================================== */
+
+@media (max-width: 380px) {
+  #section-2-8663 .row {
+    flex-direction: column;
+    gap: 0;
+  }
+  #section-2-8663 #mc_embed_signup .input-group ul {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+
+/* ==========================================================================
+   Mailchimp embed (#mc_embed_shell) mapped onto the same look
+   Maps the .card/.field/.btn look above onto Mailchimp's embed markup,
+   which uses its own class names (.mc-field-group etc). Kept as its own
+   section rather than rewritten into those rules above since the Mailchimp
+   markup is embed output that gets re-pasted whenever the form fields
+   change on their end — isolating the overrides here means a re-paste
+   doesn't require re-merging hand styling back into the rest of this
+   file.
+   ========================================================================== */
+
+#section-2-8663 #mc_embed_shell {
+  width: 100%;
+}
+
+#section-2-8663 #mc_embed_signup {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  margin-top: 18px;
+  padding: 26px 20px 24px;
+  text-align: left;
+  font-family: var(--swr-copy);
+  color: var(--swr-white);
+  background: rgba(30, 48, 72, 0.85);
+  border: 3px solid var(--swr-ink);
+  border-radius: 10px;
+  box-shadow: 6px 6px 0 var(--swr-ink);
+}
+
+#section-2-8663 #mc_embed_signup form {
+  margin: 0;
+}
+
+#section-2-8663 #mc_embed_signup .indicates-required {
+  font-family: var(--swr-copy);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: rgba(252, 246, 240, 0.55);
+  margin: 0 0 14px;
+}
+#section-2-8663 #mc_embed_signup .asterisk {
+  font-family: var(--swr-copy);
+  color: var(--swr-yellow);
+  font-style: normal;
+}
+
+#section-2-8663 #mc_embed_signup .row {
+  display: flex;
+  gap: 10px;
+}
+#section-2-8663 #mc_embed_signup .row .mc-field-group {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+#section-2-8663 #mc_embed_signup .mc-field-group {
+  display: block;
+  text-align: left;
+  margin-bottom: 14px;
+}
+#section-2-8663 #mc_embed_signup .mc-field-group label,
+#section-2-8663 #mc_embed_signup .mc-field-group > strong {
+  font-family: var(--swr-copy);
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: var(--swr-yellow);
+  margin-bottom: 5px;
+}
+
+#section-2-8663 #mc_embed_signup input[type="email"],
+#section-2-8663 #mc_embed_signup input[type="text"] {
+  width: 100%;
+  font: inherit;
+  font-family: var(--swr-copy);
+  font-size: 15px;
+  color: var(--swr-ink);
+  background: var(--swr-white);
+  border: 3px solid var(--swr-ink) !important;
+  border-radius: 5px;
+  padding: 10px 11px;
+  box-shadow: 0 3px 0 var(--swr-ink);
+}
+#section-2-8663 #mc_embed_signup input[type="email"]::placeholder,
+#section-2-8663 #mc_embed_signup input[type="text"]::placeholder {
+  font-family: var(--swr-copy);
+  color: #8a8a8a;
+}
+#section-2-8663 #mc_embed_signup input[type="email"]:focus,
+#section-2-8663 #mc_embed_signup input[type="text"]:focus {
+  outline: 3px solid var(--swr-yellow);
+  outline-offset: 2px;
+}
+
+/* Park radio group — same boxed look as the text fields (white fill, ink
+   border + offset shadow) rather than the browser's native control, with a
+   filled dot drawn on :checked since appearance:none drops native ticking. */
+#section-2-8663 #mc_embed_signup .input-group ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 18px;
+}
+#section-2-8663 #mc_embed_signup .input-group li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#section-2-8663 #mc_embed_signup .input-group input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  margin: 0;
+  position: relative;
+  cursor: pointer;
+  background: var(--swr-white);
+  border: 3px solid var(--swr-ink);
+  border-radius: 50%;
+  box-shadow: 0 3px 0 var(--swr-ink);
+}
+#section-2-8663 #mc_embed_signup .input-group input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--swr-orange);
+}
+#section-2-8663 #mc_embed_signup .input-group input[type="radio"]:focus-visible {
+  outline: 3px solid var(--swr-yellow);
+  outline-offset: 2px;
+}
+#section-2-8663 #mc_embed_signup .input-group label {
+  font-family: var(--swr-copy);
+  display: inline;
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 400;
+  color: var(--swr-pale);
+}
+
+/* SMS phone field — Mailchimp inlines its own border/layout styles on the
+   wrapper and the number input, so those need !important to override. */
+#section-2-8663 #mc_embed_signup #mce-SMSPHONE {
+  width: 100%;
+}
+#section-2-8663 #mc_embed_signup .mc-field-group > div[style] {
+  background: var(--swr-white);
+  border: 3px solid var(--swr-ink) !important;
+  border-radius: 5px;
+  box-shadow: 0 3px 0 var(--swr-ink);
+}
+#section-2-8663 #mc_embed_signup .mc-field-group > div[style] input[type="text"] {
+  border: none !important;
+  box-shadow: none;
+  padding: 10px 11px 10px 4px;
+}
+#section-2-8663 #mc_embed_signup .mc-field-group > div[style] input[type="text"]::placeholder {
+  color: #8a8a8a;
+}
+#section-2-8663 #mc_embed_signup #flag-emoji-SMSPHONE {
+  font-size: 16px;
+}
+
+#section-2-8663 #mc_embed_signup .mc-sms-phone-group {
+  margin: 10px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+}
+/* flex-basis:auto (the default) sizes this against its unwrapped
+   max-content width for the line-fitting decision, not its shrunk width —
+   that's always wider than the row, so it wraps below the checkbox instead
+   of sharing the row with it. flex:1 1 0 (same fix as .row .field above)
+   gives it a 0 base size instead, so it fills the remaining row width and
+   wraps its own text there, keeping checkbox + text side by side. */
+#section-2-8663 #mc_embed_signup .mc-sms-phone-group > div:first-child {
+  flex: none;
+}
+#section-2-8663 #mc_embed_signup .mc-sms-phone-group input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  margin: 0;
+  position: relative;
+  cursor: pointer;
+  background: var(--swr-white);
+  border: 3px solid var(--swr-ink);
+  border-radius: 5px;
+  box-shadow: 0 3px 0 var(--swr-ink);
+}
+#section-2-8663 #mc_embed_signup .mc-sms-phone-group input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 5px;
+  height: 10px;
+  border: solid var(--swr-orange);
+  border-width: 0 3px 3px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+}
+#section-2-8663 #mc_embed_signup .mc-sms-phone-group input[type="checkbox"]:focus-visible {
+  outline: 3px solid var(--swr-yellow);
+  outline-offset: 2px;
+}
+#section-2-8663 #mc_embed_signup .small-meta {
+  font-family: var(--swr-copy);
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 10px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: rgba(252, 246, 240, 0.55);
+}
+#section-2-8663 #mc_embed_signup .small-meta p {
+  font-family: var(--swr-copy);
+  margin: 0;
+}
+#section-2-8663 #mc_embed_signup .small-meta a {
+  font-family: var(--swr-copy);
+  color: var(--swr-yellow);
+}
+
+#section-2-8663 #mc_embed_signup #mce-responses {
+  margin: 8px 0 0;
+}
+#section-2-8663 #mc_embed_signup .response {
+  font-family: var(--swr-copy);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-align: left;
+}
+#section-2-8663 #mc_embed_signup #mce-error-response {
+  color: var(--swr-orange);
+}
+#section-2-8663 #mc_embed_signup #mce-success-response {
+  color: var(--swr-yellow);
+}
+
+/* Per-field validation errors — injected by mailchimp-form.js next to
+   whichever field(s) failed, so a customer sees exactly which of the four
+   required inputs (email, SMS phone, park, consent) is missing, instead of
+   one generic message at the bottom of the form. Visibility toggles via
+   the .is-visible class rather than inline style — the mc-field-group>div
+   [style] rule above targets Mailchimp's own inline-styled phone wrapper,
+   and an inline style attribute on this div (from el.style.display) would
+   match that same selector and pick up the white input-box look. */
+#section-2-8663 #mc_embed_signup .mc-field-error {
+  font-family: var(--swr-copy);
+  display: none;
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--swr-orange);
+  text-align: left;
+}
+#section-2-8663 #mc_embed_signup .mc-field-error.is-visible {
+  display: block;
+}
+/* The consent checkbox's error lands as a third item in that flex row —
+   give it the full row width so it wraps onto its own line below instead
+   of squeezing into a narrow column next to the legal text. */
+#section-2-8663 #mc_embed_signup .mc-sms-phone-group > .mc-field-error.is-visible {
+  flex: 0 0 100%;
+}
+
+#section-2-8663 #mc_embed_signup .clear {
+  margin-top: 6px;
+}
+#section-2-8663 #mc_embed_signup .button {
+  position: relative;
+  display: block;
+  width: 100%;
+  cursor: pointer;
+  font-family: var(--swr-display-card);
+  text-transform: uppercase;
+  transform: skewX(-7deg);
+  font-size: clamp(13px, calc(6vw - 5px), 22px);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+  text-align: center;
+  color: var(--swr-white);
+  -webkit-text-stroke: 2px var(--swr-ink);
+  paint-order: stroke fill;
+  background: var(--swr-yellow);
+  border: 3px solid var(--swr-ink);
+  border-radius: 4px;
+  padding: 13px 10px 15px;
+  margin-top: 20px;
+  box-shadow: 6px 6px 0 var(--swr-ink);
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+#section-2-8663 #mc_embed_signup .button:active {
+  transform: skewX(-7deg) translate(4px, 4px);
+  box-shadow: 2px 2px 0 var(--swr-ink);
+}
+#section-2-8663 #mc_embed_signup .button:focus-visible {
+  outline: 3px solid var(--swr-white);
+  outline-offset: 4px;
+}
+
+/* Swaps the label for a spinner rather than changing size, so the form
+   doesn't jump while the JSONP submit is in flight — same pattern as
+   index.html's #nameGo claim button. */
+#section-2-8663 #mc_embed_signup .button.busy .btnLabel {
+  visibility: hidden;
+}
+#section-2-8663 #mc_embed_signup .button .spinner {
+  display: none;
+}
+#section-2-8663 #mc_embed_signup .button.busy .spinner {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border: 3px solid var(--swr-white);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btnSpin 0.7s linear infinite;
+}
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #section-2-8663 #mc_embed_signup .button.busy .spinner {
+    animation: none;
+    border-top-color: var(--swr-white);
+  }
+}
