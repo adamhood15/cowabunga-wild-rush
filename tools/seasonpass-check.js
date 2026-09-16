@@ -60,7 +60,7 @@ async function main() {
     // --- Pickup: starts the FROZEN intro, not the mechanical effect ---
     const grabbed = await evaluate(session, `
       (() => {
-        add(T.SEASONPASS, travelled + 0.05, 0);
+        spawnEntity(ENTITY_TYPE.SEASONPASS, travelled + 0.05, 0);
         update(0.016);
         return { seasonPassIntroT, seasonPassT, travelledAfter: travelled };
       })()
@@ -86,7 +86,7 @@ async function main() {
     const duringFreeze = await evaluate(session, `
       (() => {
         const livesBefore = lives;
-        add(T.COW, travelled + 0.05, 0);   // would be in the hit window if collisions ran
+        spawnEntity(ENTITY_TYPE.COW, travelled + 0.05, 0);   // would be in the hit window if collisions ran
         for (let i = 0; i < 10; i++) update(0.016);
         return { livesBefore, livesAfter: lives, seasonPassIntroT };
       })()
@@ -114,7 +114,7 @@ async function main() {
     // --- Invincibility now that the effect is truly active ---
     const beforeLives = await evaluate(session, "lives");
     await evaluate(session, `
-      (() => { window.__safeCount = 0; add(T.COW, travelled + 0.05, 0); update(0.016); })()
+      (() => { window.__safeCount = 0; spawnEntity(ENTITY_TYPE.COW, travelled + 0.05, 0); update(0.016); })()
     `);
     const afterHit = await evaluate(session, `({ lives, safeCount: window.__safeCount })`);
     allPass &= ok("cow hit during the active effect costs no life", afterHit.lives === beforeLives, { beforeLives, afterHit });
@@ -141,7 +141,7 @@ async function main() {
     const duringOutroFreeze = await evaluate(session, `
       (() => {
         const livesBefore = lives;
-        add(T.COW, travelled + 0.05, 0);
+        spawnEntity(ENTITY_TYPE.COW, travelled + 0.05, 0);
         for (let i = 0; i < 10; i++) update(0.016);
         return { livesBefore, livesAfter: lives, seasonPassT };
       })()
@@ -204,10 +204,10 @@ async function main() {
         seasonPassSpawned = true;
         let sawSeasonPassAgain = false;
         for (let i = 0; i < 400; i++){
-          ents = ents.filter(e => e.t !== T.SEASONPASS);
+          ents = ents.filter(e => e.t !== ENTITY_TYPE.SEASONPASS);
           powerupZ = travelled - 1;
           spawnPowerup();
-          if (ents.some(e => e.t === T.SEASONPASS)) sawSeasonPassAgain = true;
+          if (ents.some(e => e.t === ENTITY_TYPE.SEASONPASS)) sawSeasonPassAgain = true;
           travelled += 1;
         }
         return { sawSeasonPassAgain };

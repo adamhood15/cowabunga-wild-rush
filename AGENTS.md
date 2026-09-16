@@ -22,6 +22,14 @@ the links:
 - **Comments explain *why*, never *what*.** No narrating comments.
 - **Follow DRY.** Prefer existing patterns over introducing abstractions.
 - **Name variables explicitly** — not `t`, name it for what it holds.
+- **Always name JavaScript functions and variables so they describe what
+  they are or what they do** — not `add`/`wall`/`puff`, not `t`/`i`/`w` as
+  parameters, not `$`/`C`/`T` as globals. Applies file-wide, not just to new
+  code: when touching a poorly-named identifier, rename it (verify with the
+  real page over CDP afterward — a rename can silently break a call site,
+  and separately, macOS `sed` does not support `\b`, so a `\bname\b`
+  word-boundary rename must go through Node's regex engine or it can
+  silently match nothing).
 - **Check mobile viewports on every UI change** — screenshot at phone sizes
   before saying it works.
 - **Confirm before committing.** The user asks for commits; never commit

@@ -76,15 +76,15 @@ async function main() {
     });
     await new Promise(r => setTimeout(r, 200));
 
-    const nameShownAfterTap = await evaluate(session, `$("namePanel").classList.contains("panel--on")`);
+    const nameShownAfterTap = await evaluate(session, `byId("namePanel").classList.contains("panel--on")`);
     const gateClearedAfterTap = await evaluate(session, `loaderGateArmed === false`);
 
     // Force straight to the "Play without saving" branch — Board.claim()
     // would otherwise hit the real dev backend (see cdp.js's write guard,
     // which blocks it anyway) and this bug has nothing to do with claim()
     // succeeding or failing, only with what happens after skip.
-    await evaluate(session, `$("nameSkip").click(); true`);
-    const nameHiddenAfterSkip = await evaluate(session, `!$("namePanel").classList.contains("panel--on")`);
+    await evaluate(session, `byId("nameSkip").click(); true`);
+    const nameHiddenAfterSkip = await evaluate(session, `!byId("namePanel").classList.contains("panel--on")`);
     // typeof-guarded: pre-fix code has no skippedNaming global at all, and
     // this check should report that as a clean fail, not crash on it.
     const skippedFlagSet = await evaluate(session, `typeof skippedNaming !== "undefined" && skippedNaming === true`);
@@ -105,7 +105,7 @@ async function main() {
     });
     await new Promise(r => setTimeout(r, 200));
 
-    const nameShownAfterArrowKey = await evaluate(session, `$("namePanel").classList.contains("panel--on")`);
+    const nameShownAfterArrowKey = await evaluate(session, `byId("namePanel").classList.contains("panel--on")`);
     const stateAfterArrowKey = await evaluate(session, `state`);
 
     await new Promise(r => setTimeout(r, 50));   // let any async exception land

@@ -1807,7 +1807,7 @@ const ART = {
      it is drawn by CSS, so the URL is repeated in the #revealHat rule. */
   hat:      "assets/sprites/typhoon-sprites/hat-tilt/typhoon-hat-tilt.png",
 
-  /* Power-ups. One entry per power-up as they're added — see the T.BOOST
+  /* Power-ups. One entry per power-up as they're added — see the ENTITY_TYPE.BOOST
      collectible below for how Speed Boost uses this. */
   speedBoostPickup: "assets/sprites/power-ups/speed-boost.png",
   souvenir: "assets/sprites/power-ups/souvenir-bottle.png",
@@ -1864,13 +1864,13 @@ const SFX = {
   seasonPass:"assets/sound-effects/power-ups/season-pass.mp3",
 };
 
-const C = {
+const COLORS = {
   sky:"#068af6", skyLow:"#7edefc", blue:"#30b4fc", blueDp:"#0072d2",
   yellow:"#fcea00", gold:"#f6ba00", orange:"#fc901e",
   white:"#fcf6f0", pale:"#e4f6f6", green:"#187230", navy:"#1e3048", ink:"#0a0a0a"
 };
 
-const $ = (id) => document.getElementById(id);
+const byId = (id) => document.getElementById(id);
 
 /* ---------- asset loading ---------- */
 const IMG = {};
@@ -1898,8 +1898,8 @@ let hardFailed = [];   // keys that failed even after every retry
 function loadStep(){
   loadDone++;
   const p = LOAD_TOTAL ? loadDone / LOAD_TOTAL : 1;
-  $("load").style.setProperty("--p", p.toFixed(4));
-  $("loadPct").textContent = Math.round(p * 100) + "%";
+  byId("load").style.setProperty("--p", p.toFixed(4));
+  byId("loadPct").textContent = Math.round(p * 100) + "%";
 }
 
 function load(key, src){
@@ -1938,24 +1938,24 @@ async function ready(){
   /* Finish the bar before dismissing it. Hiding on the last onload skipped
      straight from wherever the fill had eased to over to nothing, which read as
      the loader giving up rather than completing. */
-  $("load").style.setProperty("--p", "1");
-  $("loadPct").textContent = "100%";
+  byId("load").style.setProperty("--p", "1");
+  byId("loadPct").textContent = "100%";
 
   // Every retry is spent — this isn't a blip, something is genuinely missing.
   // Stop here rather than handing the player a run short on sprites.
   if (hardFailed.length){
-    $("load").classList.add("load--error");
-    $("loadMsg").textContent = "Couldn't load " + hardFailed.length +
+    byId("load").classList.add("load--error");
+    byId("loadMsg").textContent = "Couldn't load " + hardFailed.length +
       (hardFailed.length === 1 ? " asset" : " assets") + " — check your connection and retry.";
     return;
   }
 
-  $("loadMsg").textContent = "Ready";
+  byId("loadMsg").textContent = "Ready";
   const held = Math.max(0, LOAD_FLOOR - (performance.now() - LOAD_T0));
   setTimeout(finishLoading, held + 340);
-  if (IMG.coinA) $("coinIcon").src = ART.coinA;
-  if (IMG.slide) $("revealSlide").src = ART.slide;
-  else $("revealSlide").style.display = "none";
+  if (IMG.coinA) byId("coinIcon").src = ART.coinA;
+  if (IMG.slide) byId("revealSlide").src = ART.slide;
+  else byId("revealSlide").style.display = "none";
 }
 /* First visit goes to the naming screen; every visit after goes straight to the
    title, because the rider is already on file. Handled here rather than in the
@@ -1966,15 +1966,15 @@ async function ready(){
 let skippedNaming = false;
 function afterLoader(){
   if (Board.me() || skippedNaming) return;
-  $("titlePanel").classList.remove("panel--on");
-  $("namePanel").classList.add("panel--on");
-  $("reels").classList.add("reels--loading");
+  byId("titlePanel").classList.remove("panel--on");
+  byId("namePanel").classList.add("panel--on");
+  byId("reels").classList.add("reels--loading");
   loadTakenNames();
 }
 
 function dismissLoader(){
-  $("load").classList.add("load--off");                          // fade
-  setTimeout(() => $("load").classList.add("load--gone"), 500);   // then out of the layout
+  byId("load").classList.add("load--off");                          // fade
+  setTimeout(() => byId("load").classList.add("load--gone"), 500);   // then out of the layout
 }
 
 /* ---------- the last step of loading is getting the sound on ----------
@@ -2001,8 +2001,8 @@ function finishLoading(){
     afterLoader();
     return;
   }
-  $("loadMsg").textContent = "Tap to start";
-  $("load").classList.add("load--gate");
+  byId("loadMsg").textContent = "Tap to start";
+  byId("load").classList.add("load--gate");
   loaderGateArmed = true;
   /* The tap that dismisses the loader is also the one that unlocks audio, so the
      title tune is already running by the time the naming screen appears — the
@@ -2027,14 +2027,14 @@ for (const k in ART) load(k, ART[k]);
 // A full reload rather than re-attempting just the failed keys in place —
 // simplest thing that's actually reliable, and re-fetches everything fresh
 // rather than trusting whatever partial state got this far.
-$("loadRetryBtn").addEventListener("click", () => location.reload());
+byId("loadRetryBtn").addEventListener("click", () => location.reload());
 
 /* ---------- config into the DOM ---------- */
 /* The full "Cowabunga: Wild Rush" name is only ever spoken in one place
    (this line) — everywhere else either wants just the name+colon (the big
    title) or the subtitle alone (the smaller line under it). */
 const RIDE_FULL_NAME = CONFIG.rideName + (CONFIG.rideSubtitle ? ": " + CONFIG.rideSubtitle : "");
-$("revealName").textContent = RIDE_FULL_NAME;
+byId("revealName").textContent = RIDE_FULL_NAME;
 /* CONFIG.tagline no longer has a home anywhere on the card: the sell line and
    the "collect every letter" prompt both moved into #howPanel, which can
    explain them properly instead of compressing them into one sentence, and
@@ -2043,14 +2043,14 @@ $("revealName").textContent = RIDE_FULL_NAME;
    line finds a home again later. Same story for CONFIG.eyebrow, unused since
    the title card's eyebrow/park text was replaced by the Typhoon Texas logo
    image (2026-09-03). */
-$("ctaBtn").textContent   = CONFIG.ctaLabel;
-$("reveal").querySelector(".slab__kicker").textContent = CONFIG.openingLine;
+byId("ctaBtn").textContent   = CONFIG.ctaLabel;
+byId("reveal").querySelector(".slab__kicker").textContent = CONFIG.openingLine;
 /* The one line of copy on the win card, under the sign. Blank hides it outright
    rather than leaving an empty box in the middle of the poster — same contract
    as ctaUrl below, so either can be switched off from CONFIG alone. */
-$("revealNote").textContent = CONFIG.winNote || "";
-if (!CONFIG.winNote) $("revealNote").style.display = "none";
-if (!CONFIG.ctaUrl) $("ctaBtn").style.display = "none";
+byId("revealNote").textContent = CONFIG.winNote || "";
+if (!CONFIG.winNote) byId("revealNote").style.display = "none";
+if (!CONFIG.ctaUrl) byId("ctaBtn").style.display = "none";
 document.title = CONFIG.parkName + " — " + RIDE_FULL_NAME;
 
 /* ==================================================================
@@ -2058,7 +2058,7 @@ document.title = CONFIG.parkName + " — " + RIDE_FULL_NAME;
    looking down into the chute. The rim sits just under the horizon so
    the flume reads as a channel below you with open park beyond it.
    ================================================================== */
-const cv = $("game"), ctx = cv.getContext("2d");
+const cv = byId("game"), ctx = cv.getContext("2d");
 let W = 0, H = 0, DPR = 1, focal = 600, horizon = 250;
 /* margin the backdrop paints beyond the viewport, so the camera roll cannot
    swing an unpainted corner into shot */
@@ -2120,7 +2120,7 @@ function project(wx, wy, dz){
   const s = focal / dz;
   return { x: W/2 + (wx - camX) * s, y: horizon + (wy - camY) * s, s: s };
 }
-function wall(z, a){
+function wallPoint(z, a){
   return project(curveX(z) + Math.sin(a), curveY(z) + Math.cos(a), z - travelled + CAM_DZ);
 }
 function floorPt(z, a, lift){
@@ -2509,7 +2509,7 @@ const Sound = (function(){
 /* ==================================================================
    STATE
    ================================================================== */
-const T = { COW:0, YETI:1, WAVE:2, TUNNEL:3, COIN:4, BOOST:5, PIG:6, LETTER:7, SOUVENIR:8, EXTRALIFE:9, WHIRLPOOL:10, SEASONPASS:11 };
+const ENTITY_TYPE = { COW:0, YETI:1, WAVE:2, TUNNEL:3, COIN:4, BOOST:5, PIG:6, LETTER:7, SOUVENIR:8, EXTRALIFE:9, WHIRLPOOL:10, SEASONPASS:11 };
 
 /* ------------------------------------------------------------------
    SNIPER PIG
@@ -2838,23 +2838,23 @@ const LETTER_AHEAD = 20;    // spawn distance; inside DRAW_FAR (26) so it fades
    error at all, which is a bad way to find out a name didn't work. */
 const POWERUP_DEBUG_NAME = (location.search.match(/[?&]powerup=([a-z-]+)/i) || [])[1]?.toLowerCase();
 const POWERUP_DEBUG_TYPE = {
-  boost: T.BOOST, speedboost: T.BOOST, "speed-boost": T.BOOST,
-  souvenir: T.SOUVENIR, "souvenir-bottle": T.SOUVENIR,
-  extralife: T.EXTRALIFE, "extra-life": T.EXTRALIFE,
-  whirlpool: T.WHIRLPOOL,
-  seasonpass: T.SEASONPASS, "season-pass": T.SEASONPASS,
+  boost: ENTITY_TYPE.BOOST, speedboost: ENTITY_TYPE.BOOST, "speed-boost": ENTITY_TYPE.BOOST,
+  souvenir: ENTITY_TYPE.SOUVENIR, "souvenir-bottle": ENTITY_TYPE.SOUVENIR,
+  extralife: ENTITY_TYPE.EXTRALIFE, "extra-life": ENTITY_TYPE.EXTRALIFE,
+  whirlpool: ENTITY_TYPE.WHIRLPOOL,
+  seasonpass: ENTITY_TYPE.SEASONPASS, "season-pass": ENTITY_TYPE.SEASONPASS,
 }[POWERUP_DEBUG_NAME];
 const POWERUP_DEBUG_FAST = POWERUP_DEBUG_NAME !== undefined || /[?&]powerups\b/.test(location.search);
 const POWERUP_GAP   = (POWERUP_DEBUG_FAST ? 50 : 550) / CONFIG.metresPerUnit;   // ~550m between offers
 const POWERUP_AHEAD = 20;   // same reasoning as LETTER_AHEAD
 /* Every power-up currently unlocked. spawnPowerup() draws one type from this
-   set each time the shared clock fires — except T.EXTRALIFE, which it drops
+   set each time the shared clock fires — except ENTITY_TYPE.EXTRALIFE, which it drops
    from the draw while extraLife is already held (see spawnPowerup()), per the
    user's call that a second one should never even appear until the first is
-   used up, and T.SEASONPASS, which drops out for good the instant it has been
+   used up, and ENTITY_TYPE.SEASONPASS, which drops out for good the instant it has been
    offered once (see seasonPassSpawned) — the grand-finale power-up, so it
    only ever shows up once in a run. */
-const POWERUP_TYPES = [T.BOOST, T.SOUVENIR, T.EXTRALIFE, T.WHIRLPOOL, T.SEASONPASS];
+const POWERUP_TYPES = [ENTITY_TYPE.BOOST, ENTITY_TYPE.SOUVENIR, ENTITY_TYPE.EXTRALIFE, ENTITY_TYPE.WHIRLPOOL, ENTITY_TYPE.SEASONPASS];
 /* Holds the row until the run-off is done. The last letter leaves the screen
    somewhere between 7.0s (wide desktop) and 7.9s (phone) — the spread is real,
    because the word is a bigger share of a narrow viewport and so has further to
@@ -2934,7 +2934,7 @@ const DUCK_DUR = 0.55;       // tuckT set by tuck() — see spawn()'s PIG_AFTER_
 const BOOST_DUR = 2.4;      // also roughly the length of the boost sample
 const BOOST_SUPER_MULT = 1.25;
 
-/* How close a T.PIG is allowed to spawn after a T.WAVE — see spawn()'s
+/* How close a ENTITY_TYPE.PIG is allowed to spawn after a ENTITY_TYPE.WAVE — see spawn()'s
    "sniper pig" branch. tuck() refuses to fire while jumpT >= 0 (see below), so
    a wave immediately followed by a pig demands the rider fully land the jump
    before they can even START ducking — unlike the reverse order, where
@@ -2974,7 +2974,7 @@ const SOUVENIR_BONUS = 100;       // "acts the same as if you had collected 100 
 const POWERUP_SCORE_BONUS = 15;   // +150 points (coins is the only thing runScore()
                                    // reads a bonus through — see SOUVENIR_BONUS above)
                                    // on top of whatever each power-up already grants;
-                                   // added in every T.BOOST/SOUVENIR/EXTRALIFE/
+                                   // added in every ENTITY_TYPE.BOOST/SOUVENIR/EXTRALIFE/
                                    // WHIRLPOOL/SEASONPASS pickup branch below
 const WHIRLPOOL_DUR   = 6.0;   // seconds the magnet stays active, per Adam's spec
 const WHIRLPOOL_RANGE = 8;     // world units ahead of the rider a coin can be
@@ -3065,7 +3065,7 @@ function reset(){
      left set somewhere cannot take him off the water again. */
   overRiderDom = false; overTextIn = false; overTextT = 0; overTilt = 0;
   overWon = false;
-  $("overPanel").classList.remove("panel--text-in", "panel--rider-in");
+  byId("overPanel").classList.remove("panel--text-in", "panel--rider-in");
   revealed = false;
   ents = []; spray = []; nextZ = 8; comboFree = 0;
   gotLetters = 0; shownLetters = 0; letterZ = LETTER_GAP * 0.55; stampedeT = -1;
@@ -3085,8 +3085,8 @@ function goHome(){
   if (state !== "over") return;
   reset();
   state = "title";
-  $("overPanel").classList.remove("panel--on");
-  $("titlePanel").classList.add("panel--on");
+  byId("overPanel").classList.remove("panel--on");
+  byId("titlePanel").classList.add("panel--on");
   // Same crossfade showReveal() uses to bring the title tune back in over
   // whatever the results screen was playing.
   Sound.musicStop(MUSIC_FADE);
@@ -3094,8 +3094,8 @@ function goHome(){
 }
 
 const laneAngle = (i) => i * LANE_A;
-function add(t, z, i, w){
-  const e = { t:t, z:z, i:i, a:laneAngle(i), dead:false, w:w||1,
+function spawnEntity(type, z, laneIndex, width){
+  const e = { t:type, z:z, i:laneIndex, a:laneAngle(laneIndex), dead:false, w:width||1,
               spin:Math.random()*6, side:Math.random()<0.5?-1:1 };
   ents.push(e);
   return e;                        // returned so a caller can tag it (see letters)
@@ -3118,20 +3118,20 @@ function spawn(){
 
     if (z < START_GRACE){
       const li = (Math.random()*3|0) - 1;
-      for (let k = 0; k < 5; k++) add(T.COIN, z + k * 0.8, li);
+      for (let k = 0; k < 5; k++) spawnEntity(ENTITY_TYPE.COIN, z + k * 0.8, li);
       gapSec = 1.2;
     } else if (comboFree > 0){
       comboFree--;
-      for (let k = 0; k < 4; k++) add(T.COIN, z + k * 0.8, (Math.random()*3|0) - 1);
+      for (let k = 0; k < 4; k++) spawnEntity(ENTITY_TYPE.COIN, z + k * 0.8, (Math.random()*3|0) - 1);
       gapSec = 1.5;
     } else if (r < 0.15){                                   // breaker line
       const li = (Math.random()*3|0) - 1;
-      for (let k = 0; k < 7; k++) add(T.COIN, z + k * 0.8, li);
+      for (let k = 0; k < 7; k++) spawnEntity(ENTITY_TYPE.COIN, z + k * 0.8, li);
       gapSec = 1.4;
     } else if (r < 0.34){                                   // one rider + coins in a clear lane
       const li = (Math.random()*3|0) - 1;
-      add(Math.random() < 0.5 ? T.COW : T.YETI, z, li);
-      for (let k = 0; k < 4; k++) add(T.COIN, z + k * 0.8, li === -1 ? 1 : li - 1);
+      spawnEntity(Math.random() < 0.5 ? ENTITY_TYPE.COW : ENTITY_TYPE.YETI, z, li);
+      for (let k = 0; k < 4; k++) spawnEntity(ENTITY_TYPE.COIN, z + k * 0.8, li === -1 ? 1 : li - 1);
       gapSec = 1.35;
     } else if (r < 0.51 && metres > 220 && z - lastTunZ > TUN_APART
                && tunnelStraight(z)){                       // enclosed section
@@ -3139,14 +3139,14 @@ function spawn(){
       // below knows nothing about. Without a floor here, a slow rider at high
       // difficulty gets the next obstacle 5.3 units on — inside a 6.3-unit
       // tunnel — and two of them visibly telescope into each other.
-      add(T.TUNNEL, z, 0, 3); lastTunZ = z; gapSec = 1.4; minGap = TUN_LEN + 2.5;
+      spawnEntity(ENTITY_TYPE.TUNNEL, z, 0, 3); lastTunZ = z; gapSec = 1.4; minGap = TUN_LEN + 2.5;
     } else if (r < 0.62 && metres > 110){                   // wave -> jump -> coins
       // The run starts past the wave's own depth so it reads as a payout for
       // clearing it rather than as decoration sitting on top of it. Collection
       // is lane-only, so being airborne over them still counts.
-      add(T.WAVE, z, 0, 3); lastWaveZ = z;
+      spawnEntity(ENTITY_TYPE.WAVE, z, 0, 3); lastWaveZ = z;
       const li = (Math.random()*3|0) - 1;
-      for (let k = 0; k < 3; k++) add(T.COIN, z + 1.6 + k * 0.8, li);
+      for (let k = 0; k < 3; k++) spawnEntity(ENTITY_TYPE.COIN, z + 1.6 + k * 0.8, li);
       gapSec = 1.4;
     } else if (r < 0.80 && metres > 110
                && z - lastWaveZ > PIG_AFTER_WAVE_MIN_GAP){    // sniper pig -> duck
@@ -3154,22 +3154,22 @@ function spawn(){
       // the jet spans the chute, so stacking anything on top is unreadable.
       // The z - lastWaveZ check is the reverse concern: too soon AFTER a wave,
       // not too soon before one — see PIG_AFTER_WAVE_MIN_GAP.
-      add(T.PIG, z, 0, 3); gapSec = 1.9;
+      spawnEntity(ENTITY_TYPE.PIG, z, 0, 3); gapSec = 1.9;
     } else if (r < 0.90 && hard > 0.22){                     // two riders, one gap
       const free = (Math.random()*3|0) - 1;
       let flip = Math.random() < 0.5;
-      for (let i = -1; i <= 1; i++) if (i !== free){ add(flip ? T.COW : T.YETI, z, i); flip = !flip; }
-      for (let k = 0; k < 4; k++) add(T.COIN, z + k * 0.8, free);
+      for (let i = -1; i <= 1; i++) if (i !== free){ spawnEntity(flip ? ENTITY_TYPE.COW : ENTITY_TYPE.YETI, z, i); flip = !flip; }
+      for (let k = 0; k < 4; k++) spawnEntity(ENTITY_TYPE.COIN, z + k * 0.8, free);
       gapSec = 1.5;
     } else if (hard > 0.45 && z - lastTunZ > TUN_APART && tunnelStraight(z)){  // tunnel, then jump
-      add(T.TUNNEL, z, 0, 3); lastTunZ = z;
+      spawnEntity(ENTITY_TYPE.TUNNEL, z, 0, 3); lastTunZ = z;
       // Placed off the tunnel's LENGTH, not off speed: at speed*1.05 the wave
       // landed 4.6 units in, i.e. buried inside the tunnel, at low speed.
       lastWaveZ = z + TUN_LEN + 1.6;
-      add(T.WAVE, lastWaveZ, 0, 3);
+      spawnEntity(ENTITY_TYPE.WAVE, lastWaveZ, 0, 3);
       gapSec = 2.0; minGap = TUN_LEN + 4.5;
     } else {
-      add(Math.random() < 0.5 ? T.COW : T.YETI, z, (Math.random()*3|0) - 1);
+      spawnEntity(Math.random() < 0.5 ? ENTITY_TYPE.COW : ENTITY_TYPE.YETI, z, (Math.random()*3|0) - 1);
       gapSec = 1.35;
     }
     gapSec *= 1.16 - hard * 0.3;
@@ -3184,7 +3184,7 @@ function spawn(){
 function laneBlocked(z, i){
   for (const e of ents){
     if (e.dead || e.w === 0) continue;
-    const near = e.t === T.TUNNEL
+    const near = e.t === ENTITY_TYPE.TUNNEL
       ? (z > e.z - 1.6 && z < e.z + TUN_LEN + 1.6)
       : Math.abs(e.z - z) < 1.6;
     if (!near) continue;
@@ -3205,7 +3205,7 @@ function spawnLetter(){
   for (let k = 0; k < 3; k++){
     const i = ((start + k) % 3) - 1;
     if (laneBlocked(z, i)) continue;
-    const e = add(T.LETTER, z, i);
+    const e = spawnEntity(ENTITY_TYPE.LETTER, z, i);
     e.gi = gotLetters;              // also picks its cell out of the artwork
     letterZ = travelled + LETTER_GAP;
     return;
@@ -3227,8 +3227,8 @@ function spawnPowerup(){
   // ever offers Speed Boost/Souvenir until the held one is spent. Season Pass
   // drops out for good, not just temporarily, once it has been offered once —
   // it's the grand finale, so a run only ever sees it the one time.
-  let offered = extraLife ? POWERUP_TYPES.filter(t => t !== T.EXTRALIFE) : POWERUP_TYPES;
-  if (seasonPassSpawned) offered = offered.filter(t => t !== T.SEASONPASS);
+  let offered = extraLife ? POWERUP_TYPES.filter(t => t !== ENTITY_TYPE.EXTRALIFE) : POWERUP_TYPES;
+  if (seasonPassSpawned) offered = offered.filter(t => t !== ENTITY_TYPE.SEASONPASS);
   // ?powerup=<name> pins every offer to one type for testing — see the note
   // by POWERUP_DEBUG_TYPE above. Overrides the extraLife/Season Pass filters
   // too, since a test session asking for it explicitly wants to SEE it.
@@ -3239,8 +3239,8 @@ function spawnPowerup(){
   for (let k = 0; k < 3; k++){
     const i = ((start + k) % 3) - 1;
     if (laneBlocked(z, i)) continue;
-    add(type, z, i);
-    if (type === T.SEASONPASS) seasonPassSpawned = true;
+    spawnEntity(type, z, i);
+    if (type === ENTITY_TYPE.SEASONPASS) seasonPassSpawned = true;
     powerupZ = travelled + POWERUP_GAP;
     return;
   }
@@ -3303,17 +3303,17 @@ window.addEventListener("keydown", (e) => {
      is only hidden, not torn down, so every title shortcut is still live. */
   /* Naming swallows the keyboard: the title card is only hidden behind it, so
      Space would otherwise start a run before the player has a name. */
-  if ($("namePanel").classList.contains("panel--on")){
-    if (k === "enter" || k === " ") $("nameGo").click();
+  if (byId("namePanel").classList.contains("panel--on")){
+    if (k === "enter" || k === " ") byId("nameGo").click();
     return;
   }
-  if ($("howPanel").classList.contains("panel--on")){
+  if (byId("howPanel").classList.contains("panel--on")){
     if (k === "escape" || k === "enter" || k === " ") closeHow();
     return;
   }
   /* Same reasoning as the how-to card: the screen underneath is only hidden,
      not torn down, so Space would start a run behind a board being read. */
-  if ($("lbPanel").classList.contains("panel--on")){
+  if (byId("lbPanel").classList.contains("panel--on")){
     if (k === "escape" || k === "enter" || k === " ") closeBoard();
     return;
   }
@@ -3352,8 +3352,8 @@ function popModal(){
 }
 window.addEventListener("popstate", () => {
   suppressPop = true;
-  if ($("howPanel").classList.contains("panel--on")) closeHow();
-  else if ($("lbPanel").classList.contains("panel--on")) closeBoard();
+  if (byId("howPanel").classList.contains("panel--on")) closeHow();
+  else if (byId("lbPanel").classList.contains("panel--on")) closeBoard();
   else if (state === "paused" && !revealOpen) resumeGame();
   suppressPop = false;
 });
@@ -3448,58 +3448,58 @@ cv.addEventListener("touchcancel", endTouch, { passive:true });
 const HOW_ART = { howCoin:"coinA", hudCoin:"coinA", hazCow:"cow", hazYeti:"yeti", hazWave:"wave2", hazPig:"pig4", hazSpeedBoost:"speedBoostPickup", hazSouvenir:"souvenir", hazExtraLife:"extraLife", hazWhirlpool:"whirlpool", hazSeasonPass:"seasonPass" };
 for (const id in HOW_ART){
   const src = ART[HOW_ART[id]];
-  if (src) $(id).src = src;
-  else     $(id).closest(".haz")?.remove();
+  if (src) byId(id).src = src;
+  else     byId(id).closest(".haz")?.remove();
 }
 if ("ontouchstart" in window) document.body.classList.add("is-touch");
 
 function openHow(){
   // Opened from either the title or the pause screen: whichever is showing
   // gets hidden behind it, and closeHow() below hands it back to the same one.
-  $("titlePanel").classList.remove("panel--on");
+  byId("titlePanel").classList.remove("panel--on");
   // #pause shares How to Play's corner with #howClose. It is only ever "on"
   // during a paused run (see #pause's CSS comment), but that assumption broke
   // the day How to Play became reachable from pause — without hiding it here,
   // it would sit on top of #howClose for as long as the card is open.
   if (state === "paused"){
-    $("pausePanel").classList.remove("panel--on");
-    $("pause").classList.remove("hudbtn--on");
+    byId("pausePanel").classList.remove("panel--on");
+    byId("pause").classList.remove("hudbtn--on");
   }
-  $("howPanel").classList.add("panel--on");
+  byId("howPanel").classList.add("panel--on");
   // Always opens at the top, not where it was left after the last read.
-  $("howScroll").scrollTop = 0;
+  byId("howScroll").scrollTop = 0;
   pushModal();
 }
 function closeHow(){
-  $("howPanel").classList.remove("panel--on");
-  if (state === "title") $("titlePanel").classList.add("panel--on");
+  byId("howPanel").classList.remove("panel--on");
+  if (state === "title") byId("titlePanel").classList.add("panel--on");
   if (state === "paused"){
-    $("pausePanel").classList.add("panel--on");
+    byId("pausePanel").classList.add("panel--on");
     // Still carries the "paused" class from pauseGame(), so this brings back
     // the Play icon, not the Pause one.
-    $("pause").classList.add("hudbtn--on");
+    byId("pause").classList.add("hudbtn--on");
   }
   popModal();
 }
-$("howBtn").addEventListener("click", openHow);
-$("pauseHowBtn").addEventListener("click", openHow);
-$("howBack").addEventListener("click", closeHow);
-$("howClose").addEventListener("click", closeHow);
+byId("howBtn").addEventListener("click", openHow);
+byId("pauseHowBtn").addEventListener("click", openHow);
+byId("howBack").addEventListener("click", closeHow);
+byId("howClose").addEventListener("click", closeHow);
 
-$("playBtn").addEventListener("click", start);
-$("againBtn").addEventListener("click", start);
-$("ctaBtn").addEventListener("click", () => {
+byId("playBtn").addEventListener("click", start);
+byId("againBtn").addEventListener("click", start);
+byId("ctaBtn").addEventListener("click", () => {
   if (CONFIG.ctaUrl) window.open(CONFIG.ctaUrl, "_blank", "noopener");
 });
-$("overHome").addEventListener("click", goHome);
-$("pause").addEventListener("click", togglePause);
-$("resumeBtn").addEventListener("click", resumeGame);
-$("pauseAgainBtn").addEventListener("click", pauseRestart);
-$("revealScore").addEventListener("click", revealToScore);
-$("mute").addEventListener("click", () => {
+byId("overHome").addEventListener("click", goHome);
+byId("pause").addEventListener("click", togglePause);
+byId("resumeBtn").addEventListener("click", resumeGame);
+byId("pauseAgainBtn").addEventListener("click", pauseRestart);
+byId("revealScore").addEventListener("click", revealToScore);
+byId("mute").addEventListener("click", () => {
   const on = Sound.toggle();
-  $("mute").classList.toggle("hudbtn--off", !on);
-  $("mute").setAttribute("aria-label", on ? "Mute sound" : "Unmute sound");
+  byId("mute").classList.toggle("hudbtn--off", !on);
+  byId("mute").setAttribute("aria-label", on ? "Mute sound" : "Unmute sound");
 });
 /* ---------- leaving the page takes the sound with it ----------
    A Web Audio context does not stop when a tab is backgrounded or the browser
@@ -3519,18 +3519,18 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("pagehide", toBackground);
 window.addEventListener("pageshow", () => { if (!document.hidden) toForeground(); });
-if (!("ontouchstart" in window)) $("hint").textContent = "hold \u2190 \u2192 steer  \u00b7  \u2191 jump  \u00b7  \u2193 duck";
+if (!("ontouchstart" in window)) byId("hint").textContent = "hold \u2190 \u2192 steer  \u00b7  \u2191 jump  \u00b7  \u2193 duck";
 
 /* ==================================================================
    HUD
    ================================================================== */
 const SPEED_HORSES = 5;
-const speedbar = $("speedbar");
+const speedbar = byId("speedbar");
 for (let i = 0; i < SPEED_HORSES; i++) speedbar.appendChild(document.createElement("i"));
 const speedHorseEls = speedbar.querySelectorAll("i");
 
 function drawTubes(){
-  const box = $("tubes"); box.innerHTML = "";
+  const box = byId("tubes"); box.innerHTML = "";
   // Extra Life's bonus tube goes in FIRST — #tubes is justify-content:flex-end,
   // so DOM order is still left-to-right within the packed row, and the first
   // child lands on the left of the normal three. Never .spent.
@@ -3596,7 +3596,7 @@ function buildWord(box, upto){
   }
 }
 function paintLetters(){
-  const box = $("letters");
+  const box = byId("letters");
   box.className = "";                   // clears letters--run/letters--gone left by the last run
   buildWord(box, shownLetters);
 }
@@ -3615,7 +3615,7 @@ function flyLetter(idx){
   const from = { x: W / 2 + dx * cs - dy * sn, y: horizon + dx * sn + dy * cs };
 
   let to = { x: W / 2, y: H * 0.06 }, h1 = 32;
-  const slot = $("letters").children[idx];
+  const slot = byId("letters").children[idx];
   if (slot){
     const b = slot.getBoundingClientRect(), cr = cv.getBoundingClientRect();
     if (b.width > 0){
@@ -3642,7 +3642,7 @@ function flySouvenir(){
   const from = { x: W / 2 + dx * cs - dy * sn, y: horizon + dx * sn + dy * cs };
 
   let to = { x: W - 60, y: 40 }, h1 = 30;
-  const board = $("coins").closest(".board");
+  const board = byId("coins").closest(".board");
   if (board){
     const b = board.getBoundingClientRect(), cr = cv.getBoundingClientRect();
     if (b.width > 0){
@@ -3695,7 +3695,7 @@ function flyExtraLife(){
   const from = { x: W / 2 + dx * cs - dy * sn, y: horizon + dx * sn + dy * cs };
 
   let to = { x: W - 30, y: 70 }, h1 = 20;
-  const box = $("tubes");
+  const box = byId("tubes");
   if (box){
     const b = box.getBoundingClientRect(), cr = cv.getBoundingClientRect();
     if (b.width > 0){
@@ -3719,14 +3719,14 @@ function updateFlyers(dt){
       f.landed = true;
       if (f.kind === "souvenir"){
         // coins itself and Sound.souvenir() both already fired at pickup (see
-        // T.SOUVENIR above) — this is just the HUD payoff, timed to the
+        // ENTITY_TYPE.SOUVENIR above) — this is just the HUD payoff, timed to the
         // bottle actually arriving.
         flashCoins();
       } else if (f.kind === "extralife"){
         // Unlike souvenir's coins, nothing was banked at pickup — the bonus
         // tube becomes real right here, the instant it's actually seen in
         // the HUD (see flyExtraLife()'s comment). The eating animation/sound
-        // fire earlier, right at the grab (see T.EXTRALIFE's collision
+        // fire earlier, right at the grab (see ENTITY_TYPE.EXTRALIFE's collision
         // branch), and that's the only sound this pickup ever plays — no
         // second cue here, so there's nothing left to overlap or cut off.
         extraLife = true; drawTubes();
@@ -3766,7 +3766,7 @@ function drawFlyers(){
    the same plain screen space as drawFlyers() (see render()'s call site) and
    BEFORE it, so the bottle itself sits on top of the coins it just exploded
    out of. Reuses the world coin sprites' alternating-face spin (drawEntInner's
-   T.COIN case) so a burst Breaker reads as the same coin, just airborne. */
+   ENTITY_TYPE.COIN case) so a burst Breaker reads as the same coin, just airborne. */
 function drawCoinSpill(){
   for (const p of coinSpill){
     const alpha = Math.max(0, p.life / p.maxLife);
@@ -3777,14 +3777,14 @@ function drawCoinSpill(){
       ctx.drawImage(img, p.x - w / 2, p.y - p.r, w, p.r * 2);
     } else {
       ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.284);
-      ctx.fillStyle = C.yellow; ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.fillStyle = COLORS.yellow; ctx.fill();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = 1.5; ctx.stroke();
     }
     ctx.globalAlpha = 1;
   }
 }
 
-/* Same fallback shape as the world pickup (drawEntInner's T.SOUVENIR case),
+/* Same fallback shape as the world pickup (drawEntInner's ENTITY_TYPE.SOUVENIR case),
    just without the glow — a flyer already has the viewer's attention, it
    doesn't need to compete for it the way the pickup sitting in the chute does. */
 function drawSouvenirFlyer(x, y, h, alpha){
@@ -3796,13 +3796,13 @@ function drawSouvenirFlyer(x, y, h, alpha){
   } else {
     const r = h * 0.42;
     ctx.beginPath(); ctx.arc(x, y, r, 0, 6.284);
-    ctx.fillStyle = C.yellow; ctx.fill();
-    ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, h * 0.05); ctx.stroke();
+    ctx.fillStyle = COLORS.yellow; ctx.fill();
+    ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(2, h * 0.05); ctx.stroke();
   }
   if (alpha < 1) ctx.globalAlpha = 1;
 }
 
-/* Same fallback shape as drawEntInner's T.EXTRALIFE case, no glow — same
+/* Same fallback shape as drawEntInner's ENTITY_TYPE.EXTRALIFE case, no glow — same
    reasoning as drawSouvenirFlyer above. */
 function drawExtraLifeFlyer(x, y, h, alpha){
   if (alpha < 1) ctx.globalAlpha = alpha;
@@ -3814,7 +3814,7 @@ function drawExtraLifeFlyer(x, y, h, alpha){
     const r = h * 0.42;
     ctx.beginPath(); ctx.arc(x, y, r, 0, 6.284);
     ctx.fillStyle = "rgb(250,60,50)"; ctx.fill();
-    ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, h * 0.05); ctx.stroke();
+    ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(2, h * 0.05); ctx.stroke();
   }
   if (alpha < 1) ctx.globalAlpha = 1;
 }
@@ -3827,8 +3827,8 @@ function drawExtraLifeFlyer(x, y, h, alpha){
    The freeze's own onEnd (see freezeWorld()'s stampedeT block) hands the
    channel back once the run-off ends. */
 function runStampede(){
-  $("letters").classList.add("letters--run");
-  Sound.stampede(); puff(22);
+  byId("letters").classList.add("letters--run");
+  Sound.stampede(); spawnSplash(22);
   Sound.musicStop(0.15);
 }
 
@@ -3847,13 +3847,13 @@ function showReveal(){
      and render() only places the settled rider in the dying/over states. The
      results panel is simply held back until they ask for it. */
   state = "over";
-  $("pause").classList.remove("hudbtn--on");
+  byId("pause").classList.remove("hudbtn--on");
   /* The HUD goes with it: the metre readout and breaker count sat ghosting
      through the wash in the corners the poster reaches into. */
-  $("hud").classList.remove("hud--on");
-  $("overPanel").classList.remove("panel--on");
+  byId("hud").classList.remove("hud--on");
+  byId("overPanel").classList.remove("panel--on");
   revealOpen = true; hatT = 0; hatI = -1;
-  $("reveal").classList.add("reveal--on"); Sound.reveal();
+  byId("reveal").classList.add("reveal--on"); Sound.reveal();
 
   /* Same hand-off as the wipeout: the outgoing track is left ramping on its own
      schedule (musicStop detaches the source but lets it finish), so the incoming
@@ -3879,14 +3879,14 @@ function hatTick(dt){
   const i = Math.floor(hatT * HAT_FPS) % HAT_SRC.x.length;
   if (i === hatI) return;            // only touch the DOM on a frame change
   hatI = i;
-  const el = $("revealHat");
+  const el = byId("revealHat");
   el.style.setProperty("--fx", (HAT_SRC.x[i] / HAT_SRC.h).toFixed(4));
   el.style.setProperty("--fy", (HAT_SRC.y[i] / HAT_SRC.h).toFixed(4));
 }
 
 function closeReveal(){
   revealOpen = false;
-  $("reveal").classList.remove("reveal--on");
+  byId("reveal").classList.remove("reveal--on");
 }
 
 /* Back into the same run, which is what makes it an endless mode rather than a
@@ -3937,8 +3937,8 @@ function setFigure(el, value, maxPx){
 }
 
 function syncHUD(){
-  setFigure($("coins"), coins, 25);
-  setFigure($("hudScore"), runScore(), 25);
+  setFigure(byId("coins"), coins, 25);
+  setFigure(byId("hudScore"), runScore(), 25);
   const fillFrac = Math.max(0, Math.min(1,
     (speed - CONFIG.startSpeed) / (CONFIG.maxSpeed - CONFIG.startSpeed)));
   const lit = Math.round(fillFrac * SPEED_HORSES);
@@ -3957,23 +3957,23 @@ function start(){
   // gesture — see that section — without going through closeHow()/resumeGame,
   // so pop it here or a later back press lands on a stale entry instead of
   // actually leaving the game.
-  if ($("pausePanel").classList.contains("panel--on") || $("howPanel").classList.contains("panel--on")) popModal();
+  if (byId("pausePanel").classList.contains("panel--on") || byId("howPanel").classList.contains("panel--on")) popModal();
   Sound.unlock(); reset(); state = "play";
   Sound.unhold();
   // Faded rather than cut: musicPlay stops the current track outright, which
   // chopped the title tune off mid-note now that one is playing behind the card.
   Sound.musicStop(0.6);
   Sound.music("ride", null, 0.7);                   // eased in, not punched in
-  $("titlePanel").classList.remove("panel--on");
-  $("overPanel").classList.remove("panel--on");
-  $("pausePanel").classList.remove("panel--on");
-  $("howPanel").classList.remove("panel--on");   // a run can be started from the how-to
-  $("lbPanel").classList.remove("panel--on");
-  $("pause").classList.add("hudbtn--on");
-  $("pause").classList.remove("hudbtn--paused");
-  $("pause").setAttribute("aria-label", "Pause");
-  $("hud").classList.add("hud--on");
-  const h = $("hint"); h.style.opacity = 1;
+  byId("titlePanel").classList.remove("panel--on");
+  byId("overPanel").classList.remove("panel--on");
+  byId("pausePanel").classList.remove("panel--on");
+  byId("howPanel").classList.remove("panel--on");   // a run can be started from the how-to
+  byId("lbPanel").classList.remove("panel--on");
+  byId("pause").classList.add("hudbtn--on");
+  byId("pause").classList.remove("hudbtn--paused");
+  byId("pause").setAttribute("aria-label", "Pause");
+  byId("hud").classList.add("hud--on");
+  const h = byId("hint"); h.style.opacity = 1;
   setTimeout(() => { h.style.opacity = 0; }, 3200);
   last = performance.now();
 }
@@ -3986,9 +3986,9 @@ function pauseGame(){
   if (state !== "play") return;
   state = "paused";
   Sound.hold();                            // silent immediately, keeps its place
-  $("pausePanel").classList.add("panel--on");
-  $("pause").classList.add("hudbtn--paused");
-  $("pause").setAttribute("aria-label", "Resume");
+  byId("pausePanel").classList.add("panel--on");
+  byId("pause").classList.add("hudbtn--paused");
+  byId("pause").setAttribute("aria-label", "Resume");
   pushModal();
 }
 function resumeGame(){
@@ -3998,9 +3998,9 @@ function resumeGame(){
   if (state !== "paused" || revealOpen) return;
   state = "play";
   Sound.unhold();
-  $("pausePanel").classList.remove("panel--on");
-  $("pause").classList.remove("hudbtn--paused");
-  $("pause").setAttribute("aria-label", "Pause");
+  byId("pausePanel").classList.remove("panel--on");
+  byId("pause").classList.remove("hudbtn--paused");
+  byId("pause").setAttribute("aria-label", "Pause");
   last = performance.now();
   popModal();
 }
@@ -4056,13 +4056,13 @@ function gameOver(){
      the badges live. Folding it in there keeps one place that can get it wrong
      rather than two. */
   Sound.dead();
-  $("pause").classList.remove("hudbtn--on");
-  $("pausePanel").classList.remove("panel--on");
+  byId("pause").classList.remove("hudbtn--on");
+  byId("pausePanel").classList.remove("panel--on");
   /* The HUD goes NOW, not when the results card appears. It used to come down
      in showOver(), a full DIE_DUR later, so the metre readout, the breaker
      count, the spare tubes and the STAMPEDE word all sat over the wipeout for
      the whole 1.6s — and Typhoon tumbles up into that corner of the screen. */
-  $("hud").classList.remove("hud--on");
+  byId("hud").classList.remove("hud--on");
 }
 
 /* Where he sits before the panel exists to be measured — and the SAME number
@@ -4126,7 +4126,7 @@ function overEase(v, t, rate, dt){
 function revealOverText(){
   if (overTextIn) return;
   overTextIn = true;
-  $("overPanel").classList.add("panel--text-in");
+  byId("overPanel").classList.add("panel--text-in");
 }
 
 /* The other half of the sequence, and deliberately NOT tied to the copy.
@@ -4148,7 +4148,7 @@ function handOverRider(){
   deathY = overAnchorY || H * OVER_ANCHOR;
   overTilt = 0;
   overRiderDom = true;
-  $("overPanel").classList.add("panel--rider-in");
+  byId("overPanel").classList.add("panel--rider-in");
 }
 
 /* Sizes his box and works out where the canvas has to put him so that the two
@@ -4163,7 +4163,7 @@ function handOverRider(){
    transform only (see render), and getBoundingClientRect is CSS pixels too, so
    the two coordinate systems are already the same one. */
 function layoutOverRider(){
-  const el  = $("overRider");
+  const el  = byId("overRider");
   const im  = IMG.die2, idle2 = IMG.cowIdle2;
   const h   = Math.max(0.52 * (focal / CAM_DZ), H * 0.12);
 
@@ -4234,16 +4234,16 @@ function showOver(){
   overTextIn = false; overTextT = 0; overRiderDom = false; overTilt = 1;
   // Same bar as the (parked) reveal card: a run "won" if it spelled the word.
   overWon = gotLetters >= WORD.length;
-  $("overPanel").classList.remove("panel--text-in", "panel--rider-in");
+  byId("overPanel").classList.remove("panel--text-in", "panel--rider-in");
 
   const dist = Math.floor(metres), score = runScore();
-  setFigure($("fDist"),  dist,  26);
-  setFigure($("fCoins"), coins, 26);
-  setFigure($("fScore"), score, 26);
+  setFigure(byId("fDist"),  dist,  26);
+  setFigure(byId("fCoins"), coins, 26);
+  setFigure(byId("fScore"), score, 26);
   pendingScore = score;
   syncRankRow();
-  buildWord($("fWord"), gotLetters);
-  $("fWordLbl").textContent = gotLetters >= WORD.length
+  buildWord(byId("fWord"), gotLetters);
+  byId("fWordLbl").textContent = gotLetters >= WORD.length
     ? "You spelled it"
     : "Cowabunga letters  " + gotLetters + " / " + WORD.length;
 
@@ -4252,10 +4252,10 @@ function showOver(){
      for the letters, where 8 is the ceiling: spell the word twice and only the
      first run is the record, correctly.
      Suppressed entirely on run 1 — see BEST. */
-  markRecord($("fDist"),  BEST.runs > 0 && dist       > BEST.dist);
-  markRecord($("fCoins"), BEST.runs > 0 && coins      > BEST.coins);
-  markRecord($("fScore"), BEST.runs > 0 && score      > BEST.score);
-  markRecord($("fWord"),  BEST.runs > 0 && gotLetters > BEST.letters);
+  markRecord(byId("fDist"),  BEST.runs > 0 && dist       > BEST.dist);
+  markRecord(byId("fCoins"), BEST.runs > 0 && coins      > BEST.coins);
+  markRecord(byId("fScore"), BEST.runs > 0 && score      > BEST.score);
+  markRecord(byId("fWord"),  BEST.runs > 0 && gotLetters > BEST.letters);
 
   BEST.dist    = Math.max(BEST.dist,    dist);
   BEST.coins   = Math.max(BEST.coins,   coins);
@@ -4271,9 +4271,9 @@ function showOver(){
     { dist, coins, score, letters: gotLetters },
     "vs best", { dist: BEST.dist, coins: BEST.coins, score: BEST.score, letters: BEST.letters },
     bestStored ? "(records persist)" : "(SESSION ONLY — storage blocked, likely file://)");
-  $("overTitle").textContent = overWon ? "Nice Ride, Dude" : "Wipeout";
-  $("overKicker").textContent = overWon ? RIDE_FULL_NAME : "Better Luck Next Time, Dude";
-  $("overPanel").classList.add("panel--on");
+  byId("overTitle").textContent = overWon ? "Nice Ride, Dude" : "Wipeout";
+  byId("overKicker").textContent = overWon ? RIDE_FULL_NAME : "Better Luck Next Time, Dude";
+  byId("overPanel").classList.add("panel--on");
   settleOverRider();          // only measurable once the panel is displayed
   /* Crossfade rather than a hand-off. The ride track is 1.6s into a 2.4s linear
      fade, so it is still audible; this rises over 1.3s and reaches full at 2.9s,
@@ -4285,7 +4285,7 @@ function showOver(){
 /* ==================================================================
    UPDATE
    ================================================================== */
-function puff(n, color){
+function spawnSplash(n, color){
   const p = floorPt(travelled, laneA, 0.1);
   for (let i = 0; i < n; i++){
     spray.push({ x: p.x + (Math.random()-0.5) * p.s * 0.2,
@@ -4363,7 +4363,7 @@ function drawStreak(s, fade){
    to "" on clear rather than left on the last color, or the NEXT plain
    flash() (a hit) would fire in whatever color a power-up last used. */
 function flash(color, opacity, dur){
-  const f = $("flash");
+  const f = byId("flash");
   if (color) f.style.background = color;
   f.style.opacity = opacity == null ? .55 : opacity;
   setTimeout(() => { f.style.opacity = 0; if (color) f.style.background = ""; }, dur || 130);
@@ -4373,7 +4373,7 @@ function flash(color, opacity, dur){
    timeout cutting the second flash short. */
 let flashCoinsT = null;
 function flashCoins(){
-  const el = $("coins");
+  const el = byId("coins");
   el.style.color = "var(--yellow)";
   clearTimeout(flashCoinsT);
   flashCoinsT = setTimeout(() => { el.style.color = ""; }, 380);
@@ -4385,7 +4385,7 @@ function flashCoins(){
    post-hit i-frames and the win-reveal invuln still silently no-op the way
    they always have, rather than gaining a cue they were never asked for. */
 function seasonPassBounce(){
-  puff(14, SEASONPASS_GOLD);
+  spawnSplash(14, SEASONPASS_GOLD);
   Sound.seasonPassSafe();
 }
 function hitRider(){
@@ -4396,7 +4396,7 @@ function hitRider(){
   // flat -1.2 barely registered at speed. A boost can't survive a crash either.
   speed = Math.max(CONFIG.startSpeed, speed * 0.62);
   boostT = 0; boostSuper = false; speedBoostLabelT = 0;
-  shake = 1; flash(); puff(26);
+  shake = 1; flash(); spawnSplash(26);
   if (extraLife){
     // The extra life absorbs this hit instead of a real tube — every OTHER
     // effect above is identical to a normal hit, on purpose (the user's call:
@@ -4524,7 +4524,7 @@ function update(dt){
       spawn();
     }
     camX = curveX(travelled); camY = curveY(travelled) - CAM_UP;
-    ents = ents.filter(e => e.z > travelled - (e.t === T.TUNNEL ? TUN_LEN + 3 : 3));
+    ents = ents.filter(e => e.z > travelled - (e.t === ENTITY_TYPE.TUNNEL ? TUN_LEN + 3 : 3));
     for (const p of spray){ p.life -= dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 900*dt; }
     spray = spray.filter(p => p.life > 0);
     return;
@@ -4541,7 +4541,7 @@ function update(dt){
       seasonPassT = SEASONPASS_DUR;
       seasonPassMusicPlaying = true;
       // Nothing to fade out — the grab itself already silenced the channel
-      // (see the T.SEASONPASS branch above) and it's stayed that way through
+      // (see the ENTITY_TYPE.SEASONPASS branch above) and it's stayed that way through
       // the whole reveal, so this only needs to fade IN.
       Sound.music("seasonPass", null, 0.3);
     }});
@@ -4588,7 +4588,7 @@ function update(dt){
       /* The card used to fire here, the instant the word finished. It is a
          curtain call now, not an interruption: the player keeps riding until
          the last life is gone and the reveal waits for them at the end. */
-      $("letters").classList.add("letters--gone");
+      byId("letters").classList.add("letters--gone");
       // Hands the channel back to whichever track runStampede() cut off.
       // seasonPassT is frozen (unchanged) for the whole run-off, so
       // seasonPassMusicPlaying still reflects whether Season Pass was the
@@ -4616,7 +4616,7 @@ function update(dt){
   travelled += speed * dt;
   metres += speed * dt * CONFIG.metresPerUnit;
 
-  if (jumpT >= 0){ jumpT += dt; if (jumpT > JUMP_DUR){ jumpT = -1; Sound.land(); puff(9); } }
+  if (jumpT >= 0){ jumpT += dt; if (jumpT > JUMP_DUR){ jumpT = -1; Sound.land(); spawnSplash(9); } }
   if (tuckT > 0) tuckT -= dt;
   if ((keys["arrowdown"] || keys["s"]) && jumpT < 0) tuckT = Math.max(tuckT, 0.25);
   duckA += ((tuckT > 0 ? 1 : 0) - duckA) * Math.min(1, dt * 14);
@@ -4682,7 +4682,7 @@ function update(dt){
   if (Math.abs(leanV) > LEAN_RATE){
     moveDir = leanV > 0 ? 1 : -1;
     moveT = Math.max(moveT, 0.18);
-    if (Math.abs(leanV) > LEAN_RATE * 2 && Math.random() < 0.35) puff(2);
+    if (Math.abs(leanV) > LEAN_RATE * 2 && Math.random() < 0.35) spawnSplash(2);
   }
 
   spawn();
@@ -4709,10 +4709,10 @@ function update(dt){
      pulling in; e.z is eased the same way so the coin also closes the DEPTH
      gap rather than just sliding to the rider's lane a chute-length away.
      Once a coin is close enough it falls inside the collision loop's own
-     window below and is collected through the ordinary T.COIN branch — no
+     window below and is collected through the ordinary ENTITY_TYPE.COIN branch — no
      second collection path needed, so the reward/sound/score stay identical
      to grabbing one by hand. e.a is re-derived every frame so the coin is
-     actually DRAWN following e.i, the same relationship spawn()/add() set up
+     actually DRAWN following e.i, the same relationship spawn()/spawnEntity() set up
      for every entity. */
   /* Season Pass widens the exact same magnet to every collectible, not just
      coins/letters — "combining Whirlpool" per Adam's spec — and pulls a
@@ -4727,14 +4727,14 @@ function update(dt){
     const range = seasonPassT > 0 ? SEASONPASS_RANGE : WHIRLPOOL_RANGE;
     for (const e of ents){
       if (e.dead) continue;
-      const pullable = e.t === T.COIN || e.t === T.LETTER || (seasonPassT > 0 &&
-        (e.t === T.SOUVENIR || e.t === T.EXTRALIFE || e.t === T.BOOST || e.t === T.WHIRLPOOL));
+      const pullable = e.t === ENTITY_TYPE.COIN || e.t === ENTITY_TYPE.LETTER || (seasonPassT > 0 &&
+        (e.t === ENTITY_TYPE.SOUVENIR || e.t === ENTITY_TYPE.EXTRALIFE || e.t === ENTITY_TYPE.BOOST || e.t === ENTITY_TYPE.WHIRLPOOL));
       if (!pullable) continue;
       const dz = e.z - travelled;
       if (dz < -0.5 || dz > range) continue;
-      if (e.t === T.COIN){
+      if (e.t === ENTITY_TYPE.COIN){
         // Only coins get the cosmetic orbit wobble — see drawEntInner's
-        // T.COIN case, the only place e.swirl is read.
+        // ENTITY_TYPE.COIN case, the only place e.swirl is read.
         if (e.swirl === undefined) e.swirl = Math.random() * 6.283;  // stable per-coin phase
         e.swirl += WHIRLPOOL_SPIN * dt;
       }
@@ -4748,14 +4748,14 @@ function update(dt){
     if (e.dead || e.w === 0) continue;          // w:0 == scenery, never collides
     if (e.z > travelled + 0.5 || e.z < travelled - 1.2) continue;
 
-    if (e.t === T.COIN){
+    if (e.t === ENTITY_TYPE.COIN){
       if (nearLane(e.i, LANE_PICK)){ e.dead = true; coins += CONFIG.coinValue; Sound.coin(); }
-    } else if (e.t === T.LETTER){
+    } else if (e.t === ENTITY_TYPE.LETTER){
       if (nearLane(e.i, LANE_PICK)){
         e.dead = true;
         if (e.gi === gotLetters){          // ignore anything left over from a
           flyLetter(gotLetters);           // reveal cull or a double-tap frame
-          gotLetters++; puff(12);
+          gotLetters++; spawnSplash(12);
           // Math.max so a longer window already running (a hit taken a moment
           // ago) is never cut short by finishing the word.
           if (gotLetters >= WORD.length){
@@ -4768,7 +4768,7 @@ function update(dt){
           }
         }
       }
-    } else if (e.t === T.BOOST){
+    } else if (e.t === ENTITY_TYPE.BOOST){
       // Speed Boost: a lane pickup now, not a chute-spanning hazard, so it uses
       // the same close-enough check as coins/letters rather than an automatic
       // trigger. Matches the tunnel's boost exactly (see below) — always 25%
@@ -4777,9 +4777,9 @@ function update(dt){
         e.dead = true; boostSuper = true; boostT = BOOST_DUR;
         coins += POWERUP_SCORE_BONUS;
         speedBoostLabelT = SPEEDBOOST_LABEL_DUR;
-        Sound.boost(); puff(16);
+        Sound.boost(); spawnSplash(16);
       }
-    } else if (e.t === T.SOUVENIR){
+    } else if (e.t === ENTITY_TYPE.SOUVENIR){
       // Same reward as walking through 100 real coins — coins is the only
       // thing runScore() reads it through, so there's no separate score term
       // to keep in sync. Banked HERE, immediately, same reasoning as the
@@ -4794,9 +4794,9 @@ function update(dt){
       // Breakers figure lighting up reads as "this is what just paid out."
       if (nearLane(e.i, LANE_PICK)){
         e.dead = true; coins += SOUVENIR_BONUS + POWERUP_SCORE_BONUS;
-        puff(24); flySouvenir(); Sound.souvenir();
+        spawnSplash(24); flySouvenir(); Sound.souvenir();
       }
-    } else if (e.t === T.EXTRALIFE){
+    } else if (e.t === ENTITY_TYPE.EXTRALIFE){
       // Nothing is banked here — unlike the souvenir bottle, extraLife itself
       // only flips true once the flyer actually lands in the HUD (see
       // flyExtraLife() and updateFlyers()), so a hit taken mid-flight is a
@@ -4808,20 +4808,20 @@ function update(dt){
       // (below) rather than fired here, so the badge only takes flight once
       // the chomp animation is actually done playing.
       if (nearLane(e.i, LANE_PICK)){
-        e.dead = true; puff(16); eatT = EAT_DUR; Sound.extraLifeEat();
+        e.dead = true; spawnSplash(16); eatT = EAT_DUR; Sound.extraLifeEat();
         coins += POWERUP_SCORE_BONUS;
       }
-    } else if (e.t === T.WHIRLPOOL){
+    } else if (e.t === ENTITY_TYPE.WHIRLPOOL){
       // Starts the magnet the instant it's grabbed, same "banked on the grab"
       // reasoning as the souvenir bottle — the 6s window has to start ticking
       // right away, not after some later beat. The loop sample plays for the
       // whole effect, doubling as the pickup's own sound (rule 9).
       if (nearLane(e.i, LANE_PICK)){
-        e.dead = true; whirlpoolT = WHIRLPOOL_DUR; puff(20);
+        e.dead = true; whirlpoolT = WHIRLPOOL_DUR; spawnSplash(20);
         coins += POWERUP_SCORE_BONUS;
         Sound.loopStart("whirlpool", 0.5);
       }
-    } else if (e.t === T.SEASONPASS){
+    } else if (e.t === ENTITY_TYPE.SEASONPASS){
       // The grand finale. Grabbing it starts the FROZEN reveal
       // (seasonPassIntroT) — see update()'s early return while it's > 0 —
       // rather than the mechanical effect itself: nothing can collide or
@@ -4829,7 +4829,7 @@ function update(dt){
       // only actually start once the world resumes and seasonPassT takes
       // over (also in update()).
       if (nearLane(e.i, LANE_PICK)){
-        e.dead = true; seasonPassIntroT = SEASONPASS_INTRO_DUR; puff(30, SEASONPASS_GOLD);
+        e.dead = true; seasonPassIntroT = SEASONPASS_INTRO_DUR; spawnSplash(30, SEASONPASS_GOLD);
         coins += POWERUP_SCORE_BONUS;
         // Its own flash, not the plain hit-orange — white-to-gold, matching
         // the glow, and held noticeably longer/brighter than a hit's 130ms
@@ -4844,37 +4844,37 @@ function update(dt){
         Sound.musicStop(0.15);
         Sound.seasonPass();
       }
-    } else if (e.t === T.TUNNEL){
+    } else if (e.t === ENTITY_TYPE.TUNNEL){
       // enclosed section: passing through it gives a speed boost, but the
       // tunnel itself stays visible so the rider actually flies through it
       if (!e.triggered){
         e.triggered = true;
         // Always carries the rider 25% past max, whatever their current pace.
         boostSuper = true;
-        boostT = BOOST_DUR; Sound.boost(); puff(16);
+        boostT = BOOST_DUR; Sound.boost(); spawnSplash(16);
       }
-    } else if (e.t === T.WAVE){
+    } else if (e.t === ENTITY_TYPE.WAVE){
       if (!airborne){ e.dead = true; hitRider(); }
-    } else if (e.t === T.PIG){
+    } else if (e.t === ENTITY_TYPE.PIG){
       // the jet spans the whole chute, so steering can't save you — only ducking
       // A full hit: costs a life, i-frames and all. Routed through hitRider
       // rather than a parallel penalty so it can never drift out of step with
       // what colliding with anything else does.
       if (!ducking && !e.triggered){ e.triggered = true; hitRider(); }
-    } else if ((e.t === T.COW || e.t === T.YETI) && nearLane(e.i, LANE_HIT)){
+    } else if ((e.t === ENTITY_TYPE.COW || e.t === ENTITY_TYPE.YETI) && nearLane(e.i, LANE_HIT)){
       e.dead = true; hitRider();                          // another rider in your path
     }
   }
 
-  ents = ents.filter(e => !e.dead && e.z > travelled - (e.t === T.TUNNEL ? TUN_LEN + 3 : 3));
+  ents = ents.filter(e => !e.dead && e.z > travelled - (e.t === ENTITY_TYPE.TUNNEL ? TUN_LEN + 3 : 3));
 
   // Inside a covered section? Eased rather than binary so the walls close in and
   // open out instead of snapping.
   let inTun = 0;
   for (const e of ents)
-    if (e.t === T.TUNNEL && travelled > e.z - 0.6 && travelled < e.z + TUN_LEN){ inTun = 1; break; }
+    if (e.t === ENTITY_TYPE.TUNNEL && travelled > e.z - 0.6 && travelled < e.z + TUN_LEN){ inTun = 1; break; }
   tunnelIn += (inTun - tunnelIn) * Math.min(1, dt * 7);
-  if (Math.random() < 0.7) puff(1);
+  if (Math.random() < 0.7) spawnSplash(1);
   for (const p of spray){ p.life -= dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 900*dt; }
   spray = spray.filter(p => p.life > 0);
   syncHUD();
@@ -4904,9 +4904,9 @@ function backdrop(){
   // ---- 1. sky gradient ----
   const g = ctx.createLinearGradient(0, 0, 0, horizon);
   g.addColorStop(0,    "#0b62cc");
-  g.addColorStop(0.42, C.sky);
+  g.addColorStop(0.42, COLORS.sky);
   g.addColorStop(0.78, "#4fc4fb");
-  g.addColorStop(1,    C.skyLow);
+  g.addColorStop(1,    COLORS.skyLow);
   ctx.fillStyle = g;
   ctx.fillRect(-OVER, -OVER, W + OVER*2, horizon + OVER + 2);
 
@@ -5003,13 +5003,13 @@ function backdrop(){
 
 function arcPath(z, aMax, n, first){
   for (let i = 0; i <= n; i++){
-    const p = wall(z, -aMax + 2 * aMax * (i / n));
+    const p = wallPoint(z, -aMax + 2 * aMax * (i / n));
     if (i === 0 && first) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
   }
 }
 function arcPathRev(z, aMax, n){
   for (let i = n; i >= 0; i--){
-    const p = wall(z, -aMax + 2 * aMax * (i / n));
+    const p = wallPoint(z, -aMax + 2 * aMax * (i / n));
     ctx.lineTo(p.x, p.y);
   }
 }
@@ -5039,7 +5039,7 @@ function drawRib(z){
   if (dz < 0.3) return;
   const a = farFade(dz);
   if (a <= 0.01) return;
-  const L = wall(z, -A_MAX), R = wall(z, A_MAX), B = floorPt(z, 0, 0);
+  const L = wallPoint(z, -A_MAX), R = wallPoint(z, A_MAX), B = floorPt(z, 0, 0);
   const w = R.x - L.x;
   if (w < 3) return;
   const box = B.y - L.y;                  // rim down to the channel floor
@@ -5066,8 +5066,8 @@ const CHUTE_BACK = "32,162,251";        // #20a2fb, sampled off the rib art's wa
 
 function chuteBacking(zNear, zFar){
   const g = ctx.createLinearGradient(
-    0, wall(zFar, A_MAX).y,
-    0, wall(travelled - CAM_DZ + (RIB_FAR - FADE_DZ), A_MAX).y);
+    0, wallPoint(zFar, A_MAX).y,
+    0, wallPoint(travelled - CAM_DZ + (RIB_FAR - FADE_DZ), A_MAX).y);
   g.addColorStop(0, "rgba(" + CHUTE_BACK + ",0)");   // fades out with the ribs
   g.addColorStop(1, "rgba(" + CHUTE_BACK + ",1)");
   ctx.fillStyle = g;
@@ -5078,12 +5078,12 @@ function chuteBacking(zNear, zFar){
 
   ctx.beginPath();
   for (let i = 0; i < zb.length; i++){
-    const p = wall(zb[i], -A_MAX);
+    const p = wallPoint(zb[i], -A_MAX);
     i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y);
   }
   arcPath(zFar, A_MAX, 16, false);
   for (let i = zb.length - 1; i >= 0; i--){
-    const p = wall(zb[i], A_MAX);
+    const p = wallPoint(zb[i], A_MAX);
     ctx.lineTo(p.x, p.y);
   }
   arcPathRev(zNear, A_MAX, 16);
@@ -5139,7 +5139,7 @@ function chute(){
 
   // Covered sections first: each spans many depth bands at once, so it can't be
   // slotted into one the way a point obstacle can. Its rings sort themselves.
-  for (const e of ents) if (e.t === T.TUNNEL) drawEnt(e);
+  for (const e of ents) if (e.t === ENTITY_TYPE.TUNNEL) drawEnt(e);
 
   // ---- pass 2: everything that RIDES in the chute — coins, riders, waves,
   // tunnels, boosts — drawn after the rails so the yellow rim can never paint
@@ -5151,7 +5151,7 @@ function chute(){
     const a     = farFade(z - travelled + CAM_DZ);
     if (a < 1) ctx.globalAlpha = a;
     for (const e of ents)
-      if (e.t !== T.TUNNEL && e.z <= z && e.z > zNext) drawEnt(e);
+      if (e.t !== ENTITY_TYPE.TUNNEL && e.z <= z && e.z > zNext) drawEnt(e);
     if (a < 1) ctx.globalAlpha = 1;
   }
 }
@@ -5233,8 +5233,8 @@ function rimRails(){
   // fade to nothing over the same depth the ribs do. One polygon can't carry a
   // per-vertex alpha, so the distance fade rides a vertical screen gradient —
   // the chute recedes upward, so screen y tracks depth closely enough.
-  const yFar = wall(zB, A_MAX).y;
-  const yLit = wall(travelled - CAM_DZ + (RIB_FAR - FADE_DZ), A_MAX).y;
+  const yFar = wallPoint(zB, A_MAX).y;
+  const yLit = wallPoint(travelled - CAM_DZ + (RIB_FAR - FADE_DZ), A_MAX).y;
 
   /* One strip of the rail, given its two edges. Each edge is an angle around the
      chute plus an optional drop straight down in chute radii — the drop is what
@@ -5294,18 +5294,18 @@ function chutePoly(){
     // outer shell, in the flume blue off the reference art
     ctx.beginPath();
     arcPath(zFar, A_MAX, n, true); arcPathRev(zNear, A_MAX, n); ctx.closePath();
-    ctx.fillStyle = shade ? C.blue : "#25a2ea";
+    ctx.fillStyle = shade ? COLORS.blue : "#25a2ea";
     ctx.fill();
 
     // gold stripe along both rims, like the slide in the reference
     for (const sg of [-1, 1]){
       ctx.beginPath();
       const a0 = sg * A_MAX, a1 = sg * (A_MAX - 0.2);
-      const p1 = wall(zFar, a0), p2 = wall(zFar, a1),
-            p3 = wall(zNear, a1), p4 = wall(zNear, a0);
+      const p1 = wallPoint(zFar, a0), p2 = wallPoint(zFar, a1),
+            p3 = wallPoint(zNear, a1), p4 = wallPoint(zNear, a0);
       ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.lineTo(p3.x,p3.y); ctx.lineTo(p4.x,p4.y);
       ctx.closePath();
-      ctx.fillStyle = shade ? C.gold : "#e0a800";
+      ctx.fillStyle = shade ? COLORS.gold : "#e0a800";
       ctx.fill();
     }
 
@@ -5327,15 +5327,15 @@ function chutePoly(){
     if (Math.floor(zFar / BAND) % 2 === 0){
       ctx.strokeStyle = "rgba(252,246,240,.45)"; ctx.lineWidth = 2.5;
       for (const sg of [-1, 1]){
-        const p1 = wall(zFar, sg * LANE_A * 0.5), p2 = wall(zNear, sg * LANE_A * 0.5);
+        const p1 = wallPoint(zFar, sg * LANE_A * 0.5), p2 = wallPoint(zNear, sg * LANE_A * 0.5);
         ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
       }
     }
 
     // heavy keyline on the rim, matching the art style
-    ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, 7 * (focal / dz) * 0.006);
+    ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(2, 7 * (focal / dz) * 0.006);
     for (const sg of [-1, 1]){
-      const p1 = wall(zFar, sg * A_MAX), p2 = wall(zNear, sg * A_MAX);
+      const p1 = wallPoint(zFar, sg * A_MAX), p2 = wallPoint(zNear, sg * A_MAX);
       ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
     }
 
@@ -5351,7 +5351,7 @@ function chutePoly(){
 function tubeSprite(px, py, h, tube, body){
   const w = h * 1.15;
   ctx.lineJoin = "round";
-  ctx.strokeStyle = C.ink;
+  ctx.strokeStyle = COLORS.ink;
   ctx.lineWidth = Math.max(1.5, h * 0.055);
   ctx.beginPath(); ctx.ellipse(px, py - h*0.26, w*0.5, h*0.28, 0, 0, 6.284);
   ctx.fillStyle = tube; ctx.fill(); ctx.stroke();
@@ -5401,7 +5401,7 @@ function sprite(img, e, hUnits, lift, fbTube, fbBody){
   if (dz < 0.7) return;
   const p = floorPt(e.z, e.a, lift || 0.02);
   const s = focal / dz;
-  if (!img){ tubeSprite(p.x, p.y, hUnits * s, fbTube || C.blue, fbBody || C.white); return; }
+  if (!img){ tubeSprite(p.x, p.y, hUnits * s, fbTube || COLORS.blue, fbBody || COLORS.white); return; }
   const h = hUnits * s;
   const w = h * (img.width / img.height);
   // contact shadow, since the art carries none
@@ -5483,8 +5483,8 @@ const SUN_R    = 0.85;               // outer radius, in letter heights
    through a ray twice a second — plainly moving, without spinning fast enough
    to strobe against the frame rate. */
 const SUN_SPIN = 0.95;
-const SUN_RAY  = "246,186,0";        // C.gold — the letters' own colour
-const SUN_CORE = "252,246,240";      // C.white, warming the middle of the fan
+const SUN_RAY  = "246,186,0";        // COLORS.gold — the letters' own colour
+const SUN_CORE = "252,246,240";      // COLORS.white, warming the middle of the fan
 
 function letterSun(x, y, h, flare){
   const R = h * SUN_R * (1 + 0.14 * flare);
@@ -5622,9 +5622,9 @@ function letterBadge(x, y, h, idx, alpha, shineK){
   } else {                             // file still loading, or failed
     ctx.font = "700 " + (h * 0.86).toFixed(1) + "px " + MONO;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.lineWidth = Math.max(2, h * 0.1); ctx.strokeStyle = C.ink;
+    ctx.lineWidth = Math.max(2, h * 0.1); ctx.strokeStyle = COLORS.ink;
     ctx.strokeText(WORD[idx], x, y);
-    ctx.fillStyle = C.yellow; ctx.fillText(WORD[idx], x, y);
+    ctx.fillStyle = COLORS.yellow; ctx.fillText(WORD[idx], x, y);
     ctx.textBaseline = "alphabetic";   // ctx is shared; the rest of the frame
   }                                    // draws text on the default baseline
   ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
@@ -5652,7 +5652,7 @@ const SPEEDBOOST_PICKUP_PULSE_HZ = 1.3;    // breaths per second — visible as 
 const SPEEDBOOST_PICKUP_SPOKES   = 8;
 const SPEEDBOOST_PICKUP_SPIN     = -0.6;   // rad/s; opposite sign and slower than SUN_SPIN
 const SPEEDBOOST_PICKUP_RING     = "252,234,0";      // the tag art's own yellow border
-const SPEEDBOOST_PICKUP_CORE     = "252,246,240";    // C.white, matching the letters' core
+const SPEEDBOOST_PICKUP_CORE     = "252,246,240";    // COLORS.white, matching the letters' core
 const SPEEDBOOST_PICKUP_GLOW_R   = SUN_R;   // same glow reach as every other pickup —
                                    // was 0.62 (this halo's own hand-tuned base)
 
@@ -5826,7 +5826,7 @@ const WHIRLPOOL_LIFT  = 0.44;   // hangs a little above the water, like the othe
 // that predates this art) no longer matched it.
 const WHIRLPOOL_RING_COLOR = "255,92,15";    // vivid orange, off the art's swirl wedges
 const WHIRLPOOL_DEEP_COLOR = "248,176,0";    // rich gold, off the art's outer ring
-const WHIRLPOOL_CORE_COLOR = "252,246,240";  // C.white, matching the other pickups' core
+const WHIRLPOOL_CORE_COLOR = "252,246,240";  // COLORS.white, matching the other pickups' core
 const WHIRLPOOL_MOTES = 5;      // dive-in points spaced evenly around the ring
 const WHIRLPOOL_TURNS = 1.4;    // full turns a mote makes between the outer edge and the centre
 const WHIRLPOOL_CYCLE = 1.3;    // seconds for one mote's outer-to-centre dive
@@ -6027,7 +6027,7 @@ function whirlpoolMotes(x, y, h, t){
    gold rings expanding outward and fading — the literal "spreads out around
    it" Adam described, and its own motif rather than Speed Boost's rotating
    spokes or Whirlpool's diving motes/pinwheel blur. Used for the uncollected
-   world pickup only (drawEntInner's T.SEASONPASS case) — unlike Whirlpool,
+   world pickup only (drawEntInner's ENTITY_TYPE.SEASONPASS case) — unlike Whirlpool,
    the ACTIVE in-effect cue is deliberately NOT this glow scaled up around the
    rider; Adam's call was a translucent overlay across the whole screen
    instead (seasonPassScreenOverlay()), reusing this motif's white/gold
@@ -6048,8 +6048,8 @@ function whirlpoolMotes(x, y, h, t){
    season-pass.png is re-exported. */
 const SEASONPASS_H     = 0.393;
 const SEASONPASS_LIFT  = 0.46;   // hangs a little above the water, like the others
-const SEASONPASS_WHITE = "252,246,240";   // C.white
-const SEASONPASS_GOLD  = "246,186,0";     // C.gold
+const SEASONPASS_WHITE = "252,246,240";   // COLORS.white
+const SEASONPASS_GOLD  = "246,186,0";     // COLORS.gold
 const SEASONPASS_PULSE_HZ  = 0.9;    // core/halo breathing rate
 const SEASONPASS_RING_N    = 3;      // concurrent expanding rings, staggered
 const SEASONPASS_RING_CYCLE = 1.6;   // seconds for one ring's full expand-fade lap
@@ -6101,7 +6101,7 @@ function drawEnt(e){
   // A covered section is meant to be entered. The near-fade exists so small
   // obstacles don't pop in your face, but applied here it dissolved the tunnel
   // at the exact moment the camera reached the mouth.
-  if (e.t === T.TUNNEL) return drawEntInner(e);
+  if (e.t === ENTITY_TYPE.TUNNEL) return drawEntInner(e);
   const fade = dzf < CAM_DZ ? Math.max(0, Math.min(1, (dzf - 1.8) / 1.3)) : 1;
   if (fade <= 0) return;
   if (fade < 1){
@@ -6111,21 +6111,21 @@ function drawEnt(e){
 
 function drawEntInner(e){
   const dz = e.z - travelled + CAM_DZ;
-  if (dz < 0.7 && e.t !== T.TUNNEL) return;   // a tunnel keeps drawing from inside
+  if (dz < 0.7 && e.t !== ENTITY_TYPE.TUNNEL) return;   // a tunnel keeps drawing from inside
   const s = focal / dz;
   const K = Math.max(1.5, 0.03 * s);
   ctx.lineJoin = "round"; ctx.lineCap = "round";
 
-  if (e.t === T.COW){
+  if (e.t === ENTITY_TYPE.COW){
     const alt = IMG.cow2 && Math.floor(performance.now() * 0.002 + e.spin) % 2;
-    return sprite(alt ? IMG.cow2 : IMG.cow, e, alt ? COW2_H : COW_H, 0.02, C.orange, C.white);
+    return sprite(alt ? IMG.cow2 : IMG.cow, e, alt ? COW2_H : COW_H, 0.02, COLORS.orange, COLORS.white);
   }
-  if (e.t === T.YETI){
+  if (e.t === ENTITY_TYPE.YETI){
     const alt = IMG.yeti2 && Math.floor(performance.now() * 0.002 + e.spin) % 2;
-    return sprite(alt ? IMG.yeti2 : IMG.yeti, e, alt ? YETI2_H : YETI_H, 0.02, '#2f7fd0', C.white);
+    return sprite(alt ? IMG.yeti2 : IMG.yeti, e, alt ? YETI2_H : YETI_H, 0.02, '#2f7fd0', COLORS.white);
   }
 
-  if (e.t === T.PIG){
+  if (e.t === ENTITY_TYPE.PIG){
     const fr  = pigFrame(dz);
     const img = IMG["pig" + fr];
     if (!img) return;
@@ -6148,15 +6148,15 @@ function drawEntInner(e){
       const c2 = project(curveX(e.z), curveY(e.z) + 0.28, dz);
       ctx.font = "700 " + Math.max(12, 0.115 * s) + "px " + MONO;
       ctx.textAlign = "center";
-      ctx.lineWidth = Math.max(2, 0.03 * s); ctx.strokeStyle = C.ink;
+      ctx.lineWidth = Math.max(2, 0.03 * s); ctx.strokeStyle = COLORS.ink;
       ctx.strokeText("DUCK", c2.x, c2.y);
-      ctx.fillStyle = C.yellow;
+      ctx.fillStyle = COLORS.yellow;
       ctx.fillText("DUCK", c2.x, c2.y);
     }
     return;
   }
 
-  if (e.t === T.COIN){
+  if (e.t === ENTITY_TYPE.COIN){
     // the two coin faces alternate with a squash, so it reads as spinning
     const ph = performance.now() * 0.004 + e.spin;
     const c = Math.cos(ph);
@@ -6176,8 +6176,8 @@ function drawEntInner(e){
     if (!img){                                   // stand-in coin
       const rr = 0.19 * s, sq = Math.max(0.18, Math.abs(c));
       ctx.beginPath(); ctx.ellipse(p.x, p.y, rr * sq, rr, 0, 0, 6.284);
-      ctx.fillStyle = C.yellow; ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(1.5, 0.025 * s); ctx.stroke();
+      ctx.fillStyle = COLORS.yellow; ctx.fill();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(1.5, 0.025 * s); ctx.stroke();
       return;
     }
     const dist = e.z - travelled;
@@ -6188,7 +6188,7 @@ function drawEntInner(e){
     return;
   }
 
-  if (e.t === T.LETTER){
+  if (e.t === ENTITY_TYPE.LETTER){
     // Rides a little higher than a coin and bobs, so the rarer pickup reads as
     // its own thing at a glance rather than as one more breaker.
     const p = floorPt(e.z, e.a, 0.42);
@@ -6211,7 +6211,7 @@ function drawEntInner(e){
     return;
   }
 
-  if (e.t === T.BOOST){
+  if (e.t === ENTITY_TYPE.BOOST){
     // Speed Boost. Rides a little higher than a coin, same reasoning as a
     // letter: the rarer pickup needs to read as its own thing.
     const p = floorPt(e.z, e.a, SPEEDBOOST_PICKUP_LIFT);
@@ -6230,17 +6230,17 @@ function drawEntInner(e){
     } else {                          // file still loading, or failed
       const r = h * 0.42;
       ctx.beginPath(); ctx.arc(p.x, by, r, 0, 6.284);
-      ctx.fillStyle = C.blue; ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
+      ctx.fillStyle = COLORS.blue; ctx.fill();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
       ctx.font = "700 " + (r * 0.9).toFixed(1) + "px " + MONO;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillStyle = C.yellow; ctx.fillText("SB", p.x, by);
+      ctx.fillStyle = COLORS.yellow; ctx.fillText("SB", p.x, by);
       ctx.textBaseline = "alphabetic";
     }
     return;
   }
 
-  if (e.t === T.SOUVENIR){
+  if (e.t === ENTITY_TYPE.SOUVENIR){
     // Souvenir Bottle. Same "ride higher, read as its own thing" reasoning as
     // Speed Boost and the letters.
     const p = floorPt(e.z, e.a, SOUVENIR_LIFT);
@@ -6258,17 +6258,17 @@ function drawEntInner(e){
     } else {                          // file still loading, or failed
       const r = h * 0.42;
       ctx.beginPath(); ctx.arc(p.x, by, r, 0, 6.284);
-      ctx.fillStyle = C.yellow; ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
+      ctx.fillStyle = COLORS.yellow; ctx.fill();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
       ctx.font = "700 " + (r * 0.55).toFixed(1) + "px " + MONO;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillStyle = C.ink; ctx.fillText("+100", p.x, by);
+      ctx.fillStyle = COLORS.ink; ctx.fillText("+100", p.x, by);
       ctx.textBaseline = "alphabetic";
     }
     return;
   }
 
-  if (e.t === T.EXTRALIFE){
+  if (e.t === ENTITY_TYPE.EXTRALIFE){
     // Extra Life. Same "ride higher, read as its own thing" reasoning as
     // Speed Boost and Souvenir.
     const p = floorPt(e.z, e.a, EXTRALIFE_LIFT);
@@ -6289,17 +6289,17 @@ function drawEntInner(e){
       const r = h * 0.42;
       ctx.beginPath(); ctx.arc(p.x, by, r, 0, 6.284);
       ctx.fillStyle = "rgb(" + EXTRALIFE_COLOR + ")"; ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
       ctx.font = "700 " + (r * 0.9).toFixed(1) + "px " + MONO;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillStyle = C.white; ctx.fillText("+1", p.x, by);
+      ctx.fillStyle = COLORS.white; ctx.fillText("+1", p.x, by);
       ctx.textBaseline = "alphabetic";
     }
     extraLifeSmellLines(p.x, by, h);
     return;
   }
 
-  if (e.t === T.WHIRLPOOL){
+  if (e.t === ENTITY_TYPE.WHIRLPOOL){
     // Whirlpool. Same "ride higher, read as its own thing" reasoning as the
     // other pickups; the dive-in motes run off the clock rather than any
     // game-state timer, same as speedBoostPickupGlow/souvenirGlow, since this is the
@@ -6324,14 +6324,14 @@ function drawEntInner(e){
       const r = h * 0.42;
       ctx.beginPath(); ctx.arc(p.x, by, r, 0, 6.284);
       ctx.fillStyle = "rgb(" + WHIRLPOOL_RING_COLOR + ")"; ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
     }
     // Motes drawn LAST, on top of the icon — see whirlpoolMotes's comment.
     whirlpoolMotes(p.x, by, h, t);
     return;
   }
 
-  if (e.t === T.SEASONPASS){
+  if (e.t === ENTITY_TYPE.SEASONPASS){
     // Season Pass. Same "ride higher, read as its own thing" reasoning as the
     // other pickups, and same footprint as every one of them now too — see
     // SEASONPASS_H / LETTER_H's comment.
@@ -6351,16 +6351,16 @@ function drawEntInner(e){
       const r = h * 0.42;
       ctx.beginPath(); ctx.arc(p.x, by, r, 0, 6.284);
       ctx.fillStyle = "rgb(" + SEASONPASS_GOLD + ")"; ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
       ctx.font = "700 " + (r * 0.62).toFixed(1) + "px " + MONO;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillStyle = C.white; ctx.fillText("SP", p.x, by);
+      ctx.fillStyle = COLORS.white; ctx.fillText("SP", p.x, by);
       ctx.textBaseline = "alphabetic";
     }
     return;
   }
 
-  if (e.t === T.WAVE){
+  if (e.t === ENTITY_TYPE.WAVE){
     /* A wall of water across the chute. It builds as it approaches:
        forming far out, cresting mid-range, breaking toward you.       */
     const grow = Math.max(0, Math.min(1, (14 - (e.z - travelled)) / 10));
@@ -6378,9 +6378,9 @@ function drawEntInner(e){
       if (grow > 0.4 && s > 26){
         ctx.font = "700 " + Math.max(12, 0.115 * s) + "px " + MONO;
         ctx.textAlign = "center";
-        ctx.lineWidth = Math.max(2, 0.03 * s); ctx.strokeStyle = C.ink;
+        ctx.lineWidth = Math.max(2, 0.03 * s); ctx.strokeStyle = COLORS.ink;
         ctx.strokeText("JUMP", base.x, base.y - wh - 0.06 * s + bob);
-        ctx.fillStyle = C.yellow;
+        ctx.fillStyle = COLORS.yellow;
         ctx.fillText("JUMP", base.x, base.y - wh - 0.06 * s + bob);
       }
       return;
@@ -6405,9 +6405,9 @@ function drawEntInner(e){
     ctx.closePath();
     const gTop = floorPt(e.z, 0, hW), gBot = floorPt(e.z, 0, 0);
     const g = ctx.createLinearGradient(0, gTop.y, 0, gBot.y);
-    g.addColorStop(0, C.blue); g.addColorStop(1, C.blueDp);
+    g.addColorStop(0, COLORS.blue); g.addColorStop(1, COLORS.blueDp);
     ctx.fillStyle = g; ctx.fill();
-    ctx.strokeStyle = C.ink; ctx.lineWidth = K; ctx.stroke();
+    ctx.strokeStyle = COLORS.ink; ctx.lineWidth = K; ctx.stroke();
 
     // foam crest: overlapping lobes in the reference art's style
     for (let i = 0; i <= N; i++){
@@ -6416,21 +6416,21 @@ function drawEntInner(e){
       const p = floorPt(e.z, a, hW + ripple);
       const rr = (0.075 + 0.045 * Math.sin(f * 5 + t * 1.3)) * s * (0.75 + 0.5 * grow);
       ctx.beginPath(); ctx.arc(p.x, p.y, rr, 0, 6.284);
-      ctx.fillStyle = C.white; ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(1, K * 0.5); ctx.stroke();
+      ctx.fillStyle = COLORS.white; ctx.fill();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = Math.max(1, K * 0.5); ctx.stroke();
     }
     if (grow > 0.5 && s > 45){
       const c2 = floorPt(e.z, 0, hW + 0.16);
       ctx.font = "700 " + Math.max(12, 0.115 * s) + "px " + MONO;
       ctx.textAlign = "center";
-      ctx.lineWidth = Math.max(2, 0.03 * s); ctx.strokeStyle = C.ink;
-      ctx.strokeText("JUMP", c2.x, c2.y); ctx.fillStyle = C.yellow;
+      ctx.lineWidth = Math.max(2, 0.03 * s); ctx.strokeStyle = COLORS.ink;
+      ctx.strokeText("JUMP", c2.x, c2.y); ctx.fillStyle = COLORS.yellow;
       ctx.fillText("JUMP", c2.x, c2.y);
     }
     return;
   }
 
-  if (e.t === T.TUNNEL){
+  if (e.t === ENTITY_TYPE.TUNNEL){
     /* An enclosed covered section that plants on the water surface and stays
        inside the chute (its own radius, not the chute's).
        It used to be five bare hoops 0.55 apart with nothing behind them, so you
@@ -6555,7 +6555,7 @@ function drawEntInner(e){
       ctx.fillStyle = gr;
       if (rf < 1) ctx.globalAlpha = ga * rf;
       ctx.fill();
-      ctx.strokeStyle = C.ink; ctx.lineWidth = kk; ctx.stroke();
+      ctx.strokeStyle = COLORS.ink; ctx.lineWidth = kk; ctx.stroke();
       if (rf < 1) ctx.globalAlpha = ga;
 
       if (lead){
@@ -6567,14 +6567,14 @@ function drawEntInner(e){
           const pt = archPt(zz, t, HW, H_OUT + OFF * 0.10);
           i ? ctx.lineTo(pt.x, pt.y) : ctx.moveTo(pt.x, pt.y);
         }
-        ctx.strokeStyle = C.blue; ctx.lineWidth = Math.max(2, kk * 1.4); ctx.stroke();
+        ctx.strokeStyle = COLORS.blue; ctx.lineWidth = Math.max(2, kk * 1.4); ctx.stroke();
 
         /* Only the nearest tunnel ahead is labelled. With two on screen the
            second drew its own BOOST above the first, reading as one stacked
            pair of arches rather than two separate sections. */
         let nearest = true;
         for (const o of ents)
-          if (o !== e && o.t === T.TUNNEL && o.z < e.z && o.z > travelled - CAM_DZ){ nearest = false; break; }
+          if (o !== e && o.t === ENTITY_TYPE.TUNNEL && o.z < e.z && o.z > travelled - CAM_DZ){ nearest = false; break; }
         if (nearest && ss > 26){
           // hung off the outer apex, so it stays clear of the arch whatever
           // size it is set to — the old hand-tuned offset assumed the tall dome
@@ -6582,9 +6582,9 @@ function drawEntInner(e){
           const c2 = project(curveX(zz), curveY(zz) + RIM_Y - H_OUT - 0.18, ddz);
           ctx.font = "700 " + Math.max(12, 0.115 * ss) + "px " + MONO;
           ctx.textAlign = "center";
-          ctx.lineWidth = Math.max(2, 0.028 * ss); ctx.strokeStyle = C.ink;
+          ctx.lineWidth = Math.max(2, 0.028 * ss); ctx.strokeStyle = COLORS.ink;
           ctx.strokeText("BOOST", c2.x, c2.y);
-          ctx.fillStyle = C.yellow; ctx.fillText("BOOST", c2.x, c2.y);
+          ctx.fillStyle = COLORS.yellow; ctx.fillText("BOOST", c2.x, c2.y);
         }
       }
     }
@@ -7080,7 +7080,7 @@ function drawRider(){
 
   const h = Math.max(0.52 * S, H * 0.12);
   if (!img){                                     // stand-in rider
-    tubeSprite(p.x, p.y - (duck ? h * 0.1 : 0), h * (duck ? 0.8 : 1), C.orange, "#ae6018");
+    tubeSprite(p.x, p.y - (duck ? h * 0.1 : 0), h * (duck ? 0.8 : 1), COLORS.orange, "#ae6018");
     return;
   }
   const w = h * (img.width / img.height);
@@ -7113,32 +7113,32 @@ function drawRider(){
      speed boost and lane moves, deliberately: it is the rarer of the two
      auto-triggered cues, so boost (every tunnel plus every Speed Boost grab) is
      the one that steps aside, same reasoning as eat over jump. */
-  const dyi     = (state === "dying" || state === "over")
+  const dieFrameIdx        = (state === "dying" || state === "over")
                     ? (state === "over" ? 2 : triIdx(1 - dieT / DIE_DUR)) : -1;
-  const dieImg  = dyi >= 0 ? IMG["die" + dyi] : null;
-  const hi      = (!dieImg && hurtT > 0) ? triIdx(1 - hurtT / HURT_DUR) : -1;
-  const hurtImg = hi >= 0 ? IMG["hurt" + hi] : null;
+  const dieImg  = dieFrameIdx >= 0 ? IMG["die" + dieFrameIdx] : null;
+  const hurtFrameIdx       = (!dieImg && hurtT > 0) ? triIdx(1 - hurtT / HURT_DUR) : -1;
+  const hurtImg = hurtFrameIdx >= 0 ? IMG["hurt" + hurtFrameIdx] : null;
 
-  const spi2    = (!dieImg && !hurtImg && (seasonPassIntroT > 0 || seasonPassT > 0))
+  const seasonPassFrameIdx = (!dieImg && !hurtImg && (seasonPassIntroT > 0 || seasonPassT > 0))
                     ? seasonPassFrame() : -1;
-  const seasonPassImg = spi2 >= 0 ? IMG["sp" + spi2] : null;
+  const seasonPassImg = seasonPassFrameIdx >= 0 ? IMG["sp" + seasonPassFrameIdx] : null;
 
-  const di      = (!dieImg && !hurtImg && !seasonPassImg && duckA > 0.05) ? duckIdx(duckA) : -1;
-  const duckImg = di >= 0 ? IMG["duck" + di] : null;
-  const ei      = (!dieImg && !hurtImg && !seasonPassImg && !duckImg && eatT > 0) ? quadIdx(1 - eatT / EAT_DUR) : -1;
-  const eatImg  = ei >= 0 ? IMG["eat" + ei] : null;
-  const fi      = (!dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && jumpT >= 0) ? flipFrame(jumpT / JUMP_DUR) : -1;
-  const flipImg = fi >= 0 ? IMG["flip" + fi] : null;
-  const si      = (!dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && !flipImg && whirlpoolT > 0) ? spinFrame(performance.now() * 0.001) : -1;
-  const spinImg = si >= 0 ? IMG["spin" + si] : null;
-  const spi     = (!dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && !flipImg && !spinImg && boostT > 0) ? speedFrame(boostT) : -1;
-  const speedImg = spi >= 0 ? IMG["speed" + spi] : null;
+  const duckFrameIdx       = (!dieImg && !hurtImg && !seasonPassImg && duckA > 0.05) ? duckIdx(duckA) : -1;
+  const duckImg = duckFrameIdx >= 0 ? IMG["duck" + duckFrameIdx] : null;
+  const eatFrameIdx        = (!dieImg && !hurtImg && !seasonPassImg && !duckImg && eatT > 0) ? quadIdx(1 - eatT / EAT_DUR) : -1;
+  const eatImg  = eatFrameIdx >= 0 ? IMG["eat" + eatFrameIdx] : null;
+  const flipFrameIdx       = (!dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && jumpT >= 0) ? flipFrame(jumpT / JUMP_DUR) : -1;
+  const flipImg = flipFrameIdx >= 0 ? IMG["flip" + flipFrameIdx] : null;
+  const spinFrameIdx       = (!dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && !flipImg && whirlpoolT > 0) ? spinFrame(performance.now() * 0.001) : -1;
+  const spinImg = spinFrameIdx >= 0 ? IMG["spin" + spinFrameIdx] : null;
+  const speedFrameIdx      = (!dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && !flipImg && !spinImg && boostT > 0) ? speedFrame(boostT) : -1;
+  const speedImg = speedFrameIdx >= 0 ? IMG["speed" + speedFrameIdx] : null;
   const leaning = !dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && !flipImg && !spinImg && !speedImg && moveT > 0 && moveDir;
   const moveImg = leaning ? IMG[MOVE_KEY[moveDir]] : null;
   const idling  = !dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && !flipImg && !spinImg && !speedImg && !moveImg
                     && IMG.cowIdle1 && IMG.cowIdle2;
-  const ii      = idling ? idleFrame(performance.now() * 0.001) : -1;
-  const idleImg = ii >= 0 ? IMG["cowIdle" + ii] : null;
+  const idleFrameIdx       = idling ? idleFrame(performance.now() * 0.001) : -1;
+  const idleImg = idleFrameIdx >= 0 ? IMG["cowIdle" + idleFrameIdx] : null;
 
   // wake, so he sits in the water rather than on it. Faded out on the wipeout
   // screen, where the water is stopped and he has been moved off the track.
@@ -7175,7 +7175,7 @@ function drawRider(){
        bounding box would pump as the assembly passes through 45 degrees.
        Position comes from `p`, which carries riderLift() — so the whole
        assembly rides the jump arc exactly as the static sprite used to. */
-    const R  = FLIP_REG[fi];
+    const R  = FLIP_REG[flipFrameIdx];
     const k  = (h / img.height) * R.s;
     const dw = flipImg.width * k, dh = flipImg.height * k;
     const ccx = (RIDER_CX - 0.5) * w;              // where the resting sprite's
@@ -7186,7 +7186,7 @@ function drawRider(){
     // for the same reason: a yaw turn foreshortens the tube, so a
     // tube-width fit (the dieImg/seasonPassImg/duckImg branch) would
     // stretch the profile frames back out to the front frame's width.
-    const R  = SPIN_REG[si];
+    const R  = SPIN_REG[spinFrameIdx];
     const k  = (h / img.height) * R.s;
     const dw = spinImg.width * k, dh = spinImg.height * k;
     const ccx = (RIDER_CX - 0.5) * w;
@@ -7235,7 +7235,7 @@ function drawRider(){
     // to frame (dh falls out of R.tw fixing dw, then dh = dw * the frame's
     // own aspect ratio), so squashing on top would double it.
     const im  = duckImg || dieImg || hurtImg || speedImg;
-    const R   = duckImg ? DUCK_REG[di] : dieImg ? DIE_REG[dyi] : hurtImg ? HURT_REG[hi] : SPEED_REG[spi];
+    const R   = duckImg ? DUCK_REG[duckFrameIdx] : dieImg ? DIE_REG[dieFrameIdx] : hurtImg ? HURT_REG[hurtFrameIdx] : SPEED_REG[speedFrameIdx];
     const imW = h * (IMG.cowIdle2.width / IMG.cowIdle2.height);
     const dw  = (imW * IDLE_TUBE_W) / R.tw;
     const dh  = dw * (im.height / im.width);
@@ -7247,7 +7247,7 @@ function drawRider(){
     // Pass hasn't been re-exported to the cowabunga badge art yet (unlike
     // duck/hurt/die above), so RIDER_TUBE_W/CX/BY is still the right
     // reference for it.
-    const R   = SEASONPASS_REG[spi2];
+    const R   = SEASONPASS_REG[seasonPassFrameIdx];
     const dw  = (w * RIDER_TUBE_W) / R.tw;
     const dh  = dw * (seasonPassImg.height / seasonPassImg.width);
     const tcx = (RIDER_TUBE_CX - 0.5) * w;         // resting tube's centre and
@@ -7417,9 +7417,9 @@ function speedBoostLabel(){
   ctx.globalAlpha = alpha;
   ctx.font = "900 " + Math.max(22, Math.min(44, W * 0.085)).toFixed(0) + "px " + MONO;
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
-  ctx.lineWidth = 6; ctx.strokeStyle = C.ink;
+  ctx.lineWidth = 6; ctx.strokeStyle = COLORS.ink;
   ctx.strokeText("SPEED BOOST!", 0, 0);
-  ctx.fillStyle = C.yellow;
+  ctx.fillStyle = COLORS.yellow;
   ctx.fillText("SPEED BOOST!", 0, 0);
   ctx.restore();
 }
@@ -7822,7 +7822,7 @@ const NAME_B = ["Surfboard","Longboard","Boogieboard","Paddleboard","Wetsuit","D
   "Walrus","Pufferfish","Jellyfish","Starfish","Hermitcrab","Sandcastle",
   "Beachball","Innertube","Rapids"];
 
-const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const randomFrom = (a) => a[Math.floor(Math.random() * a.length)];
 
 /* Diagnostic-only rank tracing, gated so it costs nothing and prints nothing
    in normal play. Opt in from the console with
@@ -8019,7 +8019,7 @@ const Board = (() => {
 const namesPromise = Board.me() ? Promise.resolve([]) : Board.takenNames();
 
 /* ---------- reels ---------- */
-let reelA = pick(NAME_A), reelB = pick(NAME_B);
+let reelA = randomFrom(NAME_A), reelB = randomFrom(NAME_B);
 let takenSet = new Set();   // filled by loadTakenNames() below; empty means "unknown, allow anything"
 
 /* Bounded local retry against the currently-known taken set. Never blocks —
@@ -8027,24 +8027,24 @@ let takenSet = new Set();   // filled by loadTakenNames() below; empty means "un
    suffix retry, exactly like a stale/failed takenSet would anyway. */
 function pickAdjective(){
   for (let i = 0; i < 25; i++){
-    const a = pick(NAME_A);
+    const a = randomFrom(NAME_A);
     if (!takenSet.has(a + " " + reelB)) return a;
   }
-  return pick(NAME_A);
+  return randomFrom(NAME_A);
 }
 function pickNoun(){
   for (let i = 0; i < 25; i++){
-    const b = pick(NAME_B);
+    const b = randomFrom(NAME_B);
     if (!takenSet.has(reelA + " " + b)) return b;
   }
-  return pick(NAME_B);
+  return randomFrom(NAME_B);
 }
 function pickPair(){
   for (let i = 0; i < 25; i++){
-    const a = pick(NAME_A), b = pick(NAME_B);
+    const a = randomFrom(NAME_A), b = randomFrom(NAME_B);
     if (!takenSet.has(a + " " + b)) return [a, b];
   }
-  return [pick(NAME_A), pick(NAME_B)];
+  return [randomFrom(NAME_A), randomFrom(NAME_B)];
 }
 
 /* Some words ("Rootin'-tootin'", "Rip-roarin'") are too long for the clamp()
@@ -8064,8 +8064,8 @@ function paintReels(){
   /* Writes to the inner span, not the button. The button owns the badge and the
      ray burst, and setting textContent on it would delete the span along with
      them on the first repaint. */
-  const wordA = $("reelA").querySelector(".reel__word");
-  const wordB = $("reelB").querySelector(".reel__word");
+  const wordA = byId("reelA").querySelector(".reel__word");
+  const wordB = byId("reelB").querySelector(".reel__word");
   wordA.textContent = reelA;
   wordB.textContent = reelB;
   fitReelWord(wordA);
@@ -8080,8 +8080,8 @@ function rollReel(el, pickFn, assign){
   assign(pickFn()); paintReels();
 }
 let claiming = false;
-$("reelA").addEventListener("click", () => { if (!claiming) rollReel($("reelA"), pickAdjective, v => reelA = v); });
-$("reelB").addEventListener("click", () => { if (!claiming) rollReel($("reelB"), pickNoun, v => reelB = v); });
+byId("reelA").addEventListener("click", () => { if (!claiming) rollReel(byId("reelA"), pickAdjective, v => reelA = v); });
+byId("reelB").addEventListener("click", () => { if (!claiming) rollReel(byId("reelB"), pickNoun, v => reelB = v); });
 
 /* The actual fetch is namesPromise, started during asset loading (see above)
    and already awaited by ready() before the loader ever dismisses — this
@@ -8093,46 +8093,46 @@ async function loadTakenNames(){
   takenSet = new Set(await namesPromise);
   [reelA, reelB] = pickPair();
   paintReels();
-  $("reels").classList.remove("reels--loading");
+  byId("reels").classList.remove("reels--loading");
 }
 
 /* Naming happens once, before the title card. Confirming hands straight to the
    home screen — the run is never interrupted to ask, and every later submission
    is automatic because a name always exists by then. */
-$("nameGo").addEventListener("click", async () => {
+byId("nameGo").addEventListener("click", async () => {
   if (claiming) return;
   claiming = true;
-  $("nameGo").classList.add("btn--busy");
-  $("nameGo").disabled = true;
-  $("reels").classList.add("reels--disabled");
-  $("nameError").classList.remove("name-error--on");
-  $("nameSkip").classList.remove("skip-link--on");
+  byId("nameGo").classList.add("btn--busy");
+  byId("nameGo").disabled = true;
+  byId("reels").classList.add("reels--disabled");
+  byId("nameError").classList.remove("name-error--on");
+  byId("nameSkip").classList.remove("skip-link--on");
 
   try {
     await Board.claim(reelA, reelB);
-    $("namePanel").classList.remove("panel--on");
-    $("titlePanel").classList.add("panel--on");
+    byId("namePanel").classList.remove("panel--on");
+    byId("titlePanel").classList.add("panel--on");
   } catch (e) {
-    $("nameError").textContent = "Couldn't save your name — try again in a bit.";
-    $("nameError").classList.add("name-error--on");
-    $("nameSkip").classList.add("skip-link--on");
+    byId("nameError").textContent = "Couldn't save your name — try again in a bit.";
+    byId("nameError").classList.add("name-error--on");
+    byId("nameSkip").classList.add("skip-link--on");
     // Escalation beyond the inline text — a player who looked away mid-"load"
     // should still catch the failure. Remove-then-reflow-then-add so back-to-
     // back failures restart the shake instead of the class already being on
     // being a no-op.
-    $("namePanel").classList.remove("panel--shake");
-    void $("namePanel").offsetWidth;
-    $("namePanel").classList.add("panel--shake");
+    byId("namePanel").classList.remove("panel--shake");
+    void byId("namePanel").offsetWidth;
+    byId("namePanel").classList.add("panel--shake");
     if (navigator.vibrate) navigator.vibrate(200);
   } finally {
     claiming = false;
-    $("nameGo").classList.remove("btn--busy");
-    $("nameGo").disabled = false;
-    $("reels").classList.remove("reels--disabled");
+    byId("nameGo").classList.remove("btn--busy");
+    byId("nameGo").disabled = false;
+    byId("reels").classList.remove("reels--disabled");
   }
 });
-$("namePanel").addEventListener("animationend", (e) => {
-  if (e.animationName === "nameShake") $("namePanel").classList.remove("panel--shake");
+byId("namePanel").addEventListener("animationend", (e) => {
+  if (e.animationName === "nameShake") byId("namePanel").classList.remove("panel--shake");
 });
 /* Only reachable after a failed claim (see above) — a broken backend must
    never be a hard wall between the player and the game. Board.me() stays
@@ -8140,10 +8140,10 @@ $("namePanel").addEventListener("animationend", (e) => {
    handles gracefully (see syncRankRow()). skippedNaming records the decision
    for the rest of this session, so afterLoader() won't put the naming screen
    back up if it ever runs again. */
-$("nameSkip").addEventListener("click", () => {
+byId("nameSkip").addEventListener("click", () => {
   skippedNaming = true;
-  $("namePanel").classList.remove("panel--on");
-  $("titlePanel").classList.add("panel--on");
+  byId("namePanel").classList.remove("panel--on");
+  byId("titlePanel").classList.add("panel--on");
 });
 
 /* Ride down to the player's own row rather than dumping them at the top of a
@@ -8156,7 +8156,7 @@ $("nameSkip").addEventListener("click", () => {
    slide into place after the fact. */
 const SCROLL_DUR = 1200;
 function scrollToMe(instant){
-  const box = $("lbScroll");
+  const box = byId("lbScroll");
   const row = box.querySelector(".lb-row.lb-row--me");
   if (!row) return;
   /* Rect maths, not offsetTop: offsetTop is relative to the nearest positioned
@@ -8186,7 +8186,7 @@ let pendingScore = 0;          // this run's score, for the "you'd rank" line
 async function renderBoard(){
   const me = Board.me();
   const rows = await Board.top(50);
-  const you = $("lbYou"); you.innerHTML = "";
+  const you = byId("lbYou"); you.innerHTML = "";
 
   /* The player's own score can be missing from `rows` for two different
      reasons: it's real but sits outside this top-50 window, OR — Board.top()
@@ -8217,7 +8217,7 @@ async function renderBoard(){
     }
   }
 
-  const list = $("lbList");
+  const list = byId("lbList");
   list.innerHTML = "";
   rows.forEach((r, i) => {
     const d = document.createElement("div");
@@ -8229,7 +8229,7 @@ async function renderBoard(){
     d.children[2].textContent = r.score.toLocaleString();
     list.appendChild(d);
   });
-  $("lbEmpty").classList.toggle("lb-empty--on", rows.length === 0);
+  byId("lbEmpty").classList.toggle("lb-empty--on", rows.length === 0);
 
   const meRowIndex = rows.findIndex(r => r.me);
   if (meRowIndex >= 0){
@@ -8242,30 +8242,30 @@ async function renderBoard(){
    to the player's row before ever revealing the board — see scrollToMe()'s
    `instant` param and #lbLoading's CSS comment for why. */
 function openBoard(scrollToRank){
-  $("titlePanel").classList.remove("panel--on");
-  $("overPanel").classList.remove("panel--on");
-  $("lbPanel").classList.add("panel--on");
-  $("lbPanel").classList.add("panel--loading");
-  $("lbScroll").scrollTop = 0;
+  byId("titlePanel").classList.remove("panel--on");
+  byId("overPanel").classList.remove("panel--on");
+  byId("lbPanel").classList.add("panel--on");
+  byId("lbPanel").classList.add("panel--loading");
+  byId("lbScroll").scrollTop = 0;
   pushModal();
   paintReels();
   return renderBoard().then(() => {
     if (scrollToRank && Board.me()) scrollToMe(true);
-    $("lbPanel").classList.remove("panel--loading");
+    byId("lbPanel").classList.remove("panel--loading");
   });
 }
 function closeBoard(){
-  $("lbPanel").classList.remove("panel--on");
-  if (state === "title")     $("titlePanel").classList.add("panel--on");
-  else if (state === "over") $("overPanel").classList.add("panel--on");
+  byId("lbPanel").classList.remove("panel--on");
+  if (state === "title")     byId("titlePanel").classList.add("panel--on");
+  else if (state === "over") byId("overPanel").classList.add("panel--on");
   popModal();
 }
 // Not `openBoard` directly — addEventListener would pass the click event
 // through as scrollToRank, which is truthy and jumps to a "me" row that may
 // not be the reason this entry point was opened.
-$("lbBtn").addEventListener("click", () => openBoard(false));
-$("lbBack").addEventListener("click", closeBoard);
-$("statRank").addEventListener("click", () => openBoard(true));
+byId("lbBtn").addEventListener("click", () => openBoard(false));
+byId("lbBack").addEventListener("click", closeBoard);
+byId("statRank").addEventListener("click", () => openBoard(true));
 
 /* ---------- the rank row on the results card ----------
    Rank is a STAT, not a destination: after a run the question is "how did I
@@ -8282,7 +8282,7 @@ let rankRequestId = 0;
 const RANK_CYCLE_MS = 70;   // fast enough to read as "still counting", not laggy
 async function setRankFigures(score){
   const requestId = ++rankRequestId;
-  const el = $("fRank");
+  const el = byId("fRank");
   el.classList.add("f-rank--calculating");
   const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   // The cycling IS the loading cue, so reduced motion just skips it and
@@ -8303,17 +8303,17 @@ function syncRankRow(){
      blocked outright. Show the standing rank rather than a dead row. */
   if (!me){
     setRankFigures(pendingScore);
-    $("fRankNote").textContent = "score not saved";
+    byId("fRankNote").textContent = "score not saved";
     return;
   }
   /* Named before the first run, so submission never needs asking for. Fire-
      and-forget: the results card doesn't wait on either network call. */
   Board.submit(pendingScore);
   setRankFigures(Board.me().score);
-  $("fRankNote").textContent = me.name;
+  byId("fRankNote").textContent = me.name;
 }
 
-buildWord($("howWord"), WORD.length);   // shown lit on the how-to card: the goal
+buildWord(byId("howWord"), WORD.length);   // shown lit on the how-to card: the goal
 reset();
 startTitleMusic(false);
 requestAnimationFrame(frame);
