@@ -56,7 +56,7 @@ async function main() {
     // doesn't start yet -- it only begins once the flyer LANDS in the HUD. ---
     const grabbed = await evaluate(session, `
       (() => {
-        const e = add(T.LETTER, travelled + 0.05, 0);
+        const e = spawnEntity(ENTITY_TYPE.LETTER, travelled + 0.05, 0);
         e.gi = gotLetters;
         update(0.016);
         return { gotLetters, shownLetters, stampedeT, flyersLen: flyers.length, invuln };
@@ -74,7 +74,7 @@ async function main() {
         for (let i = 0; i < 60 && stampedeT < 0; i++) update(0.016);
         return {
           shownLetters, stampedeT, STAMPEDE_DUR,
-          hasRunClass: $("letters").classList.contains("run"),
+          hasRunClass: byId("letters").classList.contains("run"),
           stampedeSounds: window.__stampedeSounds,
           musicStoppedOnLanding: window.__musicStops.length > stopsBefore,
         };
@@ -101,7 +101,7 @@ async function main() {
       (() => {
         const before = travelled;
         const livesBefore = lives;
-        add(T.COW, travelled + 0.05, 0);   // would be in the hit window if collisions ran
+        spawnEntity(ENTITY_TYPE.COW, travelled + 0.05, 0);   // would be in the hit window if collisions ran
         for (let i = 0; i < 60; i++) update(0.016);   // ~0.96s, well inside the 8.1s run-off
         return { before, after: travelled, livesBefore, livesAfter: lives, stampedeT, shake, state };
       })()
@@ -129,7 +129,7 @@ async function main() {
         while (stampedeT > 0.02) update(0.016);
         update(0.05);   // cross the 0 boundary
         return {
-          stampedeT, hasGoneClass: $("letters").classList.contains("gone"), invuln, WIN_INVULN,
+          stampedeT, hasGoneClass: byId("letters").classList.contains("gone"), invuln, WIN_INVULN,
           lastMusicStart: window.__musicStarts[window.__musicStarts.length - 1],
         };
       })()
@@ -151,7 +151,7 @@ async function main() {
         const before = travelled;
         const livesBefore = lives;
         for (let i = 0; i < 30; i++) update(0.016);
-        add(T.COW, travelled + 0.05, 0);
+        spawnEntity(ENTITY_TYPE.COW, travelled + 0.05, 0);
         update(0.016);
         return { before, after: travelled, livesBefore, livesAfter: lives };
       })()
@@ -169,7 +169,7 @@ async function main() {
         reset(); state = "play"; lane = 0; laneA = 0;
         seasonPassT = 5; seasonPassMusicPlaying = true;   // mid-effect, well past SEASONPASS_OUTRO_DUR
         gotLetters = WORD.length - 1; shownLetters = WORD.length - 1;
-        const e = add(T.LETTER, travelled + 0.05, 0);
+        const e = spawnEntity(ENTITY_TYPE.LETTER, travelled + 0.05, 0);
         e.gi = gotLetters;
         const stopsBefore = window.__musicStops.length;
         update(0.016);   // grab -- plays out under normal rules, Season Pass is mid-effect, not frozen

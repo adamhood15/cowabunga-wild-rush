@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Verifies the wave->pig spacing rule (see PIG_AFTER_WAVE_MIN_GAP in
-// index.html, next to JUMP_DUR/DUCK_DUR): a T.PIG must never spawn close
-// enough after a T.WAVE that a rider who jumped the wave has no time to
+// index.html, next to JUMP_DUR/DUCK_DUR): a ENTITY_TYPE.PIG must never spawn close
+// enough after a ENTITY_TYPE.WAVE that a rider who jumped the wave has no time to
 // land AND duck before the pig's own hit-window starts. tuck() refuses to
 // fire while jumpT >= 0, so this only matters wave -> pig, never the
 // reverse (jump() has no such gate and cancels an active duck outright).
@@ -53,13 +53,13 @@ async function main() {
             travelled = Math.max(travelled, nextZ - DRAW_FAR + 1);
             spawn();
           }
-          const hazards = ents.filter(e => e.t === T.WAVE || e.t === T.PIG)
+          const hazards = ents.filter(e => e.t === ENTITY_TYPE.WAVE || e.t === ENTITY_TYPE.PIG)
                                .sort((a, b) => a.z - b.z);
-          waveCount += hazards.filter(e => e.t === T.WAVE).length;
-          pigCount += hazards.filter(e => e.t === T.PIG).length;
+          waveCount += hazards.filter(e => e.t === ENTITY_TYPE.WAVE).length;
+          pigCount += hazards.filter(e => e.t === ENTITY_TYPE.PIG).length;
           for (let i = 0; i < hazards.length - 1; i++){
             checked++;
-            if (hazards[i].t === T.WAVE && hazards[i+1].t === T.PIG){
+            if (hazards[i].t === ENTITY_TYPE.WAVE && hazards[i+1].t === ENTITY_TYPE.PIG){
               const gap = hazards[i+1].z - hazards[i].z;
               if (gap < PIG_AFTER_WAVE_MIN_GAP - 1e-9){
                 violations.push({ speed: testSpeed, gap, need: PIG_AFTER_WAVE_MIN_GAP });
@@ -90,8 +90,8 @@ async function main() {
           jumpT = -1; tuckT = 0; hurtT = 0; dieT = 0;
           const waveZ = travelled + 5;
           const pigZ = waveZ + gap;
-          const wave = add(T.WAVE, waveZ, 0, 3);
-          const pig = add(T.PIG, pigZ, 0, 3);
+          const wave = spawnEntity(ENTITY_TYPE.WAVE, waveZ, 0, 3);
+          const pig = spawnEntity(ENTITY_TYPE.PIG, pigZ, 0, 3);
           const dt = 1/240;   // fine-grained to avoid frame-boundary artifacts
           let jumped = false, duckedAfterLanding = false;
           const livesStart = lives;

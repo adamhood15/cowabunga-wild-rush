@@ -53,7 +53,7 @@ async function main() {
     const tunnelTrigger = await evaluate(session, `
       (() => {
         boostT = 0; boostSuper = false;
-        const e = add(T.TUNNEL, travelled + 0.05, 0, 3);
+        const e = spawnEntity(ENTITY_TYPE.TUNNEL, travelled + 0.05, 0, 3);
         update(0.016);
         return { boostT, boostSuper, triggered: e.triggered };
       })()
@@ -61,7 +61,7 @@ async function main() {
     const speedBoostPickupTrigger = await evaluate(session, `
       (() => {
         boostT = 0; boostSuper = false;
-        const e = add(T.BOOST, travelled + 0.05, 0);
+        const e = spawnEntity(ENTITY_TYPE.BOOST, travelled + 0.05, 0);
         update(0.016);
         return { boostT, boostSuper, dead: e.dead };
       })()

@@ -38,7 +38,7 @@ async function main() {
           start();
           lane = 0; laneA = 0;
           const before = { coins, score: runScore() };
-          const e = add(T.${key}, travelled + 0.05, 0);
+          const e = spawnEntity(ENTITY_TYPE.${key}, travelled + 0.05, 0);
           update(0.016);
           return { before, after: { coins, score: runScore() }, dead: e.dead };
         })();

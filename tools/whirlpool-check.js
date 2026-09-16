@@ -2,7 +2,7 @@
 // Verifies the Whirlpool power-up end to end over the real DevTools protocol:
 // pickup starts the 6s magnet -> nearby coins AND letters ease toward the
 // rider's own lane/depth over several frames -> each is collected through
-// its ordinary T.COIN/T.LETTER branch (score/word progress, entity removed)
+// its ordinary ENTITY_TYPE.COIN/ENTITY_TYPE.LETTER branch (score/word progress, entity removed)
 // -> a survived hit does NOT cancel the effect (Adam's call, unlike Fast
 // Pass's boost) -> a fatal hit (gameOver) DOES stop it, so the loop sound
 // can't outlive the run -- AND the loop-trim audio fix: whirlpool.mp3 fades
@@ -54,13 +54,13 @@ async function main() {
     const pickup = await evaluate(session, `
       (() => {
         const before = { whirlpoolT, coins, gotLetters };
-        add(T.WHIRLPOOL, travelled + 0.05, 0);
-        const coinE = add(T.COIN, travelled + 4, 1);     // off-lane, 4 units ahead
-        const letterE = add(T.LETTER, travelled + 4, -1); // off-lane, opposite side
+        spawnEntity(ENTITY_TYPE.WHIRLPOOL, travelled + 0.05, 0);
+        const coinE = spawnEntity(ENTITY_TYPE.COIN, travelled + 4, 1);     // off-lane, 4 units ahead
+        const letterE = spawnEntity(ENTITY_TYPE.LETTER, travelled + 4, -1); // off-lane, opposite side
         letterE.gi = gotLetters;                          // the next letter the word needs
         update(0.016);
         const afterPickup = {
-          whirlpoolT, entLeft: ents.some(e => e.t === T.WHIRLPOOL && !e.dead),
+          whirlpoolT, entLeft: ents.some(e => e.t === ENTITY_TYPE.WHIRLPOOL && !e.dead),
         };
         for (let i = 0; i < 240 && !(coinE.dead && letterE.dead); i++){
           update(0.016);
@@ -97,7 +97,7 @@ async function main() {
     // 4. Rendering the active cue and the world pickup's own glow must not throw.
     await evaluate(session, `
       reset(); state = "play";
-      add(T.WHIRLPOOL, travelled + 3, 0);
+      spawnEntity(ENTITY_TYPE.WHIRLPOOL, travelled + 3, 0);
       whirlpoolT = 3; whirlpoolAngle = 1.2;
       for (let i = 0; i < 30; i++){ update(0.016); render(); }
       true

@@ -77,8 +77,8 @@ const SCREENS = [
     root: "#namePanel",
     setup: `
       dismissLoader();
-      $("titlePanel").classList.remove("on");
-      $("namePanel").classList.add("on");
+      byId("titlePanel").classList.remove("on");
+      byId("namePanel").classList.add("on");
       reelA = __longestOf(NAME_A); reelB = __longestOf(NAME_B);
       paintReels();
       true
@@ -128,10 +128,10 @@ const SCREENS = [
     // all, but a useful screenshot does, so force the reveal classes directly
     // instead of waiting out the ease.
     postSetup: `
-      $("fRankNote").textContent = __worstName;
-      $("fRank").textContent = "#" + (999999).toLocaleString();
+      byId("fRankNote").textContent = __worstName;
+      byId("fRank").textContent = "#" + (999999).toLocaleString();
       overTextIn = true;
-      $("overPanel").classList.add("textIn", "riderIn");
+      byId("overPanel").classList.add("textIn", "riderIn");
       true
     `,
     postSettleMs: 900, // let the staggered .textIn overIn animation (up to ~0.46s + per-child delay) finish before the screenshot
@@ -148,10 +148,10 @@ const SCREENS = [
       true
     `,
     postSetup: `
-      $("fRankNote").textContent = __worstName;
-      $("fRank").textContent = "#" + (999999).toLocaleString();
+      byId("fRankNote").textContent = __worstName;
+      byId("fRank").textContent = "#" + (999999).toLocaleString();
       overTextIn = true;
-      $("overPanel").classList.add("textIn", "riderIn");
+      byId("overPanel").classList.add("textIn", "riderIn");
       true
     `,
     postSettleMs: 900,
@@ -171,9 +171,9 @@ const SCREENS = [
     root: "#lbPanel",
     setup: `
       dismissLoader();
-      $("titlePanel").classList.remove("on");
-      $("lbPanel").classList.add("on");
-      const list = $("lbList"); list.innerHTML = "";
+      byId("titlePanel").classList.remove("on");
+      byId("lbPanel").classList.add("on");
+      const list = byId("lbList"); list.innerHTML = "";
       for (let i = 0; i < 50; i++){
         const d = document.createElement("div");
         d.className = "lbRow";
@@ -183,9 +183,9 @@ const SCREENS = [
         d.children[2].textContent = (999999999).toLocaleString();
         list.appendChild(d);
       }
-      $("lbEmpty").classList.remove("on");
+      byId("lbEmpty").classList.remove("on");
       // The pinned "you" row below the top 50 (see renderBoard()).
-      const you = $("lbYou"); you.innerHTML = "";
+      const you = byId("lbYou"); you.innerHTML = "";
       const d = document.createElement("div");
       d.className = "lbRow me";
       d.innerHTML = '<span class="lbPos"></span><span class="lbName"></span><span class="lbScore"></span>';

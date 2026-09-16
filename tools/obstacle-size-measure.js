@@ -4,7 +4,7 @@
 // fraction for cowabunga-idle_02/03.png (the reference "full size" cow) --
 // per AGENTS.md, "measure before coding."
 //
-// sprite() (index.html, drawEntInner's T.COW/T.YETI branch) draws an
+// sprite() (index.html, drawEntInner's ENTITY_TYPE.COW/ENTITY_TYPE.YETI branch) draws an
 // obstacle's WHOLE PNG at h = hUnits * s, so its apparent ON-SCREEN opaque
 // height is h * (bboxH / img.height), not h itself -- a PNG with padding
 // around its content reads smaller than one cropped tight, even at the same

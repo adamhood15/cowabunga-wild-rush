@@ -81,7 +81,7 @@ async function main() {
     const pickup = await evaluate(session, `
       (() => {
         const before = { extraLife, tubesExtra: document.querySelectorAll('#tubes .tube.extra').length };
-        add(T.EXTRALIFE, travelled + 0.05, 0);
+        spawnEntity(ENTITY_TYPE.EXTRALIFE, travelled + 0.05, 0);
         update(0.016);
         const chainedIdx = window.__starts.findIndex(n => !!n.onended);
         const afterPickup = {
@@ -89,7 +89,7 @@ async function main() {
           plays: window.__plays.slice(),
           hasChainedWebAudioSource: chainedIdx >= 0,
           flyerKinds: flyers.map(f => f.kind),
-          entLeft: ents.some(e => e.t === T.EXTRALIFE && !e.dead),
+          entLeft: ents.some(e => e.t === ENTITY_TYPE.EXTRALIFE && !e.dead),
         };
         eatT = 0.001;
         update(1/60);
@@ -204,7 +204,7 @@ async function main() {
 
     const hits = { absorb, afterExplode, realHit };
 
-    // --- 4. Spawn-clock gate: never offers T.EXTRALIFE while one is held. ---
+    // --- 4. Spawn-clock gate: never offers ENTITY_TYPE.EXTRALIFE while one is held. ---
     const spawnGate = await evaluate(session, `
       (() => {
         extraLife = true;
@@ -212,8 +212,8 @@ async function main() {
         for (let i = 0; i < 50; i++) {
           powerupZ = travelled - 1;
           spawnPowerup();
-          if (ents.some(e => e.t === T.EXTRALIFE && !e.dead)) sawExtra = true;
-          ents = ents.filter(e => e.t !== T.EXTRALIFE);
+          if (ents.some(e => e.t === ENTITY_TYPE.EXTRALIFE && !e.dead)) sawExtra = true;
+          ents = ents.filter(e => e.t !== ENTITY_TYPE.EXTRALIFE);
         }
         extraLife = false;
         return { sawExtraWhileHeld: sawExtra };
