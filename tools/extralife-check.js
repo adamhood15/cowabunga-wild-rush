@@ -171,7 +171,7 @@ async function main() {
     const absorb = await evaluate(session, `
       (() => {
         invuln = 0; shake = 0; hurtT = 0; speed = CONFIG.maxSpeed;
-        boostT = 5; boostSuper = true; fastPassLabelT = 5;
+        boostT = 5; boostSuper = true; speedBoostLabelT = 5;
         const before = { lives, extraLife, speed };
         hitRider();
         return {
@@ -179,7 +179,7 @@ async function main() {
           justAfter: {
             lives, extraLife, invuln, shake, hurtT,
             speedDropped: speed < before.speed,
-            boostCleared: boostT === 0 && !boostSuper && fastPassLabelT === 0,
+            boostCleared: boostT === 0 && !boostSuper && speedBoostLabelT === 0,
             tubeExploding: !!document.querySelector('#tubes .tube.extra.exploding'),
             tubeStillInDom: document.querySelectorAll('#tubes .tube.extra').length,
           },

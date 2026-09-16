@@ -8,7 +8,7 @@
 //
 // Two checks:
 //   1. Statistical: force spawn() through thousands of iterations across the
-//      whole speed range (including the Fast Pass / tunnel boost ceiling)
+//      whole speed range (including the Speed Boost / tunnel boost ceiling)
 //      and assert every WAVE -> PIG pair in the generated ents list is at
 //      least PIG_AFTER_WAVE_MIN_GAP apart in z.
 //   2. Physical: place a WAVE and a PIG exactly PIG_AFTER_WAVE_MIN_GAP apart

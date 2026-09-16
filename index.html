@@ -7,7 +7,8 @@
 <link rel="icon" href="https://typhoontexas.com/wp-content/uploads/2023/02/cropped-typhoon-texas-logo-white-gradient-bg-32x32.jpg" sizes="32x32" />
 <link rel="icon" href="https://typhoontexas.com/wp-content/uploads/2023/02/cropped-typhoon-texas-logo-white-gradient-bg-192x192.jpg" sizes="192x192" />
 <link rel="apple-touch-icon" href="https://typhoontexas.com/wp-content/uploads/2023/02/cropped-typhoon-texas-logo-white-gradient-bg-180x180.jpg" />
-<link rel="stylesheet" href="https://use.typekit.net/cmv0fio.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Grandstander:wght@700;800&family=Quicksand:wght@500;600&display=swap">
 <style>
   /* ==========================================================
      PALETTE — sampled from slide.png, background-simple.png and
@@ -24,11 +25,51 @@
     --white:    #fcf6f0;
     --pale:     #e4f6f6;
     --green:    #187230;
+    --red:      #e8432b;   
+    --turquoise:#1fb8b8;  
+    --purple:   #6a2f9f;  
     /* Bright counterpart to --green, for chips that carry ink text. --green is
        a fill for large dark areas; at 1.5:1 against --ink it cannot hold type. */
     --green-lt: #6ee06e;
     --navy:     #1e3048;
     --ink:      #0a0a0a;
+
+    /* Raw r/g/b components (not full color functions) of the two stops every
+       panel-family gradient below is built from, so .panel, the --hud-glow-*
+       chips, AND deathWash()'s canvas gradient (render, JS — read once off
+       these at load rather than hand-copying the numbers) all draw from the
+       SAME two values. --panel-shade-rgb is --navy's own components, spelled
+       out separately because a hex color can't be fed into rgb()'s space
+       syntax.
+       --panel-glow-a/--panel-shade-a are .panel's OWN peak alphas at each
+       stop — separate from --hud-glow-*'s per-chip alphas below, which are
+       already their own thing at 55/80/90%. deathWash() reads these two as
+       well: it is #overPanel's entire background (see the comment on that
+       rule below), so if it uses any alpha but these, the results card is a
+       visibly different — Adam's report, 2026-09-15: "not as transparent as
+       the others" — shade of the same gradient every OTHER panel shows. */
+    --panel-glow-rgb:  73 85 255;
+    --panel-shade-rgb: 30 48 72;
+    --panel-glow-a:  .99;
+    --panel-shade-a: .7;
+
+    /* Every HUD chip/card/button (the boards, the mute/pause pair, the how-to-play
+       and title-screen cards, leaderboard rows, the load bar...) used a flat
+       rgba(30,48,72,X) — the same navy as .panel's own radial-gradient dark stop,
+       but without that gradient's rgb(73 85 255) top-of-frame highlight. Same
+       formula, reused at each spot's existing opacity, so every one of those flat
+       chips now reads as a little window onto the same lit gradient as the panels
+       behind them, rather than a plain dark box sitting on top of it. */
+    --hud-glow-55: radial-gradient(130% 100% at 50% 15%, rgb(var(--panel-glow-rgb) / 55%), rgb(var(--panel-shade-rgb) / 55%));
+    --hud-glow-8:  radial-gradient(130% 100% at 50% 15%, rgb(var(--panel-glow-rgb) / 80%), rgb(var(--panel-shade-rgb) / 80%));
+    --hud-glow-9:  radial-gradient(130% 100% at 50% 15%, rgb(var(--panel-glow-rgb) / 90%), rgb(var(--panel-shade-rgb) / 90%));
+
+    /* "Board Wax" button trio — cherry red / turquoise / deep navy — scoped to
+       .btn only. Kept separate from --yellow/--orange/--blue-dp rather than
+       repainting those, since that trio still does its original job
+       everywhere else (eyebrow labels, error text, flash flashes, the
+       leaderboard "me" row, --blue-dp's own flume-shadow use). */
+ 
 
     /* Three-way font split: --display is reserved for buttons, major page
        titles, and leaderboard rank numbers (never scores); --display-card is
@@ -37,15 +78,15 @@
        explicitly to the few tabular-nums figures (HUD/board digits, results
        stats, leaderboard scores, the load percentage) that need stable
        monospaced digit widths for setFigure()'s shrink-to-fit math. */
-    --display: "sutro-deluxe-primary","Haettenschweiler","Arial Narrow","Impact",
+    --display: "Luckiest Guy","Haettenschweiler","Arial Narrow","Impact",
                "Franklin Gothic Bold","Helvetica Neue",Arial,sans-serif;
-    --display-card: "sutro-open-fill","Franklin Gothic Bold","Helvetica Neue",Arial,sans-serif;
-    --copy: "sutro","Helvetica Neue",Arial,sans-serif;
+    --display-card: "Grandstander","Franklin Gothic Bold","Helvetica Neue",Arial,sans-serif;
+    --copy: "Quicksand","Helvetica Neue",Arial,sans-serif;
     --mono: ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%;overflow:hidden;background:var(--sky)}
-  body{font-family:var(--copy);color:var(--white);
+  body{font-family:var(--copy);font-weight:500;color:var(--white);
        -webkit-user-select:none;user-select:none;touch-action:none}
   #stage{position:fixed;inset:0;overflow:hidden}
   canvas{display:block;width:100%;height:100%}
@@ -60,7 +101,7 @@
      screen edge as the figures grow — there is nothing to detect and nothing to
      shrink against. See setFigure(). */
   #hud > *{min-width:0}
-  .board{background:rgba(30,48,72,.8);border:3px solid var(--ink);border-radius:6px;max-width:100%;height:61px;
+  .board{background:var(--hud-glow-8);border:3px solid var(--ink);border-radius:6px;max-width:100%;height:61px;
          padding:7px 12px 9px;box-shadow:4px 4px 0 var(--ink)}
   .board .lbl{display:block;font-size:9px;letter-spacing:.2em;color:var(--sky-low);margin-bottom:3px}
   /* 25px is the starting point setFigure()/applyFit() shrinks from, same as
@@ -80,11 +121,11 @@
   #coinRow img{flex:none}
   #coinRow img{width:26px;height:26px;display:block}
   #tubes{margin-top:10px;display:flex;gap:6px;justify-content:flex-end}
-  /* A life is a pizza slice icon now, not a plain colour fill, so the art
-     itself carries the outline/shading and .tube is just its box — sized off
-     the source file's own ratio (30x28) so "contain" never stretches it. */
-  .tube{width:19px;aspect-ratio:30/28;
-        background:no-repeat center/contain url("assets/sprites/typhoon-sprites/extra-life/extra-life.png");
+  /* A life is an icon, not a plain colour fill, so the art itself carries the
+     outline/shading and .tube is just its box — sized off the source file's
+     own ratio (50x33) so "contain" never stretches it. */
+  .tube{width:26px;aspect-ratio:50/33;
+        background:no-repeat center/contain url("assets/sprites/hud/extra-life.png");
         filter:drop-shadow(1px 2px 0 rgba(10,10,10,.5))}
   .tube.spent{opacity:.3;filter:grayscale(1)}
   /* Extra Life's bonus slice. Placed first (drawTubes()), left of the normal
@@ -115,9 +156,9 @@
   /* Below the boards on narrow screens: at full size the word plus both boards
      overrun a phone's width and the letters end up underneath them. */
   /* 90px cleared a single row of boards, but not #tubes underneath the
-     Buckaroos board — #hudRight's own content runs 14px (hud's padding-top)
-     + 61px (board) + 10px (#tubes margin-top) + ~18px (.tube's own height,
-     19px wide at its 30/28 aspect ratio) = ~103px past the safe-area line,
+     Breakers board — #hudRight's own content runs 14px (hud's padding-top)
+     + 61px (board) + 10px (#tubes margin-top) + ~17px (.tube's own height,
+     26px wide at its 50/33 aspect ratio) = ~102px past the safe-area line,
      and #tubes is right-aligned while #letters is centred, so the two only
      ever collided once #tubes' row grew wide enough to reach under the
      centre — which normally only happens with Extra Life's bonus tube
@@ -133,22 +174,23 @@
 .board .val {font-size:20px} }
   .word{display:flex;justify-content:center}
   /* Each letter is a window onto its own artwork file rather than type: the
-     word is a slab serif with a gold gradient, a bevel and baked-in sparkles,
-     and --display is a condensed sans, so no amount of stroke and shadow would
-     have got the letterforms right.
+     word is a red-and-white candy-striped life-preserver ring per letter,
+     roped and bevelled, and --display is a condensed sans, so no amount of
+     stroke and shadow would have got the letterforms right.
      Everything is expressed in units of --lh, so the whole word scales from a
-     single value: the box is the ink's aspect ratio tall, the file behind it is
-     scaled so its 390px ink band maps to --lh, and --ox slides it across to
-     drop the file's own padding. background-image, --ar, --ox and --bw are set
-     per letter in buildWord. No skew here — the artwork carries its own
-     styling. */
+     single value: the box is the ink's aspect ratio tall, the file behind it
+     is scaled so its OWN ink band (WORD_SRC.h[i], which varies letter to
+     letter — see WORD_SRC's comment) maps to --lh, and --ox/--oy slide it
+     across and down to drop the file's own padding. background-image, --ar,
+     --ox, --oy and --bw are all set per letter in buildWord. No skew here —
+     the artwork carries its own styling. */
   #letters b,.word b{display:block;font-size:0;color:transparent;
         height:var(--lh);width:calc(var(--lh) * var(--ar));
         background-repeat:no-repeat;
         background-size:calc(var(--lh) * var(--bw)) auto;
-        background-position:calc(var(--lh) * var(--ox) * -1) calc(var(--lh) * -0.01538)}
+        background-position:calc(var(--lh) * var(--ox) * -1) calc(var(--lh) * var(--oy) * -1)}
   /* Gap taken from the artwork's own letter spacing so the word reads as the
-     logo does rather than as eight separate stickers. */
+     logo does rather than as separate stickers. */
   #letters,.word{gap:calc(var(--lh) * .075)}
   .word{--lh:clamp(15px,3.8vw,26px)}
   /* The HUD word is the run's scoreboard, so it carries far more weight than
@@ -214,15 +256,15 @@
             height:48px;
             transform:translateX(-50%);
             display:flex;align-items:center;gap:4px;
-            padding:6px 10px;background:rgba(30,48,72,.8);
+            padding:6px 10px;background:var(--hud-glow-8);
             border:3px solid var(--ink);border-radius:6px;
             box-shadow:3px 3px 0 var(--ink);
             width:min(320px,calc(100% - (env(safe-area-inset-left,0px) +
               env(safe-area-inset-right,0px) + 144px)))}
   #speedbar i{flex:1 1 0;min-width:0;height:100%;
-    background:no-repeat center/contain url("assets/sprites/hud/horse-grey.png")}
-  #speedbar i.lit{background-image:url("assets/sprites/hud/horse-yellow.png")}
-  /* Over top speed: filled horses jitter in place to read as "past the
+    background:no-repeat center/contain url("assets/sprites/hud/speed-indicator/speed-indicator_02.png")}
+  #speedbar i.lit{background-image:url("assets/sprites/hud/speed-indicator/speed-indicator_03.png")}
+  /* Over top speed: filled icons jitter in place to read as "past the
      redline" instead of adding yet another colour tier. Staggered delays
      keep them from all snapping in perfect unison. */
   #speedbar i.boosted{animation:speedShake .2s steps(2) infinite}
@@ -244,7 +286,7 @@
             and was clipping the corner of the last control card on short screens */
          padding:24px 20px calc(env(safe-area-inset-bottom,0px) + 66px);
          overflow-y:auto;touch-action:pan-y;
-         background:radial-gradient(130% 100% at 50% 15%,rgba(48,180,252,.99),rgba(30,48,72,.97))}
+         background:radial-gradient(130% 100% at 50% 15%,rgb(var(--panel-glow-rgb) / var(--panel-glow-a)),rgb(var(--panel-shade-rgb) / var(--panel-shade-a)))}
   .panel.on{display:flex}
   /* Centred by a PAIR of auto margins rather than justify-content, because a
      centred flex column with overflow-y:auto clips its own top once the content
@@ -258,9 +300,7 @@
   .panel::before,.panel::after{content:"";flex:none}
   .panel::before{margin-top:auto}
   .panel::after{margin-bottom:auto}
-  /* The wipeout screen's wash is painted on the canvas instead, so Typhoon can
-     sit on top of it. This panel supplies only the text and buttons. */
-  #overPanel{background:none}
+
   /* Typhoon's landing spot, and a real box in the layout rather than a hole cut
      for one. Width and height are written by layoutOverRider() to the pixel size
      the canvas draws him at, so the flex column reserves exactly his footprint
@@ -272,6 +312,21 @@
      him. He is only ever about a tenth of the viewport wide, so there is nothing
      for it to save. */
   #overRider{flex:none;display:block;margin-top:20px}
+
+  /* #overRider (above) has to stay VISIBLE through whatever sits behind this
+     card while he settles into his slot — he is still a canvas drawing at
+     that point, not yet the DOM img (see handOverRider) — and a DOM layer
+     above the canvas buries him no matter the z-order the moment it paints
+     anything of its own. So unlike every other panel, #overPanel gets no
+     background here at all: deathWash() (render, canvas) paints the SAME
+     --panel-glow-rgb/--panel-glow-a/--panel-shade-rgb/--panel-shade-a
+     gradient behind him instead, for the whole wipeout and the results card
+     both, and .panel's own background (above) shows through everywhere else
+     the canvas isn't covering him. Because both read the same four
+     variables, the moment this card actually appears (.on has no
+     transition) is invisible — same gradient, same alpha, nothing to see
+     switch. */
+  #overPanel{background:none}
 
   /* The copy WAITS for Typhoon. He settles into #overRider — the slot at the
      FOOT of this card — over about a second after the wipeout, and the card used
@@ -309,20 +364,18 @@
   #againBtn  {--d:380}
   #ctaBtn    {--d:450}
 
-  .eyebrow{font-size:10px;letter-spacing:.4em;text-transform:uppercase;
-           color:var(--yellow);margin-bottom:10px}
+  .eyebrow{font-size:15px;letter-spacing:.4em;text-transform:uppercase;
+           color:var(--orange);margin-bottom:10px}
   /* 12.5vw, not 15: eight condensed caps plus a 7px stroke and a skew ran wider
      than the viewport on a phone, so the S and the final E were cut off by the
      screen edges. Desktop is unaffected — it sits on the 118px ceiling. */
   .ride{position:relative;z-index:0;font-family:var(--display);text-transform:uppercase;transform:skewX(-7deg);font-weight:400;
-        font-size:clamp(37px,5.5vw,118px);line-height:.84;color:transparent;margin:0;
-        -webkit-text-stroke:2px var(--ink);paint-order:stroke fill;
+        font-size:clamp(37px,5.5vw,118px);line-height:.84;color:var(--yellow);margin:0;
+        -webkit-text-stroke:4px var(--ink);paint-order:stroke fill;
         }
-  .rideLogo{width:min(90vw,500px);height:auto;margin:0;
+  .rideLogo{width:min(60vw,500px);height:auto;margin:0;
         filter:drop-shadow(4px 6px 0 rgba(10,10,10,.4))}
-  .ride::before{content:attr(data-text);position:absolute;z-index:-1;
-        inset:0;font-family:"sutro-deluxe-fill",var(--display);white-space:inherit;
-        color:var(--orange)}
+  .rideLogo.howHead{width:min(84vw,340px)}
   .parkLogoLink{display:inline-block;margin:0 0 14px}
   .parkLogo{display:block;width:250px;height:auto}
   @media (max-width:561px){ .parkLogo{width:200px} }
@@ -330,10 +383,9 @@
        color:rgba(252,246,240,.85);max-width:32ch;line-height:1.7}
   #heroWrap{position:relative;display:flex;align-items:flex-end;justify-content:center;
             margin:8px 0 0;height:min(24vh,190px)}
-  /* Fixed box rather than width:auto. The dance frames are cropped tight and
-     run 203-264px wide, so an auto-width image resizes the flex item on every
-     frame and he skates sideways as he dances. contain + bottom holds him
-     centred with his feet on one line. */
+  /* Fixed box rather than width:auto, so a differently-proportioned GIF
+     never resizes the flex item. contain + bottom holds him centred with
+     his feet on one line. */
   #heroDance{height:100%;width:min(58vw,210px);object-fit:contain;
              object-position:center bottom;
              filter:drop-shadow(0 8px 0 rgba(10,10,10,.25))}
@@ -341,38 +393,40 @@
 
   .btn{pointer-events:auto;cursor:pointer;font-family:var(--display-card);
        text-transform:uppercase;transform:skewX(-7deg);font-size:27px;letter-spacing:.03em;
-       color:var(--white);-webkit-text-stroke:2px var(--ink);background:var(--yellow);border:3px solid var(--ink);border-radius:4px;
-       padding:12px 34px 14px;margin-top:20px;box-shadow:6px 6px 0 var(--ink);
+       color:var(--white);text-shadow:3px 3px 0 var(--ink);background:var(--red);border:3px solid var(--ink);border-radius:4px;
+       padding:12px 34px 14px;margin-top:20px;box-shadow:0 6px 0 rgba(10,10,10,.35);
        transition:transform .08s,box-shadow .08s}
-  .btn:active{transform:skewX(-7deg) translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+  .btn:active{transform:skewX(-7deg) translate(0,4px);box-shadow:0 2px 0 rgba(10,10,10,.35)}
   /* Same pressed-down look on hover, gated to real pointers: a touch tap on
      Android Chrome can leave :hover stuck after release with no mouse to
      clear it, which would leave every button looking permanently half-pressed
      on a phone. skewX(-7deg) has to stay in the transform here too, or the
      hover state would snap the button upright for as long as it's hovered. */
   @media (hover:hover) and (pointer:fine){
-    .btn:hover{transform:skewX(-7deg) translate(4px,4px);box-shadow:2px 2px 0 var(--ink)}
+    .btn:hover{transform:skewX(-7deg) translate(0,4px);box-shadow:0 2px 0 rgba(10,10,10,.35)}
     /* Ghost/tertiary sit on a shallower 4px shadow than the primary's 6px, so
        pressing them the same 4px would overshoot their own depth — scaled
        down instead, following the same translate+remaining-shadow=base-shadow
-       rule the primary uses (6px: 4+2 here; 4px: 2+2). Written as compound
+       rule the primary uses (6px: 4+2 here; 4px: 2+2). Straight-down only (no
+       x offset), matching the soft single-direction drop the Board Wax specimen
+       used instead of the old diagonal ink-solid shadow. Written as compound
        selectors, not just inherited from .btn:hover: .btn.ghost,.btn.tertiary's
        own box-shadow rule below ties this in specificity and sits later in
        the sheet, so .btn:hover alone would lose that fight on box-shadow and
        these two would never visibly look pressed. */
-    .btn.ghost:hover,.btn.tertiary:hover{transform:skewX(-7deg) translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+    .btn.ghost:hover,.btn.tertiary:hover{transform:skewX(-7deg) translate(0,2px);box-shadow:0 2px 0 rgba(10,10,10,.35)}
   }
-  /* Secondary (orange) and tertiary (blue) share one size/shape — only the
+  /* Secondary (turquoise) and tertiary (navy) share one size/shape — only the
      colour differs — because the three-button rule always pairs them side by
      side under the primary: see .ghostRow below. */
   .btn.ghost,.btn.tertiary{color:var(--white);font-size:14px;
-             padding:10px 18px 11px;margin-top:12px;box-shadow:4px 4px 0 var(--ink);-webkit-text-stroke:1px var(--ink)}
-  .btn.ghost{background:var(--orange)}
-  /* Deep water blue, not another shade of the ghost orange: the third action
+             padding:10px 18px 11px;margin-top:12px;box-shadow:0 4px 0 rgba(10,10,10,.35);text-shadow:2px 2px 0 var(--ink)}
+  .btn.ghost{background:var(--turquoise)}
+  /* Night-surf navy, not another shade of the ghost turquoise: the third action
      in a trio needs its own colour to read as a distinct choice rather than
-     as two ghosts of different sizes, and blue keeps it in palette and clear
-     of the yellow primary. */
-  .btn.tertiary{background:var(--blue-dp)}
+     as two ghosts of different sizes, and navy keeps it in palette and clear
+     of the red primary. */
+  .btn.tertiary{background:var(--purple)}
   /* The lone-primary rule: whenever a screen has three actions, the primary
      sits alone on its own row and reads slightly bigger than the standard
      .btn, so it stays the obvious first move above the secondary/tertiary
@@ -381,13 +435,13 @@
   .btn:focus-visible,.hudbtn:focus-visible{outline:3px solid var(--yellow);outline-offset:4px}
 
   @media (max-width:560px){
-    .btn.ghost, .btn.tertiary{font-size:12px;padding:8px 14px 9px;margin-top:10px;box-shadow:3px 3px 0 var(--ink)}
+    .btn.ghost, .btn.tertiary{font-size:12px;padding:8px 14px 9px;margin-top:10px;box-shadow:0 3px 0 rgba(10,10,10,.35)}
   }
   /* A narrow window with a real mouse hits both this and the 560px rule above
      at once — rescaled again for the 3px shadow that applies there, same
      translate+remaining-shadow=base-shadow rule (3px: 1+2). */
   @media (max-width:560px) and (hover:hover) and (pointer:fine){
-    .btn.ghost:hover, .btn.tertiary:hover{transform:skewX(-7deg) translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
+    .btn.ghost:hover, .btn.tertiary:hover{transform:skewX(-7deg) translate(0,1px);box-shadow:0 2px 0 rgba(10,10,10,.35)}
   }
 
   /* ---------- controls ----------
@@ -407,7 +461,7 @@
             width:100%;max-width:560px}
   .ctl{flex:1 1 0;min-width:0;max-width:180px;display:flex;flex-direction:column;
        align-items:center;gap:6px;padding:14px 8px 12px;border-radius:8px;
-       background:rgba(30,48,72,.55);border:3px solid var(--ink);
+       background:var(--hud-glow-55);border:3px solid var(--ink);
        box-shadow:4px 4px 0 var(--ink)}
   .ctl .cap{display:flex;align-items:center;justify-content:center;
             min-width:52px;height:40px;padding:0 10px;border-radius:6px;
@@ -480,7 +534,7 @@
   .reel{pointer-events:auto;cursor:pointer;flex:1 1 0;min-width:0;position:relative;
         font-family:var(--display-card);text-transform:uppercase;letter-spacing:.02em;
         font-size:clamp(15px,3.9vw,18px);color:var(--ink);background:var(--white);
-        border:3px solid var(--ink);border-radius:5px;padding:11px 8px 24px;
+        border:3px solid var(--ink);border-radius:5px;padding:24px 8px;
         /* bottom pad clears the badge, which hangs at translateY(62%) and so
            still reaches ~16px up into the button face */
         box-shadow:4px 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
@@ -505,11 +559,11 @@
      word rather than sitting across it. */
   .reel::after{content:"";position:absolute;left:50%;bottom:0;z-index:2;
         width:42px;height:42px;margin-left:-21px;transform:translateY(62%);
-        background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Ccircle cx='22' cy='22' r='18.4' fill='%23fcf6f0' stroke='%230a0a0a' stroke-width='3.4'/%3E%3Cg fill='none' stroke='%23fc901e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 18.5V17.5A2.5 2.5 0 0 1 16.5 15H27'/%3E%3Cpath d='M24 11.8L27.4 15L24 18.2'/%3E%3Cpath d='M30 25.5v1a2.5 2.5 0 0 1-2.5 2.5H17'/%3E%3Cpath d='M20 25.8L16.6 29L20 32.2'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}
+        background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Ccircle cx='22' cy='22' r='18.4' fill='%23fcf6f0' stroke='%230a0a0a' stroke-width='3.4'/%3E%3Cg fill='none' stroke='%231fb8b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 18.5V17.5A2.5 2.5 0 0 1 16.5 15H27'/%3E%3Cpath d='M24 11.8L27.4 15L24 18.2'/%3E%3Cpath d='M30 25.5v1a2.5 2.5 0 0 1-2.5 2.5H17'/%3E%3Cpath d='M20 25.8L16.6 29L20 32.2'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}
   .reel::before{content:"";position:absolute;left:50%;bottom:0;z-index:1;
         width:82px;height:82px;margin-left:-41px;
         transform:translateY(62%) scale(.92);
-        background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cg stroke='%23fc901e' stroke-width='4.4' stroke-linecap='round'%3E%3Cpath d='M20.0 55.0L13.2 60.2M28.8 62.4L25.1 70.0M40.0 65.0L40.0 73.5M51.2 62.4L54.9 70.0M60.0 55.0L66.8 60.2'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+        background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cg stroke='%231fb8b8' stroke-width='4.4' stroke-linecap='round'%3E%3Cpath d='M20.0 55.0L13.2 60.2M28.8 62.4L25.1 70.0M40.0 65.0L40.0 73.5M51.2 62.4L54.9 70.0M60.0 55.0L66.8 60.2'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
         animation:rayPulse 1.7s ease-in-out infinite}
   /* translateY has to be repeated in every keyframe or the animation drops it
      and the burst jumps up to sit inside the button. */
@@ -546,7 +600,7 @@
   @media (prefers-reduced-motion:reduce){
     #nameGo.busy .spinner{animation:none;border-top-color:var(--ink)}}
 
-  #namePanel .nameError{display:none;color:var(--orange);margin-top:10px}
+  #namePanel .nameError{display:none;color:var(--yellow);margin-top:10px}
   #namePanel .nameError.on{display:block}
 
   /* A failed claim otherwise just sits there quietly — on a flaky connection
@@ -588,7 +642,7 @@
   #lbHead{font-size:9px;letter-spacing:.2em;text-transform:uppercase;font-family:var(--display-card);
           color:var(--yellow);opacity:.8;padding:0 12px 6px;-webkit-text-stroke:1px var(--ink);paint-order:stroke fill}
   #lbHead span:last-child,.lbRow .lbScore{text-align:right}
-  .lbRow{background:rgba(30,48,72,.9);border:3px solid var(--ink);border-radius:5px;
+  .lbRow{background:var(--hud-glow-9);border:3px solid var(--ink);border-radius:5px;
          padding:9px 12px 10px;margin-bottom:7px;box-shadow:3px 3px 0 var(--ink)}
   .lbRow .lbPos{font-family:var(--display);font-size:17px;color:var(--sky-low)}
   .lbRow .lbName{font-size:14px;letter-spacing:.04em;color:var(--white);
@@ -705,7 +759,7 @@
   #hazards,#powerups{margin-top:16px;display:grid;gap:12px;
            grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
   .haz{display:flex;flex-direction:column;align-items:center;gap:6px;
-       padding:14px 8px 12px;border-radius:8px;background:rgba(30,48,72,.55);
+       padding:14px 8px 12px;border-radius:8px;background:var(--hud-glow-55);
        border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
   .haz img,.haz svg{width:100%;max-width:88px;height:62px;object-fit:contain;
                     filter:drop-shadow(0 3px 0 rgba(10,10,10,.28))}
@@ -730,14 +784,14 @@
   .hudGuide{margin-top:16px;display:grid;gap:12px;
             grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
   .hgItem{display:flex;flex-direction:column;align-items:center;gap:6px;
-          padding:14px 8px 12px;border-radius:8px;background:rgba(30,48,72,.55);
+          padding:14px 8px 12px;border-radius:8px;background:var(--hud-glow-55);
           border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
   .hgItem b{font-family:var(--copy);transform:skewX(-7deg);
             font-size:17px;letter-spacing:.04em;color:var(--white)}
   .hgItem span{font-size:14px;letter-spacing:.1em;line-height:1.6;
                color:rgba(252,246,240,.72)}
   .hgWide{grid-column:1 / -1}
-  /* Score, Buckaroos and Tubes share one row (like Mute/Back/Play do as
+  /* Score, Breakers and Tubes share one row (like Mute/Back/Play do as
      ordinary auto-fit tiles) instead of each claiming a full-width row of its
      own — flex:1 1 0 + min-width:0 is the same shrink-safe three-across trick
      #stats already uses for its own row of figures. */
@@ -754,11 +808,11 @@
      normal flow rather than pinned to a screen corner, since this is an
      illustration sitting in a card, not a real button. */
   .hgIcon{width:48px;height:48px;flex:none;display:flex;align-items:center;
-          justify-content:center;background:rgba(30,48,72,.8);
+          justify-content:center;background:var(--hud-glow-8);
           border:3px solid var(--ink);border-radius:5px;color:var(--sky-low);
           box-shadow:3px 3px 0 var(--ink)}
   .hgIcon svg{width:23px;height:23px;display:block;fill:currentColor}
-  /* Score/Buckaroos: the real .board dropped into the grid with sample
+  /* Score/Breakers: the real .board dropped into the grid with sample
      figures instead of live ones. */
   .hgCoinRow{display:flex;align-items:center;gap:7px;justify-content:center}
   .hgCoinRow img{width:26px;height:26px;display:block}
@@ -769,14 +823,14 @@
      canvas — same sprites, same lit/boosted rule, just not position:absolute
      about it. */
   .hgSpeedbar{display:flex;align-items:center;gap:4px;width:100%;max-width:280px;
-              box-sizing:border-box;padding:6px 10px;background:rgba(30,48,72,.8);
+              box-sizing:border-box;padding:6px 10px;background:var(--hud-glow-8);
               border:3px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink)}
-  .hgSpeedbar i{flex:1 1 0;min-width:0;aspect-ratio:200/127;
-                background:no-repeat center/contain url("assets/sprites/hud/horse-grey.png")}
-  .hgSpeedbar i.lit{background-image:url("assets/sprites/hud/horse-yellow.png")}
+  .hgSpeedbar i{flex:1 1 0;min-width:0;aspect-ratio:185/161;
+                background:no-repeat center/contain url("assets/sprites/hud/speed-indicator/speed-indicator_02.png")}
+  .hgSpeedbar i.lit{background-image:url("assets/sprites/hud/speed-indicator/speed-indicator_03.png")}
   .hgSpeedbar i.boosted{animation:speedShake .2s steps(2) infinite}
   /* Every three-across row on the how-to card goes two-up on a phone instead —
-     Slide/Jump/Duck and Score/Buckaroos/Tubes both fit this, and any future
+     Slide/Jump/Duck and Score/Breakers/Tubes both fit this, and any future
      three-card row picking up .controls or .hgRow3 gets it for free. The odd
      third card wraps onto its own row and sits flush left, same as a fifth
      .hgItem left over in .hudGuide's grid — one rule for every orphaned card
@@ -788,9 +842,7 @@
     #howPanel .controls > .ctl{flex:0 0 calc(50% - 5px);max-width:calc(50% - 5px)}
     #howPanel .hgRow3 > .hgItem{flex:0 0 calc(50% - 6px);max-width:calc(50% - 6px)}
   }
-  @media (max-width:380px) {
-    .howSec h3 {font-size:18px}
-  }
+
 
   /* ONE results object, not two. The letters used to sit outside this board as
      a separate labelled block, which put two competing result cards on top of
@@ -823,10 +875,10 @@
   .statRow{display:flex}
   /* Side padding gives way on narrow screens. The cells are equal thirds now
      (flex:1 1 0), so on a 360px phone each is ~100px, and a fixed 20px a side
-     left only 60px of content — less than "Buckaroos" needs at 9px/.2em, let
+     left only 60px of content — less than "Breakers" needs at 9px/.2em, let
      alone the New best pill. It relaxes back to the roomier 20px by tablet. */
   .statRow > div{padding:12px clamp(10px,3.4vw,20px) 13px;
-                 background:rgba(30,48,72,.9);flex:1 1 0;min-width:0}
+                 background:var(--hud-glow-9);flex:1 1 0;min-width:0}
   /* min-width:0 is load-bearing. A flex item defaults to min-width:auto, which
      refuses to shrink below its content, so a long figure does not compress the
      cell — it bursts the whole row out past both screen edges. Measured before
@@ -917,9 +969,11 @@
           padding:clamp(10px,3.4vh,30px) 14px calc(env(safe-area-inset-bottom,0px) + 30px)}
   /* Takes pointer events once it is up: the run is frozen behind it and this is
      a modal choice, so nothing underneath should be reachable. Same wash as
-     .panel so the win screen sits in the same family as pause and game over. */
+     .panel — the SAME --panel-glow-rgb/-a and --panel-shade-rgb/-a stops, not
+     a separate hand-typed copy — so the win screen actually sits in the same
+     family as pause and game over rather than just claiming to. */
   #reveal.on{display:flex;pointer-events:auto;overflow-y:auto;touch-action:pan-y;
-    background:radial-gradient(130% 100% at 50% 15%,rgba(48,180,252,.82),rgba(30,48,72,.97))}
+    background:radial-gradient(130% 100% at 50% 15%,rgb(var(--panel-glow-rgb) / var(--panel-glow-a)),rgb(var(--panel-shade-rgb) / var(--panel-shade-a)))}
   /* The flash moved onto a pseudo-element. It used to animate #reveal's own
      background, which cannot cross-fade from a flat colour into the gradient
      above — the card flashed white and then popped to the wash. */
@@ -1077,7 +1131,7 @@
           bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
           width:48px;height:48px;padding:0;
           align-items:center;justify-content:center;
-          background:rgba(30,48,72,.8);border:3px solid var(--ink);color:var(--sky-low);
+          background:var(--hud-glow-8);border:3px solid var(--ink);color:var(--sky-low);
           border-radius:5px;box-shadow:3px 3px 0 var(--ink)}
   .hudbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
   .hudbtn svg{width:23px;height:23px;display:block;fill:currentColor}
@@ -1122,8 +1176,13 @@
      apart, and both ease at the same .35s — the bar GLIDES between assets
      instead of stepping, which matters because a fast connection would
      otherwise fire every step in one frame. */
+  /* Same two stops as .panel/#reveal/deathWash() (--panel-glow-rgb/-shade-rgb),
+     but its OWN alphas: this is a full-bleed loading screen, not a member of
+     the modal "panel family" those share --panel-glow-a/-shade-a to stay in
+     sync with, and it wants to read as more solidly opaque while it blocks
+     the whole page. */
   #load{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;
-        align-items:center;justify-content:center;gap:20px;background:var(--sky);
+        align-items:center;justify-content:center;gap:20px;background:radial-gradient(130% 100% at 50% 15%, rgb(var(--panel-glow-rgb) / 99%), rgb(var(--panel-shade-rgb) / 97%));
         transition:opacity .45s ease}
   /* Deliberately still pointer-blocking while it fades. Going click-through on
      the tap that dismisses it let the browser re-hit-test the click onto DROP IN
@@ -1131,7 +1190,7 @@
   #load.off{opacity:0}
   #load.gone{display:none}
   #loadTrack{position:relative;width:min(64vw,300px);height:18px;border-radius:9px;
-             background:rgba(30,48,72,.55);border:3px solid var(--ink);
+             background:var(--hud-glow-55);border:3px solid var(--ink);
              box-shadow:4px 4px 0 var(--ink)}
   /* inset:0 then right:auto — the fill is pinned left and grows rightward */
   #loadFill{position:absolute;inset:0;right:auto;width:calc(var(--p,0) * 100%);
@@ -1194,35 +1253,32 @@
     </div>
     <div id="hudRight">
       <div class="board">
-        <span class="lbl">Buckaroos</span>
+        <span class="lbl">Breakers</span>
         <div id="coinRow"><img id="coinIcon" alt=""><span class="val" id="coins">0</span></div>
       </div>
       <div id="tubes"></div>
     </div>
-    <div id="letters" aria-label="Stampede letters collected"></div>
+    <div id="letters" aria-label="Cowabunga letters collected"></div>
     <div id="speedbar"></div>
     <div id="hint">Hold &amp; slide to steer</div>
   </div>
 
   <div class="panel on" id="titlePanel">
-    <a class="parkLogoLink" href="https://typhoontexas.com/" target="_blank" rel="noopener noreferrer">
-      <img class="parkLogo" alt="Typhoon Texas"
-        src="https://typhoontexas.com/wp-content/uploads/2026/09/White_Horizontal__TTLogo-updated-768x337.png"
-        srcset="https://typhoontexas.com/wp-content/uploads/2026/09/White_Horizontal__TTLogo-updated-300x132.png 300w,
-                https://typhoontexas.com/wp-content/uploads/2026/09/White_Horizontal__TTLogo-updated-768x337.png 768w,
-                https://typhoontexas.com/wp-content/uploads/2026/09/White_Horizontal__TTLogo-updated.png 957w"
-        sizes="(min-width:1024px) 300px, (min-width:561px) 250px, 220px">
+    <a class="parkLogoLink" href="https://cowabungavegas.com/" target="_blank" rel="noopener noreferrer">
+      <img class="parkLogo" alt="Cowabunga Vegas"
+        src="assets/logo/CBV_White.png">
     </a>
     <img class="rideLogo" id="rideLogo" alt="Cowabunga: Wild Rush"
-      src="assets/logo/stampede-logo-600.png"
-      srcset="assets/logo/stampede-logo-100.png 100w,
-              assets/logo/stampede-logo-300.png 300w,
-              assets/logo/stampede-logo-600.png 600w,
-              assets/logo/stampede-logo-1000.png 1000w,
-              assets/logo/stampede-logo-2100.png 2100w"
-      sizes="min(84vw,340px)">
+      src="assets/logo/cowabunga-wild-rush-logo-500.png"
+      srcset="assets/logo/cowabunga-wild-rush-logo-100.png 100w,
+              assets/logo/cowabunga-wild-rush-logo-200.png 200w,
+              assets/logo/cowabunga-wild-rush-logo-500.png 500w,
+              assets/logo/cowabunga-wild-rush-logo-1000.png 1000w,
+              assets/logo/cowabunga-wild-rush-logo-1200.png 1200w,
+              assets/logo/cowabunga-wild-rush-logo-2100.png 2100w"
+      sizes="min(90vw,500px)">
     <div id="heroWrap">
-      <img id="heroDance" alt="">
+      <img id="heroDance" alt="" src="assets/sprites/cowabunga-sprites/wink/wink.gif">
     </div>
     <!-- Three-button rule: Drop In alone on its row and a size up, How to
          Play (orange) and Leaderboard (blue) side by side underneath. -->
@@ -1258,15 +1314,15 @@
   <!-- Naming happens once, before the title card, so the game never has to stop
        and ask mid-flow. Shown only when there is no stored rider. -->
   <div class="panel" id="namePanel">
-    <div class="eyebrow">Howdy Partner,</div>
-    <h1 class="ride nameHead" data-text="What Do They Call Ya?">What Do They Call Ya?</h1>
+    <div class="eyebrow">Hey There, Dude,</div>
+    <h1 class="ride nameHead">What Do They Call Ya?</h1>
     <div id="reels">
       <button class="reel" id="reelA" type="button"><span class="reelWord"></span></button>
       <button class="reel" id="reelB" type="button"><span class="reelWord"></span></button>
     </div>
-    <p class="lbLead">Tap to change yer name</p>
+    <p class="lbLead">Tap to switch up your name</p>
     <button class="btn" id="nameGo" type="button">
-      <span class="btnLabel">That'll Do</span>
+      <span class="btnLabel">Let's Ride!</span>
       <span class="spinner" aria-hidden="true"></span>
     </button>
     <p class="lbLead nameError" id="nameError"></p>
@@ -1277,24 +1333,26 @@
     <div id="howScroll">
       <div class="eyebrow">How to Play</div>
       <img class="rideLogo howHead" alt="Cowabunga: Wild Rush"
-        src="assets/logo/stampede-logo-600.png"
-        srcset="assets/logo/stampede-logo-100.png 100w,
-                assets/logo/stampede-logo-300.png 300w,
-                assets/logo/stampede-logo-600.png 600w,
-                assets/logo/stampede-logo-1000.png 1000w,
-                assets/logo/stampede-logo-2100.png 2100w"
+        src="assets/logo/cowabunga-wild-rush-logo-500.png"
+        srcset="assets/logo/cowabunga-wild-rush-logo-100.png 100w,
+                assets/logo/cowabunga-wild-rush-logo-200.png 200w,
+                assets/logo/cowabunga-wild-rush-logo-500.png 500w,
+                assets/logo/cowabunga-wild-rush-logo-1000.png 1000w,
+                assets/logo/cowabunga-wild-rush-logo-1200.png 1200w,
+                assets/logo/cowabunga-wild-rush-logo-2100.png 2100w"
         sizes="min(84vw,340px)">
 
       <section class="howSec">
         <h3>Complete the Word</h3>
         <div id="howWord" class="word"></div>
-        <p>Round up all 8 STAMPEDE letters before your run ends!</p>
+        <h4 style="font-family: var(--display);">COWABUNGA</h4>
+        <p>Grab all 9 COWABUNGA letters before your run ends!</p>
       </section>
 
       <section class="howSec">
-        <h3>Grab Buckaroos</h3>
+        <h3>Grab Breakers</h3>
         <img class="howCoin" id="howCoin" alt="">
-        <p>Grab Buckaroos along the way to boost your score!</p>
+        <p>Grab Breakers along the way to boost your score!</p>
       </section>
 
       <section class="howSec">
@@ -1326,7 +1384,7 @@
         <h3>Dodge, Jump &amp; Duck</h3>
         <p class="howLead">Dodge the hazards and hang on to your 3 lives!</p>
         <div id="hazards">
-          <div class="haz"><img id="hazCow" alt=""><b>Cow Tube</b><span>Slide around it!</span></div>
+          <div class="haz"><img id="hazCow" alt=""><b>Typhoon</b><span>Slide around him!</span></div>
           <div class="haz"><img id="hazYeti" alt=""><b>Snowman Tube</b><span>Slide around it!</span></div>
           <div class="haz"><img id="hazWave" alt=""><b>Wave</b><span>Jump over it!</span></div>
           <div class="haz"><img id="hazPig" alt=""><b>Pig Jet</b><span>Duck under it!</span></div>
@@ -1363,8 +1421,8 @@
         <h3>Power-Ups</h3>
         <p class="howLead">Snag Power-Ups for a little extra help on the trail!</p>
         <div id="powerups">
-          <div class="haz"><img id="hazFastPass" alt=""><b>Fast Pass</b><span>Blast past top speed!</span></div>
-          <div class="haz"><img id="hazSouvenir" alt=""><b>Souvenir Bottle</b><span>Score 100 Buckaroos!</span></div>
+          <div class="haz"><img id="hazSpeedBoost" alt=""><b>Speed Boost</b><span>Blast past top speed!</span></div>
+          <div class="haz"><img id="hazSouvenir" alt=""><b>Souvenir Bottle</b><span>Score 100 Breakers!</span></div>
           <div class="haz"><img id="hazExtraLife" alt=""><b>Extra Life</b><span>Grab one extra life!</span></div>
           <div class="haz"><img id="hazWhirlpool" alt=""><b>Whirlpool</b><span>Pull nearby pickups to you!</span></div>
           <div class="haz"><img id="hazSeasonPass" alt=""><b>Season Pass</b><span>Go faster and become invincible!</span></div>
@@ -1382,10 +1440,10 @@
             </div>
 
             <div class="hgItem">
-              <div class="board"><span class="lbl">Buckaroos</span>
+              <div class="board"><span class="lbl">Breakers</span>
                 <div class="hgCoinRow"><img id="hudCoin" alt=""><span class="val">42</span></div>
               </div>
-              <b>Buckaroos</b><span>Buckaroos you've rounded up.</span>
+              <b>Breakers</b><span>Breakers you've caught.</span>
             </div>
 
             <div class="hgItem">
@@ -1401,7 +1459,7 @@
               <i></i><i class="lit"></i><i class="lit"></i>
               <i class="lit boosted"></i><i class="lit boosted"></i>
             </div>
-            <b>Speed</b><span>More horses means more speed!</span>
+            <b>Speed</b><span>More lit icons means more speed!</span>
           </div>
         </div>
       </section>
@@ -1481,15 +1539,15 @@
 
   <div class="panel" id="overPanel">
     <div class="eyebrow" id="overKicker">Wipeout</div>
-    <h2 class="ride" style="font-size:clamp(38px,11vw,80px)" id="overTitle" data-text="Nice Run">Nice Run</h2>
+    <h2 class="ride" style="font-size:clamp(38px,11vw,80px)" id="overTitle">Nice Run</h2>
     <div id="stats">
       <div class="statRow">
         <div><span>Descent</span><strong id="fDist">0</strong></div>
-        <div><span>Buckaroos</span><strong id="fCoins">0</strong></div>
+        <div><span>Breakers</span><strong id="fCoins">0</strong></div>
         <div><span>Score</span><strong id="fScore">0</strong></div>
       </div>
       <div class="statRow" id="statWord">
-        <div><span id="fWordLbl">Stampede letters</span><div id="fWord" class="word"></div></div>
+        <div><span id="fWordLbl">Cowabunga letters</span><div id="fWord" class="word"></div></div>
       </div>
       <div class="statRow" id="statRank">
         <div><em id="fRankNote">Tap to Submit</em><span>Leaderboard Ranking</span>
@@ -1561,7 +1619,7 @@
   <div class="panel" id="lbPanel">
     <div id="lbScroll">
       <div class="eyebrow">Leaderboard</div>
-      <h2 class="ride howHead" id="lbTitle" data-text="Top Riders">Top Riders</h2>
+      <h2 class="ride howHead" id="lbTitle">Top Riders</h2>
 
       <div id="lbHead"><span>#</span><span>Rider</span><span>Score</span></div>
       <div id="lbList"></div>
@@ -1584,7 +1642,7 @@
 
   <div class="panel" id="pausePanel">
     <div class="eyebrow">Paused</div>
-    <h2 class="ride" style="font-size:clamp(38px,11vw,80px)" data-text="Take a Breath">Take a Breath</h2>
+    <h2 class="ride" style="font-size:clamp(38px,11vw,80px)">Take a Breath</h2>
     <p class="tag">The slide will wait.</p>
     <button class="btn trioPrimary" id="resumeBtn" type="button">Resume</button>
     <!-- Three-button rule: the primary (Resume) gets its own row above, and
@@ -1637,8 +1695,8 @@ const CONFIG = {
   rideName:  "Cowabunga",            // <- your real slide name
   rideSubtitle: "Wild Rush",         // <- shows smaller, under the name; blank hides it
   eyebrow:   "Join. Slide. Save.",
-  winNote:   "You spelled it. Here is the real thing.",   // blank hides the line
-  tagline:   "Grab the Letters, and the Buckaroos. Dodge the crowd. Ride it before you ride it.",
+  winNote:   "You spelled it. Here's the real thing, dude.",   // blank hides the line
+  tagline:   "Grab the Letters, and the Breakers. Dodge the crowd. Catch this wave before it catches you.",
   openingLine: "Coming Summer 2027",
   ctaLabel:  "Get Season Passes",
   ctaUrl:    "",                     // blank hides the button
@@ -1658,126 +1716,121 @@ const CONFIG = {
    made the page self-contained but meant swapping the art on disk silently did
    nothing — and cost a 33% encoding penalty the browser could never cache
    separately from the code. Filenames match the keys below one-for-one.
-   NOTE: the rider, flip, move, duck, hurt and die frames are registered against
-   measured constants (see RIDER_CX / RIDER_TUBE_* / FLIP_REG / MOVE_REG /
-   DUCK_REG / HURT_REG / DIE_REG). Re-exporting any of those needs those numbers
-   re-measured — and re-exporting the RIDER invalidates every other set, since
-   they are all registered relative to it. */
+   NOTE: the rider, flip, duck, hurt, die, and speed frames are registered
+   against measured constants (see RIDER_CX / RIDER_TUBE_* / FLIP_REG /
+   DUCK_REG / HURT_REG / DIE_REG / SPEED_REG). Re-exporting any of those
+   needs those numbers re-measured — and re-exporting the RIDER invalidates
+   every other set, since they are all registered relative to it (SPEED_REG
+   is measured off its own art's "waist" width rather than a flood-filled
+   ring — see SPEED BOOST's own comment above drawRider for why). Idle, eat,
+   and move are a separate cow-in-a-tube art style sized off their own
+   aspect ratio instead (see IDLE's comment above drawRider) — re-exporting
+   those just needs a tight, 0%-padded crop to their own opaque bbox, not
+   new registration constants. */
 const ART = {
   sun:      "assets/sprites/backdrop/sun.png",
   cloud:    "assets/sprites/backdrop/cloud.png",
-  cloudWagonWheel:"assets/sprites/backdrop/cloud-wagon-wheel.png",
+  cloudFlower:"assets/sprites/backdrop/flower-cloud.png",
   rider:    "assets/sprites/typhoon-sprites/typhoon-rider.png",
-  cow:      "assets/sprites/obstacles/cow-tube.png",
+  cowIdle1: "assets/sprites/cowabunga-sprites/idle/cowabunga-idle_02.png",
+  cowIdle2: "assets/sprites/cowabunga-sprites/idle/cowabunga-idle_03.png",
+  cow:      "assets/sprites/obstacles/typhoon-waving_01.png",
   yeti:     "assets/sprites/obstacles/yeti-tube.png",
-  cow2:     "assets/sprites/obstacles/cow-2.png",
+  cow2:     "assets/sprites/obstacles/typhoon-waving_02.png",
   yeti2:    "assets/sprites/obstacles/daytona-snowman-2.png",
   coinA:    "assets/sprites/coins/coin-a.png",
   coinB:    "assets/sprites/coins/coin-b.png",
 
-  /* Speedbar horses. Listed here only to get them preloaded — they are drawn
+  /* Speedbar icons. Listed here only to get them preloaded — they are drawn
      by CSS, so the URLs are repeated in the #speedbar rule. */
-  horseGrey:   "assets/sprites/hud/horse-grey.png",
-  horseWhite:  "assets/sprites/hud/horse-white.png",
-  horseYellow: "assets/sprites/hud/horse-yellow.png",
+  speedIndicator1: "assets/sprites/hud/speed-indicator/speed-indicator_01.png",
+  speedIndicator2: "assets/sprites/hud/speed-indicator/speed-indicator_02.png",
+  speedIndicator3: "assets/sprites/hud/speed-indicator/speed-indicator_03.png",
 
   /* #tubes' life icon. Listed here only to get it preloaded — it is drawn by
-     CSS (.tube's background), same reasoning as the horses above. */
-  lifeIcon: "assets/sprites/typhoon-sprites/extra-life/extra-life.png",
+     CSS (.tube's background), same reasoning as the speedbar icons above. */
+  lifeIcon: "assets/sprites/hud/extra-life.png",
   wave1:    "assets/sprites/obstacles/waves_1.png",
   wave2:    "assets/sprites/obstacles/waves_2.png",
   wave3:    "assets/sprites/obstacles/waves_3.png",
   rib:      "assets/sprites/chute/rib.png",
-  park:     "assets/sprites/backdrop/background-western.png",
-  hurt0:    "assets/sprites/typhoon-sprites/hurt/hurt_01.png",
-  hurt1:    "assets/sprites/typhoon-sprites/hurt/hurt_02.png",
-  hurt2:    "assets/sprites/typhoon-sprites/hurt/hurt_03.png",
-  die0:     "assets/sprites/typhoon-sprites/die/die_01.png",
-  die1:     "assets/sprites/typhoon-sprites/die/die_02.png",
-  die2:     "assets/sprites/typhoon-sprites/die/die_03.png",
-  duck0:    "assets/sprites/typhoon-sprites/duck/duck_01.png",
-  duck1:    "assets/sprites/typhoon-sprites/duck/duck_02.png",
-  duck2:    "assets/sprites/typhoon-sprites/duck/duck_03.png",
+  park:     "assets/sprites/backdrop/cbc-background.jpg",
+  hurt0:    "assets/sprites/cowabunga-sprites/hurt/hurt_01.png",
+  hurt1:    "assets/sprites/cowabunga-sprites/hurt/hurt_02.png",
+  hurt2:    "assets/sprites/cowabunga-sprites/hurt/hurt_03.png",
+  die0:     "assets/sprites/cowabunga-sprites/die/die_01.png",
+  die1:     "assets/sprites/cowabunga-sprites/die/die_02.png",
+  die2:     "assets/sprites/cowabunga-sprites/die/die_03.png",
+  duck0:    "assets/sprites/cowabunga-sprites/duck/duck_01.png",
+  duck1:    "assets/sprites/cowabunga-sprites/duck/duck_02.png",
+  duck2:    "assets/sprites/cowabunga-sprites/duck/duck_03.png",
   eat0:     "assets/sprites/typhoon-sprites/extra-life/extra-life_01.png",
   eat1:     "assets/sprites/typhoon-sprites/extra-life/extra-life_02.png",
   eat2:     "assets/sprites/typhoon-sprites/extra-life/extra-life_03.png",
   eat3:     "assets/sprites/typhoon-sprites/extra-life/extra-life_04.png",
-  mvL:      "assets/sprites/typhoon-sprites/move/move-left_01.png",
-  mvR:      "assets/sprites/typhoon-sprites/move/move-right_01.png",
-  flip0:    "assets/sprites/typhoon-sprites/jump/backflip_01.png",
-  flip1:    "assets/sprites/typhoon-sprites/jump/backflip_02.png",
-  flip2:    "assets/sprites/typhoon-sprites/jump/backflip_03.png",
-  flip3:    "assets/sprites/typhoon-sprites/jump/backflip_04.png",
-  spin0:    "assets/sprites/typhoon-sprites/spin/spin_01.png",
-  spin1:    "assets/sprites/typhoon-sprites/spin/spin_02.png",
-  spin2:    "assets/sprites/typhoon-sprites/spin/spin_03.png",
-  spin3:    "assets/sprites/typhoon-sprites/spin/spin_04.png",
-  speed0:   "assets/sprites/typhoon-sprites/speed-boost/speed_01.png",
-  speed1:   "assets/sprites/typhoon-sprites/speed-boost/speed_02.png",
-  speed2:   "assets/sprites/typhoon-sprites/speed-boost/speed_03.png",
-  speed3:   "assets/sprites/typhoon-sprites/speed-boost/speed_04.png",
+  mvL:      "assets/sprites/cowabunga-sprites/lean/cowabunga-move-left.png",
+  mvR:      "assets/sprites/cowabunga-sprites/lean/cowabunga-move-right.png",
+  flip0:    "assets/sprites/cowabunga-sprites/jump/cowabunga-jump_01.png",
+  flip1:    "assets/sprites/cowabunga-sprites/jump/cowabunga-jump_02.png",
+  flip2:    "assets/sprites/cowabunga-sprites/jump/cowabunga-jump_03.png",
+  flip3:    "assets/sprites/cowabunga-sprites/jump/cowabunga-jump_04.png",
+  spin0:    "assets/sprites/cowabunga-sprites/spin/spin_01.png",
+  spin1:    "assets/sprites/cowabunga-sprites/spin/spin_02.png",
+  spin2:    "assets/sprites/cowabunga-sprites/spin/spin_03.png",
+  spin3:    "assets/sprites/cowabunga-sprites/spin/spin_04.png",
+  speed0:   "assets/sprites/cowabunga-sprites/speed-boost/cowabunga-speed-boost_01.png",
+  speed1:   "assets/sprites/cowabunga-sprites/speed-boost/cowabunga-speed-boost_02.png",
+  speed2:   "assets/sprites/cowabunga-sprites/speed-boost/cowabunga-speed-boost_03.png",
+  speed3:   "assets/sprites/cowabunga-sprites/speed-boost/cowabunga-speed-boost_04.png",
   pig0:     "assets/sprites/obstacles/pig-0.png",
   pig1:     "assets/sprites/obstacles/pig-1.png",
   pig2:     "assets/sprites/obstacles/pig-2.png",
   pig3:     "assets/sprites/obstacles/pig-3.png",
   pig4:     "assets/sprites/obstacles/pig-4.png",
 
-  /* Title-screen line dance, played in numeric order. ld04 used to point at
-     "line-dance_04-05.png" to dodge a bad export — the original
-     line-dance_04.png was a 15x932 sliver with nothing in it. The frames were
-     re-exported on 2026-08-14 and line-dance_04.png is now the real frame 4
-     (both hands on the tube), so the workaround is gone and the file it pointed
-     at no longer exists. Nine frames — 10-12 were dropped from the loop and
-     their files are no longer loaded. */
-  ld01:     "assets/sprites/typhoon-sprites/line-dance/line-dance_01.png",
-  ld02:     "assets/sprites/typhoon-sprites/line-dance/line-dance_02.png",
-  ld03:     "assets/sprites/typhoon-sprites/line-dance/line-dance_03.png",
-  ld04:     "assets/sprites/typhoon-sprites/line-dance/line-dance_04.png",
-  ld05:     "assets/sprites/typhoon-sprites/line-dance/line-dance_05.png",
-  ld06:     "assets/sprites/typhoon-sprites/line-dance/line-dance_06.png",
-  ld07:     "assets/sprites/typhoon-sprites/line-dance/line-dance_07.png",
-  ld08:     "assets/sprites/typhoon-sprites/line-dance/line-dance_08.png",
-  ld09:     "assets/sprites/typhoon-sprites/line-dance/line-dance_09.png",
-
   /* The word as artwork, one file per letter. The CSS word and the canvas
      pickups both read from these, so a letter cannot look like two different
      things on its way from the chute to the HUD. Keyed by POSITION, not by
-     letter: the two E's are separate files. */
-  lt1:      "assets/sprites/letters/letters_01.png",
-  lt2:      "assets/sprites/letters/letters_02.png",
-  lt3:      "assets/sprites/letters/letters_03.png",
-  lt4:      "assets/sprites/letters/letters_04.png",
-  lt5:      "assets/sprites/letters/letters_05.png",
-  lt6:      "assets/sprites/letters/letters_06.png",
-  lt7:      "assets/sprites/letters/letters_07.png",
-  lt8:      "assets/sprites/letters/letters_08.png",
+     letter: the two A's are separate files. */
+  lt1:      "assets/sprites/letters/letter_01.png",
+  lt2:      "assets/sprites/letters/letter_02.png",
+  lt3:      "assets/sprites/letters/letter_03.png",
+  lt4:      "assets/sprites/letters/letter_04.png",
+  lt5:      "assets/sprites/letters/letter_05.png",
+  lt6:      "assets/sprites/letters/letter_06.png",
+  lt7:      "assets/sprites/letters/letter_07.png",
+  lt8:      "assets/sprites/letters/letter_08.png",
+  lt9:      "assets/sprites/letters/letter_09.png",
 
   /* Tips his hat on the reveal card. Listed here only to get it preloaded —
      it is drawn by CSS, so the URL is repeated in the #revealHat rule. */
   hat:      "assets/sprites/typhoon-sprites/hat-tilt/typhoon-hat-tilt.png",
 
   /* Power-ups. One entry per power-up as they're added — see the T.BOOST
-     collectible below for how Fast Pass uses this. */
-  fastPass: "assets/sprites/power-ups/fast-pass.png",
+     collectible below for how Speed Boost uses this. */
+  speedBoostPickup: "assets/sprites/power-ups/speed-boost.png",
   souvenir: "assets/sprites/power-ups/souvenir-bottle.png",
   extraLife: "assets/sprites/power-ups/extra-life.png",
   whirlpool: "assets/sprites/power-ups/whirlpool.png",
   seasonPass: "assets/sprites/power-ups/season-pass.png",
 
-  /* Season Pass's own rider pose, tube-registered like eat/duck/hurt (see
-     SEASONPASS_REG) — nine frames: hyping up over the pass (01-03), settling
-     into the tube with it (04-05), blissed out (06, where the effect HOLDS
-     for the bulk of its 10s), then winding up and tossing the card away
-     (07-09) as the effect runs out. */
-  sp0:      "assets/sprites/typhoon-sprites/season-pass/season-pass_01.png",
-  sp1:      "assets/sprites/typhoon-sprites/season-pass/season-pass_02.png",
-  sp2:      "assets/sprites/typhoon-sprites/season-pass/season-pass_03.png",
-  sp3:      "assets/sprites/typhoon-sprites/season-pass/season-pass_04.png",
-  sp4:      "assets/sprites/typhoon-sprites/season-pass/season-pass_05.png",
-  sp5:      "assets/sprites/typhoon-sprites/season-pass/season-pass_06.png",
-  sp6:      "assets/sprites/typhoon-sprites/season-pass/season-pass_07.png",
-  sp7:      "assets/sprites/typhoon-sprites/season-pass/season-pass_08.png",
-  sp8:      "assets/sprites/typhoon-sprites/season-pass/season-pass_09.png",
+  /* Season Pass's own rider pose, tube-registered against RIDER_TUBE_W like
+     die (see SEASONPASS_REG) — eleven frames, the cowabunga-sprites cow
+     re-export (2026-09-15, replacing the old typhoon-sprites set): hyping up
+     over the pass (01-03), settling into the tube with it (04-06), blissed
+     out (06, where the effect HOLDS for the bulk of its run), then winding
+     up and tossing the card away (07-11) as the effect runs out. */
+  sp0:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_01.png",
+  sp1:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_02.png",
+  sp2:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_03.png",
+  sp3:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_04.png",
+  sp4:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_05.png",
+  sp5:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_06.png",
+  sp6:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_07.png",
+  sp7:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_08.png",
+  sp8:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_09.png",
+  sp9:      "assets/sprites/cowabunga-sprites/season-pass/season-pass_10.png",
+  sp10:     "assets/sprites/cowabunga-sprites/season-pass/season-pass_11.png",
 
   /* The ride itself, shown on the win card. Preloaded here rather than left to
      the <img> so it is decoded long before the card can appear — it is 2MB and
@@ -1900,11 +1953,6 @@ async function ready(){
   const held = Math.max(0, LOAD_FLOOR - (performance.now() - LOAD_T0));
   setTimeout(finishLoading, held + 340);
   if (IMG.coinA) $("coinIcon").src = ART.coinA;
-  // Checked against a literal key rather than DANCE_KEYS, which is declared
-  // further down: onload can land before that initialiser has run.
-  if (!IMG.ld01) $("heroWrap").style.display = "none";
-  else $("heroDance").src = ART.ld01;   // stand on frame 1 rather than an empty
-                                        // box for the beat before danceTick runs
   if (IMG.slide) $("revealSlide").src = ART.slide;
   else $("revealSlide").style.display = "none";
 }
@@ -2550,7 +2598,7 @@ function tunnelStraight(z){
   return true;
 }
 
-/* BOOST (the Fast Pass power-up) used to be full-width like wave/tunnel, back
+/* BOOST (the Speed Boost power-up) used to be full-width like wave/tunnel, back
    when it was never actually spawned. Every power-up is a lane pickup — see
    spawnPowerup() — so none of them belong in this set. */
 const FULL_WIDTH = { 2:true, 3:true };     // wave, tunnel span the chute
@@ -2619,9 +2667,9 @@ if (/[?&]records\b/.test(location.search)){
   setTimeout(() => alert(
     "COWABUNGA — banked records\n\n" +
     "descent   " + snapshot.dist + " m\n" +
-    "buckaroos " + snapshot.coins + "\n" +
+    "breakers " + snapshot.coins + "\n" +
     "score     " + snapshot.score + "\n" +
-    "letters   " + snapshot.letters + " / 8\n" +
+    "letters   " + snapshot.letters + " / " + WORD.length + "\n" +
     "runs      " + snapshot.runs + "\n\n" +
     "A New best pill needs a run STRICTLY above one of these.\n" +
     (snapshot.runs === 0 ? "runs is 0, so the next run cannot flag whatever it scores.\n" : "") +
@@ -2648,7 +2696,7 @@ if (/[?&]fresh\b/.test(location.search)){
 
 /* ------------------------------------------------------------------
    SCORE
-   Four terms: buckaroos, letters, tubes left, and how fast you spelled
+   Four terms: breakers, letters, tubes left, and how fast you spelled
    the word.
    The last two only exist on a COMPLETED run, and that is not a
    simplification — it is the only way they can mean anything here.
@@ -2656,13 +2704,13 @@ if (/[?&]fresh\b/.test(location.search)){
    reached from exactly one place, `if (lives <= 0)`; by the time you
    are reading a score you have always lost all three tubes. And an
    endless runner has no finish line to be timed against. Spelling
-   STAMPEDE is the one thing in this game you can actually complete, so
-   both terms are snapshotted at the instant the eighth letter lands:
+   COWABUNGA is the one thing in this game you can actually complete, so
+   both terms are snapshotted at the instant the final letter lands:
    how many tubes you still had, and how long you had been riding.
    Miss the word and there is simply no completion bonus, which is
    right — you did not complete it.
    ------------------------------------------------------------------ */
-const SC_COIN   = 10;     // per buckaroo
+const SC_COIN   = 10;     // per breaker
 const SC_LETTER = 250;    // per letter, so the full word is worth 2000
 const SC_TUBE   = 500;    // per tube still unspent when the word landed
 const SC_FAST   = 3000;   // the whole speed bonus, at par or better
@@ -2733,22 +2781,26 @@ let ents = [], spray = [], nextZ = 0, comboFree = 0;
    again one gap later — with lane-only pickup, one wrong lane would
    otherwise end the run's chance at the word.
    ------------------------------------------------------------------ */
-const WORD = "STAMPEDE";
-/* Where the ink sits inside each letters_0N.png, measured off their alpha.
-   Indexed by POSITION in WORD, not by character: the two E's are separate
-   files and must not collapse to one entry.
-   The files share a 406px canvas with their ink vertically aligned inside it,
-   so y/h are one common band for all eight and the word keeps a single
-   baseline. Horizontally they are cropped to their own ink instead, because
-   the padding baked into each file runs from 0 to 18px — leaning on it for
-   spacing would have put anything from 3px to 29px between neighbours.
-   cw is each file's full canvas width, which is what the background has to be
-   scaled by; w is just the ink. */
+const WORD = "COWABUNGA";
+/* Where the ink sits inside each letter_0N.png, measured off their real
+   alpha via tools/letter-word-measure.js (per AGENTS.md: measured, not
+   guessed). Indexed by POSITION in WORD, not by character: the two A's are
+   separate files and must not collapse to one entry.
+   Unlike the old letters_0N.png set (a shared 406px padded canvas, so one
+   y/h scalar covered all eight and kept a single baseline), these files are
+   each cropped tight to their OWN ink and canvas height varies letter to
+   letter by a few px — so y and h are per-letter arrays here, and each
+   letter's on-screen height is normalized against its OWN h, not a shared
+   one. x/w stay the ink's horizontal crop, same reasoning as before: the
+   padding baked into each file is not reliable inter-letter spacing, so CSS
+   `gap` handles that uniformly instead. cw is each file's full canvas
+   width, which is what the background has to be scaled by. */
 const WORD_SRC = {
-  y: 6, h: 390,
-  x:  [  18,  16,   0,   8,   0,   4,  10,  10],
-  w:  [ 234, 242, 289, 303, 221, 218, 235, 232],
-  cw: [ 265, 261, 295, 316, 230, 228, 257, 259],
+  y:  [   0,   2,   0,   1,   1,   1,   4,   0,   1],
+  h:  [ 257, 252, 255, 256, 263, 256, 257, 258, 256],
+  x:  [  13,   7,   2,   1,  22,  20,  18,   3,   1],
+  w:  [ 186, 204, 214, 213, 180, 173, 181, 210, 213],
+  cw: [ 215, 215, 218, 215, 220, 215, 219, 215, 215],
 };
 const LETTER_GAP   = 180 / CONFIG.metresPerUnit;  // ~180m between offers
 const LETTER_AHEAD = 20;    // spawn distance; inside DRAW_FAR (26) so it fades
@@ -2778,14 +2830,14 @@ const LETTER_AHEAD = 20;    // spawn distance; inside DRAW_FAR (26) so it fades
    anything when absent — POWERUP_GAP and the random draw are the real,
    tuned values otherwise.
    <name> accepts every alias someone might reasonably type, including the
-   ART/asset file names themselves (extra-life.png, fast-pass.png,
+   ART/asset file names themselves (extra-life.png, speed-boost.png,
    souvenir-bottle.png) — the regex allows hyphens for exactly that reason;
    an earlier version silently truncated ?powerup=extra-life to "extra" at
    the hyphen, matched nothing, and fell back to the random draw with no
    error at all, which is a bad way to find out a name didn't work. */
 const POWERUP_DEBUG_NAME = (location.search.match(/[?&]powerup=([a-z-]+)/i) || [])[1]?.toLowerCase();
 const POWERUP_DEBUG_TYPE = {
-  boost: T.BOOST, fastpass: T.BOOST, "fast-pass": T.BOOST, "speed-boost": T.BOOST,
+  boost: T.BOOST, speedboost: T.BOOST, "speed-boost": T.BOOST,
   souvenir: T.SOUVENIR, "souvenir-bottle": T.SOUVENIR,
   extralife: T.EXTRALIFE, "extra-life": T.EXTRALIFE,
   whirlpool: T.WHIRLPOOL,
@@ -2841,18 +2893,18 @@ const WIN_INVULN = FLY_DUR * FLY_LAND + 0.25;
    stays empty while its letter is still on the way up. */
 let gotLetters = 0, shownLetters = 0, letterZ = 0, stampedeT = -1;
 let flyers = [];
-/* Buckaroos exploding out of the Souvenir Bottle at the moment it's grabbed
+/* Breakers exploding out of the Souvenir Bottle at the moment it's grabbed
    (see flySouvenir()/burstCoins()) — a purely cosmetic one-shot burst kept
    separate from `flyers` itself, so it can keep falling for its own tail-off
    even after the bottle (and its own flyer entry) is long gone. */
 let coinSpill = [];
-let powerupZ = 0, fastPassLabelT = 0;
+let powerupZ = 0, speedBoostLabelT = 0;
 /* True once a picked-up Extra Life has actually landed in the HUD (see
    flyExtraLife()/updateFlyers()) — not the instant it's picked up. That's the
    gate spawnPowerup() checks, and hitRider()'s shield branch. */
 let extraLife = false;
 /* Whirlpool's magnet, active while > 0 (see update()'s pull loop and
-   whirlpoolActive()). Unlike Fast Pass's boostT, a hit does NOT clear this —
+   whirlpoolActive()). Unlike Speed Boost's boostT, a hit does NOT clear this —
    Adam's call: the effect rides out its own 6s even through a survived crash,
    rather than being cancelled the way a boost is. */
 let whirlpoolT = 0;
@@ -2865,7 +2917,7 @@ let whirlpoolT = 0;
    invincibility (hitRider() no-ops entirely while this is > 0 — see its top
    guard), +50% top speed, and the whirlpool magnet widened to every
    collectible. The rider holds season-pass_06 for the bulk of this window,
-   then plays 07-09 as it runs out (see seasonPassFrame()).
+   then plays 07-11 as it runs out (see seasonPassFrame()).
    Also true for the run, forever, once it has been offered — see
    spawnPowerup()'s filter — so it only ever shows up once. */
 let seasonPassIntroT = 0, seasonPassT = 0, seasonPassSpawned = false;
@@ -2914,9 +2966,9 @@ const BOOST_SUPER_MULT = 1.25;
    rider's speed does in between. */
 const AIR_T_LOWER = Math.asin((0.28 - 0.12) / JUMP_H) / Math.PI * JUMP_DUR;
 const PIG_REACT = 0.2;   // seconds of assumed reaction time to start ducking after landing
-const PIG_MAX_LIVE_SPEED = CONFIG.maxSpeed * BOOST_SUPER_MULT;   // Fast Pass / tunnel boost, uncapped by Season Pass since that's invincible
+const PIG_MAX_LIVE_SPEED = CONFIG.maxSpeed * BOOST_SUPER_MULT;   // Speed Boost / tunnel boost, uncapped by Season Pass since that's invincible
 const PIG_AFTER_WAVE_MIN_GAP = 1.7 + (AIR_T_LOWER + PIG_REACT) * PIG_MAX_LIVE_SPEED;
-const FASTPASS_LABEL_DUR = 1.1;   // seconds the "FAST PASS!" callout holds the screen
+const SPEEDBOOST_LABEL_DUR = 1.1;   // seconds the "SPEED BOOST!" callout holds the screen
 const SOUVENIR_BONUS = 100;       // "acts the same as if you had collected 100 coins"
 const POWERUP_SCORE_BONUS = 15;   // +150 points (coins is the only thing runScore()
                                    // reads a bonus through — see SOUVENIR_BONUS above)
@@ -2944,9 +2996,11 @@ const WHIRLPOOL_SPIN  = 4.2;   // rad/s the real, physically-pulled coins orbit
    magnet widened to every collectible, not just coins. One per run (see
    seasonPassSpawned).
    SEASONPASS_INTRO_DUR and SEASONPASS_DUR are sized off the real audio,
-   not guessed. season-pass-music.mp3 measures ~9.14s (SEASONPASS_DUR sits a
-   hair under that so update()'s expiry code never hands the music channel
-   back mid-note).
+   not guessed. season-pass-music.mp3 measured ~9.14s (decodeAudioData)
+   originally; re-exported 2026-09-15 and now measures ~11.94s decoded
+   (SEASONPASS_DUR sits a hair under that so update()'s expiry code never
+   hands the music channel back mid-note — re-measure and bump this again if
+   the file is re-exported).
    season-pass.mp3 (the stinger) is a different case: its raw container is
    ~2.98s (afinfo's ~3.03s includes LAME encoder priming/padding Chrome's own
    decodeAudioData already trims — decoded duration measured at 2.9837s), but
@@ -2963,10 +3017,10 @@ const SEASONPASS_INTRO_DUR  = 1.8;   // frozen reveal: season-pass.mp3's
                                      // audible window, not its full decoded
                                      // length — while season-pass_01-06
                                      // step through
-const SEASONPASS_DUR        = 9.0;   // resumed effect: season-pass-music.mp3
+const SEASONPASS_DUR        = 11.9;  // resumed effect: season-pass-music.mp3
                                      // plays for this whole window
 const SEASONPASS_SPEED_MULT = 1.75;  // vs. CONFIG.maxSpeed — bigger than a
-                                     // Fast Pass/tunnel boost's 1.25
+                                     // Speed Boost/tunnel boost's 1.25
                                      // (BOOST_SUPER_MULT); see update()'s
                                      // target formula, which takes the larger
                                      // of the two rather than stacking them.
@@ -2995,7 +3049,7 @@ function reset(){
   touchId = null; steering = false;   // a thumb still down across a restart no
                                       // longer owns the wheel it anchored on
   invuln = 0; boostT = 0; boostSuper = false; shake = 0; hurtT = 0; eatT = 0; moveT = 0; moveDir = 0; leanV = 0; duckA = 0;
-  tunnelIn = 0; lastTunZ = -1e9; lastWaveZ = -1e9; dieT = 0; fastPassLabelT = 0; extraLife = false;
+  tunnelIn = 0; lastTunZ = -1e9; lastWaveZ = -1e9; dieT = 0; speedBoostLabelT = 0; extraLife = false;
   whirlpoolT = 0; Sound.loopStop();  // in case a run restarted mid-effect
   // seasonPassSpawned resets every run, same as extraLife.
   seasonPassIntroT = 0; seasonPassT = 0; seasonPassSpawned = false; seasonPassMusicPlaying = false;
@@ -3051,7 +3105,7 @@ function add(t, z, i, w){
    which a standing start reaches in 1.74s — before the ride has finished
    easing up to speed and while the camera is still settling, so the opening
    read as an ambush rather than a run. 15 buys ~3.1s (54m).
-   Only hazards are held back: the runway still pays out buckaroos, so the
+   Only hazards are held back: the runway still pays out breakers, so the
    opening teaches the lane controls on something worth steering for instead
    of being empty water. */
 const START_GRACE = 15;
@@ -3069,7 +3123,7 @@ function spawn(){
       comboFree--;
       for (let k = 0; k < 4; k++) add(T.COIN, z + k * 0.8, (Math.random()*3|0) - 1);
       gapSec = 1.5;
-    } else if (r < 0.15){                                   // buckaroo line
+    } else if (r < 0.15){                                   // breaker line
       const li = (Math.random()*3|0) - 1;
       for (let k = 0; k < 7; k++) add(T.COIN, z + k * 0.8, li);
       gapSec = 1.4;
@@ -3169,7 +3223,7 @@ function spawnPowerup(){
   if (travelled < powerupZ) return;
   // Extra Life drops out of the draw entirely while one is already held, so
   // the shared clock still fires on schedule (rule 3 still holds) but only
-  // ever offers Fast Pass/Souvenir until the held one is spent. Season Pass
+  // ever offers Speed Boost/Souvenir until the held one is spent. Season Pass
   // drops out for good, not just temporarily, once it has been offered once —
   // it's the grand finale, so a run only ever sees it the one time.
   let offered = extraLife ? POWERUP_TYPES.filter(t => t !== T.EXTRALIFE) : POWERUP_TYPES;
@@ -3390,7 +3444,7 @@ cv.addEventListener("touchcancel", endTouch, { passive:true });
    never show a different cow than the chute does, and a file that moves only
    has to move in one place. A missing file hides its own tile instead of
    leaving a broken-image box on the card. */
-const HOW_ART = { howCoin:"coinA", hudCoin:"coinA", hazCow:"cow", hazYeti:"yeti", hazWave:"wave2", hazPig:"pig4", hazFastPass:"fastPass", hazSouvenir:"souvenir", hazExtraLife:"extraLife", hazWhirlpool:"whirlpool", hazSeasonPass:"seasonPass" };
+const HOW_ART = { howCoin:"coinA", hudCoin:"coinA", hazCow:"cow", hazYeti:"yeti", hazWave:"wave2", hazPig:"pig4", hazSpeedBoost:"speedBoostPickup", hazSouvenir:"souvenir", hazExtraLife:"extraLife", hazWhirlpool:"whirlpool", hazSeasonPass:"seasonPass" };
 for (const id in HOW_ART){
   const src = ART[HOW_ART[id]];
   if (src) $(id).src = src;
@@ -3527,11 +3581,15 @@ function buildWord(box, upto){
     b.textContent = WORD[i];            // kept for screen readers; hidden in CSS
     if (i < upto) b.className = "got";
     b.style.setProperty("--i", i);      // drives the stampede stagger
-    // All in units of the letter's own height, so one --lh drives the size of
-    // the box, the scale of the file behind it and the offset into it.
-    b.style.setProperty("--ar", (WORD_SRC.w[i]  / WORD_SRC.h).toFixed(4));
-    b.style.setProperty("--ox", (WORD_SRC.x[i]  / WORD_SRC.h).toFixed(4));
-    b.style.setProperty("--bw", (WORD_SRC.cw[i] / WORD_SRC.h).toFixed(4));
+    // All in units of the letter's OWN height (WORD_SRC.h[i], not a shared
+    // scalar — see WORD_SRC's comment), so one --lh drives the size of the
+    // box, the scale of the file behind it and the offset into it, and every
+    // letter still lands at the same on-screen height despite each file's
+    // canvas being a different size.
+    b.style.setProperty("--ar", (WORD_SRC.w[i]  / WORD_SRC.h[i]).toFixed(4));
+    b.style.setProperty("--ox", (WORD_SRC.x[i]  / WORD_SRC.h[i]).toFixed(4));
+    b.style.setProperty("--oy", (WORD_SRC.y[i]  / WORD_SRC.h[i]).toFixed(4));
+    b.style.setProperty("--bw", (WORD_SRC.cw[i] / WORD_SRC.h[i]).toFixed(4));
     b.style.backgroundImage = "url(" + ART["lt" + (i + 1)] + ")";
     box.appendChild(b);
   }
@@ -3546,8 +3604,9 @@ function paintLetters(){
    The world is drawn inside a rolled, shaken transform, so the pickup point is
    un-rolled here and the flight is drawn in plain screen space — otherwise the
    letter would bank with the camera on its way to a slot that never banks.
-   The slot is measured now rather than at launch-time defaults because all
-   eight slots exist from the first frame, so its position is already final. */
+   The slot is measured now rather than at launch-time defaults because
+   every slot exists from the first frame, so its position is already
+   final. */
 function flyLetter(idx){
   const p = floorPt(travelled, laneA, riderLift() + 0.42);
   const roll = rollAngle(), cs = Math.cos(roll), sn = Math.sin(roll);
@@ -3569,7 +3628,7 @@ function flyLetter(idx){
 
 /* Same shape as flyLetter() and for the same reason: the world is drawn
    inside a rolled, shaken transform, so the pickup point is un-rolled here
-   and the flight is drawn in plain screen space. Targets the Buckaroos
+   and the flight is drawn in plain screen space. Targets the Breakers
    board itself (found via #coins rather than a new id, since it's the one
    element already guaranteed to be that board's descendant) rather than a
    fixed corner, so it still lands in the right place if that board ever
@@ -3706,7 +3765,7 @@ function drawFlyers(){
    the same plain screen space as drawFlyers() (see render()'s call site) and
    BEFORE it, so the bottle itself sits on top of the coins it just exploded
    out of. Reuses the world coin sprites' alternating-face spin (drawEntInner's
-   T.COIN case) so a burst Buckaroo reads as the same coin, just airborne. */
+   T.COIN case) so a burst Breaker reads as the same coin, just airborne. */
 function drawCoinSpill(){
   for (const p of coinSpill){
     const alpha = Math.max(0, p.life / p.maxLife);
@@ -3788,7 +3847,7 @@ function showReveal(){
      results panel is simply held back until they ask for it. */
   state = "over";
   $("pause").classList.remove("on");
-  /* The HUD goes with it: the metre readout and buckaroo count sat ghosting
+  /* The HUD goes with it: the metre readout and breaker count sat ghosting
      through the wash in the corners the poster reaches into. */
   $("hud").classList.remove("on");
   $("overPanel").classList.remove("on");
@@ -3830,7 +3889,7 @@ function closeReveal(){
 }
 
 /* Back into the same run, which is what makes it an endless mode rather than a
-   level: nothing is reset, so the distance and the buckaroos carry on. */
+   level: nothing is reset, so the distance and the breakers carry on. */
 /* Score has no ceiling — coins are the only uncapped term in runScore() — so no
    fixed size can be guaranteed to hold it. Shrink the figure to fit instead of
    letting it clip: a truncated number reads as a WRONG number, and once scores
@@ -3999,7 +4058,7 @@ function gameOver(){
   $("pause").classList.remove("on");
   $("pausePanel").classList.remove("on");
   /* The HUD goes NOW, not when the results card appears. It used to come down
-     in showOver(), a full DIE_DUR later, so the metre readout, the buckaroo
+     in showOver(), a full DIE_DUR later, so the metre readout, the breaker
      count, the spare tubes and the STAMPEDE word all sat over the wipeout for
      the whole 1.6s — and Typhoon tumbles up into that corner of the screen. */
   $("hud").classList.remove("on");
@@ -4104,7 +4163,7 @@ function handOverRider(){
    the two coordinate systems are already the same one. */
 function layoutOverRider(){
   const el  = $("overRider");
-  const im  = IMG.die2, rid = IMG.rider;
+  const im  = IMG.die2, idle2 = IMG.cowIdle2;
   const h   = Math.max(0.52 * (focal / CAM_DZ), H * 0.12);
 
   /* One source of truth for the file — the ART table, same as every other
@@ -4112,7 +4171,7 @@ function layoutOverRider(){
      canvas frame and the DOM frame together. */
   if (im && el.getAttribute("src") !== ART.die2) el.setAttribute("src", ART.die2);
 
-  if (!im || !rid){
+  if (!im || !idle2){
     /* Art still loading, or missing. Reserve a plausible square-ish box so the
        buttons stay clear, and fall back to centring him in it. */
     el.style.width = Math.round(h) + "px";
@@ -4123,17 +4182,20 @@ function layoutOverRider(){
     return;
   }
 
+  /* die is now tube-pinned against IDLE_TUBE_W/CX/BY (this art's own tube),
+     not RIDER_TUBE_W — see DIE_REG's own comment above drawRider's
+     duckImg/dieImg branch, which this reverse math must stay in step with. */
   const R   = DIE_REG[2];                        // "out cold" — the frame he holds
-  const w   = h * (rid.width / rid.height);
-  const dw  = (w * RIDER_TUBE_W) / R.tw;
+  const imW = h * (idle2.width / idle2.height);
+  const dw  = (imW * IDLE_TUBE_W) / R.tw;
   const dh  = dw * (im.height / im.width);
   el.style.width  = Math.round(dw) + "px";
   el.style.height = Math.round(dh) + "px";
 
   const r = el.getBoundingClientRect();
   if (!r.height){ overAnchorX = W / 2; overAnchorY = H * OVER_ANCHOR; return; }
-  const tcx = (RIDER_TUBE_CX - 0.5)  * w;
-  const tby = (RIDER_TUBE_BY - 0.88) * h;
+  const tcx = (IDLE_TUBE_CX - 0.5) * imW;
+  const tby = (IDLE_TUBE_BY - 0.9) * h;
   overAnchorX = r.left - tcx + R.cx * dw;
   overAnchorY = r.top  - h * 0.38 - tby + R.by * dh;
 }
@@ -4182,7 +4244,7 @@ function showOver(){
   buildWord($("fWord"), gotLetters);
   $("fWordLbl").textContent = gotLetters >= WORD.length
     ? "You spelled it"
-    : "Stampede letters  " + gotLetters + " / " + WORD.length;
+    : "Cowabunga letters  " + gotLetters + " / " + WORD.length;
 
   /* Records. Compared BEFORE they are banked, or every run ties itself.
      Strictly greater, so matching a best is not a new one — which matters most
@@ -4208,8 +4270,8 @@ function showOver(){
     { dist, coins, score, letters: gotLetters },
     "vs best", { dist: BEST.dist, coins: BEST.coins, score: BEST.score, letters: BEST.letters },
     bestStored ? "(records persist)" : "(SESSION ONLY — storage blocked, likely file://)");
-  $("overTitle").textContent  = $("overTitle").dataset.text = overWon ? "Nice Ride, Partner" : "Wipeout";
-  $("overKicker").textContent = overWon ? RIDE_FULL_NAME : "Better Luck Next Time Partner";
+  $("overTitle").textContent = overWon ? "Nice Ride, Dude" : "Wipeout";
+  $("overKicker").textContent = overWon ? RIDE_FULL_NAME : "Better Luck Next Time, Dude";
   $("overPanel").classList.add("on");
   settleOverRider();          // only measurable once the panel is displayed
   /* Crossfade rather than a hand-off. The ride track is 1.6s into a 2.4s linear
@@ -4332,7 +4394,7 @@ function hitRider(){
   // Proportional, so a hit at full tilt actually costs you something — the old
   // flat -1.2 barely registered at speed. A boost can't survive a crash either.
   speed = Math.max(CONFIG.startSpeed, speed * 0.62);
-  boostT = 0; boostSuper = false; fastPassLabelT = 0;
+  boostT = 0; boostSuper = false; speedBoostLabelT = 0;
   shake = 1; flash(); puff(26);
   if (extraLife){
     // The extra life absorbs this hit instead of a real tube — every OTHER
@@ -4487,7 +4549,7 @@ function update(dt){
 
   /* Season Pass's frozen exit — the same "action pauses" treatment as the
      intro reveal, for the last SEASONPASS_OUTRO_DUR of seasonPassT while the
-     rider winds up and tosses the card away (frames 07-09). Unlike the intro
+     rider winds up and tosses the card away (frames 07-11). Unlike the intro
      block, seasonPassT itself is the timer being frozen here rather than a
      dedicated one, so the outro's own length and the music handoff when it
      hits 0 land at the exact same instant they did before this froze — only
@@ -4507,8 +4569,8 @@ function update(dt){
      herd underfoot — Adam's call, once the "collect all 8" clip's own noise
      starts. stampedeT already times the CSS run-off (#letters.run's
      keyframes), so it doubles as the freeze's own timer too.
-     Unlike the other freezes, this one keeps calling updateFlyers() — the 8th
-     letter's own flyer (and any other pickup's, if one happened to still be
+     Unlike the other freezes, this one keeps calling updateFlyers() — the
+     final letter's own flyer (and any other pickup's, if one happened to still be
      mid-flight) is already most of the way through its flight the instant
      this freeze starts, not freshly spawned the same frame the way
      flyExtraLife() would be: measured at t~0.87 here, a few px off and a few px
@@ -4543,7 +4605,7 @@ function update(dt){
   runT += dt;
 
   // Season Pass's +50% outranks a plain boost's +25% rather than stacking with
-  // it — Math.max, not multiplying the two together — so grabbing a Fast Pass
+  // it — Math.max, not multiplying the two together — so grabbing a Speed Boost
   // mid-Season-Pass doesn't launch the rider past either power-up's own spec.
   const boostMult = (boostT > 0 && boostSuper) ? BOOST_SUPER_MULT : 1;
   const seasonMult = seasonPassT > 0 ? SEASONPASS_SPEED_MULT : 1;
@@ -4587,7 +4649,7 @@ function update(dt){
       }
     }
   }
-  if (fastPassLabelT > 0) fastPassLabelT = Math.max(0, fastPassLabelT - dt);
+  if (speedBoostLabelT > 0) speedBoostLabelT = Math.max(0, speedBoostLabelT - dt);
   if (shake > 0) shake = Math.max(0, shake - dt * 3);
 
   /* Held-arrow steering, the keyboard's answer to a held thumb. Skipped while a
@@ -4706,14 +4768,14 @@ function update(dt){
         }
       }
     } else if (e.t === T.BOOST){
-      // Fast Pass: a lane pickup now, not a chute-spanning hazard, so it uses
+      // Speed Boost: a lane pickup now, not a chute-spanning hazard, so it uses
       // the same close-enough check as coins/letters rather than an automatic
       // trigger. Matches the tunnel's boost exactly (see below) — always 25%
       // past max, never conditional on the rider's current pace.
       if (nearLane(e.i, LANE_PICK)){
         e.dead = true; boostSuper = true; boostT = BOOST_DUR;
         coins += POWERUP_SCORE_BONUS;
-        fastPassLabelT = FASTPASS_LABEL_DUR;
+        speedBoostLabelT = SPEEDBOOST_LABEL_DUR;
         Sound.boost(); puff(16);
       }
     } else if (e.t === T.SOUVENIR){
@@ -4728,7 +4790,7 @@ function update(dt){
       // the user's call, so the cue confirms the pickup instantly rather than
       // trailing a beat behind it while the bottle is still in the air. Only
       // the HUD flash still waits for flySouvenir()'s flight to land, so the
-      // Buckaroos figure lighting up reads as "this is what just paid out."
+      // Breakers figure lighting up reads as "this is what just paid out."
       if (nearLane(e.i, LANE_PICK)){
         e.dead = true; coins += SOUVENIR_BONUS + POWERUP_SCORE_BONUS;
         puff(24); flySouvenir(); Sound.souvenir();
@@ -4829,7 +4891,7 @@ const CLOUDS = [
   { u: 0.40, v: 0.52, s: 0.152, a: 0.80, sp: 0.011, par: 0.38 },
   { u: 0.61, v: 0.12, s: 0.192, a: 0.88, sp: 0.014, par: 0.46 },
   { u: 0.75, v: 0.63, s: 0.112, a: 0.66, sp: 0.008, par: 0.28 },
-  { u: 0.90, v: 0.34, s: 0.176, a: 0.85, sp: 0.013, par: 0.44, img: "cloudWagonWheel" },
+  { u: 0.90, v: 0.34, s: 0.176, a: 0.85, sp: 0.013, par: 0.44, img: "cloudFlower" },
 ];
 let skyT = 0;
 
@@ -5298,6 +5360,40 @@ function tubeSprite(px, py, h, tube, body){
   ctx.fillStyle = body; ctx.fill(); ctx.stroke();
 }
 
+/* Adam's call (2026-09-14): the daytona-snowman and typhoon-waving
+   obstacles were reading noticeably smaller than the rider — make them
+   effectively the same size as the cowabunga-idle sprites at full size.
+   sprite() below draws an obstacle's WHOLE PNG at h = hUnits * s (s the
+   obstacle's own projection scale, the exact analogue of drawRider's
+   S = focal/CAM_DZ), so its apparent ON-SCREEN opaque height is actually
+   h * (bboxH/img.height) — a PNG with padding around its content reads
+   smaller than one cropped tight, even at identical hUnits. drawRider's
+   idleImg branch draws cowIdle's whole PNG the same way, at
+   h_rider * sy (sy=1 at full/non-duck size) where
+   h_rider = Math.max(0.52 * S, H * 0.12) — so cowIdle's own apparent
+   opaque height at full size is 0.52 * S * (bboxH_idle/height_idle).
+   cowabunga-idle_03.png (IMG.cowIdle2, the on-screen size reference every
+   other own-aspect/tube branch above already pins against) measures 0%
+   padding (bboxH/height = 1.0 exactly), so the target apparent height is
+   just 0.52 * s.
+   Each hUnits below is solved as 0.52 / (that PNG's own bboxH/height),
+   measured off the real alpha data via tools/obstacle-size-measure.js —
+   NOT one shared value for the two alt frames of each obstacle, since the
+   four PNGs aren't cropped to quite the same tightness as each other
+   (measured heightFrac: cow/typhoon-waving_01 1.0, cow2/typhoon-waving_02
+   0.981, yeti/yeti-tube 1.0, yeti2/daytona-snowman-2 0.993) — a single
+   shared hUnits would read one alt frame right and the other slightly
+   small again. NOTE: IMG.yeti is still yeti-tube.png, the old
+   Typhoon-branded art (unlike cow/cow2, which are both already the new
+   typhoon-waving art) — only yeti2 has been re-exported to the new
+   daytona-snowman cowabunga art so far; this pass only fixes yeti-tube's
+   SIZE to match, not its brand. Re-measure and re-solve if any of these
+   four PNGs are re-exported. */
+const COW_H   = 0.52;
+const COW2_H  = 0.5303;
+const YETI_H  = 0.52;
+const YETI2_H = 0.5238;
+
 /* draw a PNG standing on the chute floor in a lane */
 function sprite(img, e, hUnits, lift, fbTube, fbBody){
   const dz = e.z - travelled + CAM_DZ;
@@ -5353,20 +5449,20 @@ function sprite(img, e, hUnits, lift, fbTube, fbBody){
    at its depth. It is the one number that sizes the pickup, and the sunburst
    below is written in multiples of it, so the two can never drift apart. */
 /* This is the ONE size every pickup in the game now renders at — every
-   *_H below (FASTPASS_H, SOUVENIR_H, EXTRALIFE_H, WHIRLPOOL_H,
+   *_H below (SPEEDBOOST_PICKUP_H, SOUVENIR_H, EXTRALIFE_H, WHIRLPOOL_H,
    SEASONPASS_H) is defined as LETTER_H rather than its own tuned literal,
    per tools/powerup-letter-size-audit.js: the PNGs' own bounding boxes
    fill 98-100% of their native canvas height (measured, not assumed —
-   fastPass 229/233, souvenir 335/336, extraLife 186/188, whirlpool
+   speedBoostPickup 229/233, souvenir 335/336, extraLife 186/188, whirlpool
    197/197, seasonPass 126/126), so pinning every *_H to this one constant
    makes every pickup's own ink the SAME on-screen height, the same
-   invariant WORD_SRC already enforces across the 8 letters (see its own
+   invariant WORD_SRC already enforces across every letter (see its own
    comment above). Previously each pickup had its own hand-tuned height —
    a deliberate rarity hierarchy (Season Pass documented as "the biggest
    power-up in the game by design") — flattened at Adam's explicit
    request (2026-08-25): every pickup should read as the same size, no
    rarity-driven scaling. Each glow's own outer-reach constant
-   (FASTPASS_GLOW_R/SOUVENIR_GLOW_R/WHIRLPOOL_SWIRL_R/
+   (SPEEDBOOST_PICKUP_GLOW_R/SOUVENIR_GLOW_R/WHIRLPOOL_SWIRL_R/
    SEASONPASS_HALO_R/SUN_R) is likewise unified below, so the glow doesn't
    reintroduce a size hierarchy the icon itself no longer has. Re-run that
    audit tool after any pickup art is re-exported — a re-export changing
@@ -5471,12 +5567,12 @@ const shineCtx = shineCv.getContext("2d");
 function letterShine(x, y, h, idx, k){
   const img = IMG["lt" + (idx + 1)];
   if (!img) return;
-  const sw = WORD_SRC.w[idx], dw = h * (sw / WORD_SRC.h);
+  const sw = WORD_SRC.w[idx], dw = h * (sw / WORD_SRC.h[idx]);
   const bw = Math.ceil(dw * DPR), bh = Math.ceil(h * DPR);
   if (bw < 2 || bh < 2) return;
   shineCv.width = bw; shineCv.height = bh;     // assigning size also clears it
   const g = shineCtx;
-  g.drawImage(img, WORD_SRC.x[idx], WORD_SRC.y, sw, WORD_SRC.h, 0, 0, bw, bh);
+  g.drawImage(img, WORD_SRC.x[idx], WORD_SRC.y[idx], sw, WORD_SRC.h[idx], 0, 0, bw, bh);
   g.globalCompositeOperation = "source-atop";
   /* The gradient's axis runs from top-left to bottom-right, so the BAND — which
      is perpendicular to it — rakes across on the diagonal. It starts and ends
@@ -5508,8 +5604,8 @@ function letterBadge(x, y, h, idx, alpha, shineK){
   const flare = shining ? Math.sin(Math.PI * shineK) : 0;
   const draw = () => {
     if (!img) return false;
-    const sw = WORD_SRC.w[idx], dw = h * (sw / WORD_SRC.h);
-    ctx.drawImage(img, WORD_SRC.x[idx], WORD_SRC.y, sw, WORD_SRC.h,
+    const sw = WORD_SRC.w[idx], dw = h * (sw / WORD_SRC.h[idx]);
+    ctx.drawImage(img, WORD_SRC.x[idx], WORD_SRC.y[idx], sw, WORD_SRC.h[idx],
                   x - dw / 2, y - h / 2, dw, h);
     return true;
   };
@@ -5535,7 +5631,7 @@ function letterBadge(x, y, h, idx, alpha, shineK){
 }
 
 /* ------------------------------------------------------------------
-   FAST PASS GLOW
+   SPEED BOOST PICKUP GLOW
    Every power-up needs its own read from across the chute, and it can't
    reuse the letters' sunburst — two rotating ray-fans in the same game would
    just be "the sunburst effect" twice, not two different pickups. This one
@@ -5546,41 +5642,41 @@ function letterBadge(x, y, h, idx, alpha, shineK){
    letters share one rotation phase: two different-looking spins in frame
    together would read as a glitch rather than as two distinct things.
    ------------------------------------------------------------------ */
-const FASTPASS_H       = LETTER_H;   // same size as every other pickup — see
+const SPEEDBOOST_PICKUP_H       = LETTER_H;   // same size as every other pickup — see
                                      // LETTER_H's comment
-const FASTPASS_LIFT     = 0.44;   // hangs a little above the water, like a letter
-const FASTPASS_PULSE_HZ = 1.3;    // breaths per second — visible as a strobe
+const SPEEDBOOST_PICKUP_LIFT     = 0.44;   // hangs a little above the water, like a letter
+const SPEEDBOOST_PICKUP_PULSE_HZ = 1.3;    // breaths per second — visible as a strobe
                                   // without landing on a strict multiple of the
                                   // frame rate, which is what would make it flicker
-const FASTPASS_SPOKES   = 8;
-const FASTPASS_SPIN     = -0.6;   // rad/s; opposite sign and slower than SUN_SPIN
-const FASTPASS_RING     = "252,234,0";      // the tag art's own yellow border
-const FASTPASS_CORE     = "252,246,240";    // C.white, matching the letters' core
-const FASTPASS_GLOW_R   = SUN_R;   // same glow reach as every other pickup —
+const SPEEDBOOST_PICKUP_SPOKES   = 8;
+const SPEEDBOOST_PICKUP_SPIN     = -0.6;   // rad/s; opposite sign and slower than SUN_SPIN
+const SPEEDBOOST_PICKUP_RING     = "252,234,0";      // the tag art's own yellow border
+const SPEEDBOOST_PICKUP_CORE     = "252,246,240";    // C.white, matching the letters' core
+const SPEEDBOOST_PICKUP_GLOW_R   = SUN_R;   // same glow reach as every other pickup —
                                    // was 0.62 (this halo's own hand-tuned base)
 
-function fastPassGlow(x, y, h){
+function speedBoostPickupGlow(x, y, h){
   const t = performance.now() * 0.001;
-  const pulse = 0.5 + 0.5 * Math.sin(t * FASTPASS_PULSE_HZ * 6.283);
-  const R = h * FASTPASS_GLOW_R * (0.92 + 0.16 * pulse);
+  const pulse = 0.5 + 0.5 * Math.sin(t * SPEEDBOOST_PICKUP_PULSE_HZ * 6.283);
+  const R = h * SPEEDBOOST_PICKUP_GLOW_R * (0.92 + 0.16 * pulse);
   ctx.save();
   ctx.translate(x, y);
 
   const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
-  halo.addColorStop(0,    "rgba(" + FASTPASS_CORE + "," + (0.46 + 0.26 * pulse).toFixed(3) + ")");
-  halo.addColorStop(0.62, "rgba(" + FASTPASS_RING + "," + (0.36 + 0.20 * pulse).toFixed(3) + ")");
-  halo.addColorStop(1,    "rgba(" + FASTPASS_RING + ",0)");
+  halo.addColorStop(0,    "rgba(" + SPEEDBOOST_PICKUP_CORE + "," + (0.46 + 0.26 * pulse).toFixed(3) + ")");
+  halo.addColorStop(0.62, "rgba(" + SPEEDBOOST_PICKUP_RING + "," + (0.36 + 0.20 * pulse).toFixed(3) + ")");
+  halo.addColorStop(1,    "rgba(" + SPEEDBOOST_PICKUP_RING + ",0)");
   ctx.fillStyle = halo;
   ctx.beginPath(); ctx.arc(0, 0, R, 0, 6.284); ctx.fill();
 
   // Sparse dashes, not a wedge fan — see the note above on why this can't just
   // be a second sunburst.
-  ctx.rotate(t * FASTPASS_SPIN);
-  ctx.strokeStyle = "rgba(" + FASTPASS_CORE + "," + (0.55 + 0.35 * pulse).toFixed(3) + ")";
+  ctx.rotate(t * SPEEDBOOST_PICKUP_SPIN);
+  ctx.strokeStyle = "rgba(" + SPEEDBOOST_PICKUP_CORE + "," + (0.55 + 0.35 * pulse).toFixed(3) + ")";
   ctx.lineWidth = Math.max(1.5, h * 0.05);
   ctx.lineCap = "round";
-  for (let i = 0; i < FASTPASS_SPOKES; i++){
-    const a = (i / FASTPASS_SPOKES) * 6.283;
+  for (let i = 0; i < SPEEDBOOST_PICKUP_SPOKES; i++){
+    const a = (i / SPEEDBOOST_PICKUP_SPOKES) * 6.283;
     const ca = Math.cos(a), sa = Math.sin(a);
     ctx.beginPath();
     ctx.moveTo(ca * R * 0.74, sa * R * 0.74);
@@ -5592,12 +5688,12 @@ function fastPassGlow(x, y, h){
 
 /* ------------------------------------------------------------------
    SOUVENIR BOTTLE GLOW
-   A plain breathing green halo — no rotating dash-ring like Fast Pass, no
+   A plain breathing green halo — no rotating dash-ring like Speed Boost, no
    rotating fan like the letters. A first version scattered twinkling
    four-point sparkles around the bottle, but at the size a pickup actually
    draws at, the sparkles read as a handful of green blobs rather than
-   glints, so they're gone. What's left to tell this apart from Fast Pass's
-   halo is the pulse rate (slower, SOUVENIR_PULSE_HZ vs FASTPASS_PULSE_HZ) and
+   glints, so they're gone. What's left to tell this apart from Speed Boost's
+   halo is the pulse rate (slower, SOUVENIR_PULSE_HZ vs SPEEDBOOST_PICKUP_PULSE_HZ) and
    the color itself — same "third silhouette" goal, simpler execution.
    ------------------------------------------------------------------ */
 const SOUVENIR_H       = LETTER_H;   // same size as every other pickup — see
@@ -5605,7 +5701,7 @@ const SOUVENIR_H       = LETTER_H;   // same size as every other pickup — see
 const SOUVENIR_LIFT     = 0.46;
 const SOUVENIR_COLOR    = "20,180,40";       // green, measured off the bottle's
                                              // own lid/straw art
-const SOUVENIR_PULSE_HZ = 0.6;   // slower than Fast Pass's 1.3, so the two
+const SOUVENIR_PULSE_HZ = 0.6;   // slower than Speed Boost's 1.3, so the two
                                  // halos don't read as the same breathing rate
 const SOUVENIR_GLOW_R   = SUN_R;   // same glow reach as every other pickup —
                                    // was 0.75 (this halo's own hand-tuned base)
@@ -5627,8 +5723,8 @@ function souvenirGlow(x, y, h){
 
 /* ------------------------------------------------------------------
    EXTRA LIFE SMELL LINES
-   The pickup is a plate of BBQ, not a tag or a bottle — a radial halo read as
-   a generic status glow, the same idea as Fast Pass/Souvenir with a different
+   The pickup is a hot dog, not a tag or a bottle — a radial halo read as
+   a generic status glow, the same idea as Speed Boost/Souvenir with a different
    color. Cartoon smell lines are the on-theme choice instead, and give this
    pickup a silhouette the other two don't share: motion that rises and fades,
    not a halo that surrounds.
@@ -5636,7 +5732,7 @@ function souvenirGlow(x, y, h){
    A first version didn't read as smell at all — two things fixed it. First,
    speed: it wobbled at ~1 full cycle/second, which looks like static or a
    scribble; real steam ambles, so this drifts at a quarter of that. Second,
-   color: EXTRALIFE_COLOR (bright red, measured off the tray for the HUD tube)
+   color: EXTRALIFE_COLOR (bright red, measured off the hot dog for the HUD tube)
    reads as heat/alert on a rising squiggle, not "smells good" — steam is
    almost always warm cream/white in this style, so the wisps get their own
    color for that reason alone. Each wisp is also drawn as several overlapping
@@ -5644,13 +5740,17 @@ function souvenirGlow(x, y, h){
    rather than ending in a flat-capped ribbon, the way a real wisp thins out
    as it rises and disperses.
    ------------------------------------------------------------------ */
-/* Was 0.32, hand-tuned against a stale assumption about this file's own
-   shape (the old comment here claimed a 200x124 canvas so its WIDTH would
-   land near Fast Pass's — extra-life.png actually measures 200x188 now,
-   per tools/powerup-letter-size-audit.js, so that math was already off
-   against the current art even before the pickups were unified to one
-   size). Same size as every other pickup now — see LETTER_H's comment. */
-const EXTRALIFE_H     = LETTER_H;
+/* extra-life.png was re-exported 2026-09-11 as a hot dog (300x188, a wide
+   3:2-ish canvas whose art fills most of the frame — bbox 286x173, barely
+   padded) instead of the old tray art. At LETTER_H it measured ~36% over
+   every other pickup's footprintArea (tools/sprite-size-audit.js) because
+   width scales off nativeW/nativeH and this shape is much wider than
+   speedBoostPickup/whirlpool/souvenir's own bboxes — the same reason SEASONPASS_H
+   below isn't LETTER_H either. 0.434 is solved from that audit's own
+   footprintArea formula (k = H/nativeH, footprintArea = k^2 * bboxW *
+   bboxH) to land back on the other icons' mean; re-run the audit and
+   re-solve if this art is re-exported again. */
+const EXTRALIFE_H     = 0.434;
 const EXTRALIFE_LIFT  = 0.44;
 const EXTRALIFE_COLOR = "250,60,50";        // measured off extra-life.png's tray
                                             // edge — used for the HUD tube only
@@ -5710,7 +5810,7 @@ function extraLifeSmellLines(x, y, h){
    the active effect. Each mote drags a short trail of fading echoes along
    its OWN path (stepped a beat earlier in the same cycle) rather than being
    independently animated, so it reads as one thing diving in, not a cluster
-   of unrelated sparks. Neither a halo (Fast Pass, Souvenir) nor rising
+   of unrelated sparks. Neither a halo (Speed Boost, Souvenir) nor rising
    motion (Extra Life) — the one silhouette on this list that reads as a
    vortex rather than a status glow (rule 5). Shared with whirlpoolActive()
    below, so the world pickup and the post-collection cue visibly look like
@@ -5720,10 +5820,11 @@ const WHIRLPOOL_H     = LETTER_H;   // same size as every other pickup — see
                                     // LETTER_H's comment
 const WHIRLPOOL_LIFT  = 0.44;   // hangs a little above the water, like the others
 // Sampled off the actual whirlpool.png pixels (headless-canvas colour count),
-// not eyeballed — the art was re-exported 2026-08-24 and the old guess
-// ("70,190,225", a teal that predates this art) no longer matched it.
-const WHIRLPOOL_RING_COLOR = "20,180,255";   // light cyan-blue, off the art's swirl wedges
-const WHIRLPOOL_DEEP_COLOR = "0,80,235";     // deep royal blue, off the art's outer ring
+// not eyeballed — the art was re-exported 2026-09-11 (blue ring/wedges ->
+// orange/gold) and the old guess ("20,180,255"/"0,80,235", a cyan-blue pair
+// that predates this art) no longer matched it.
+const WHIRLPOOL_RING_COLOR = "255,92,15";    // vivid orange, off the art's swirl wedges
+const WHIRLPOOL_DEEP_COLOR = "248,176,0";    // rich gold, off the art's outer ring
 const WHIRLPOOL_CORE_COLOR = "252,246,240";  // C.white, matching the other pickups' core
 const WHIRLPOOL_MOTES = 5;      // dive-in points spaced evenly around the ring
 const WHIRLPOOL_TURNS = 1.4;    // full turns a mote makes between the outer edge and the centre
@@ -5923,7 +6024,7 @@ function whirlpoolMotes(x, y, h, t){
    The "biggest and best" power-up's own look (rule 5): a bright white core
    that never really leaves, wrapped in a golden halo, with slow concentric
    gold rings expanding outward and fading — the literal "spreads out around
-   it" Adam described, and its own motif rather than Fast Pass's rotating
+   it" Adam described, and its own motif rather than Speed Boost's rotating
    spokes or Whirlpool's diving motes/pinwheel blur. Used for the uncollected
    world pickup only (drawEntInner's T.SEASONPASS case) — unlike Whirlpool,
    the ACTIVE in-effect cue is deliberately NOT this glow scaled up around the
@@ -5936,7 +6037,7 @@ function whirlpoolMotes(x, y, h, t){
    bboxH, not just height) caught what a height-only match missed: season-
    pass.png's native canvas is 200x126, over 50% wider-than-tall relative to
    the other icons' own canvases (whirlpool 200x197, extraLife 200x188,
-   fastPass 200x233), so matching HEIGHT alone let the badge's WIDTH balloon
+   speedBoostPickup 200x233), so matching HEIGHT alone let the badge's WIDTH balloon
    out unchecked — +66.7% footprintArea deviation from the other four icons'
    mean, read on screen as "considerably bigger" despite an identical h.
    0.393 solves footprintArea = the other four icons' own mean
@@ -6016,11 +6117,11 @@ function drawEntInner(e){
 
   if (e.t === T.COW){
     const alt = IMG.cow2 && Math.floor(performance.now() * 0.002 + e.spin) % 2;
-    return sprite(alt ? IMG.cow2 : IMG.cow, e, 0.48, 0.02, '#1aa39b', C.white);
+    return sprite(alt ? IMG.cow2 : IMG.cow, e, alt ? COW2_H : COW_H, 0.02, C.orange, C.white);
   }
   if (e.t === T.YETI){
     const alt = IMG.yeti2 && Math.floor(performance.now() * 0.002 + e.spin) % 2;
-    return sprite(alt ? IMG.yeti2 : IMG.yeti, e, 0.48, 0.02, '#2f7fd0', C.white);
+    return sprite(alt ? IMG.yeti2 : IMG.yeti, e, alt ? YETI2_H : YETI_H, 0.02, '#2f7fd0', C.white);
   }
 
   if (e.t === T.PIG){
@@ -6088,7 +6189,7 @@ function drawEntInner(e){
 
   if (e.t === T.LETTER){
     // Rides a little higher than a coin and bobs, so the rarer pickup reads as
-    // its own thing at a glance rather than as one more buckaroo.
+    // its own thing at a glance rather than as one more breaker.
     const p = floorPt(e.z, e.a, 0.42);
     const dist = e.z - travelled;
     const grow = Math.max(0.25, Math.min(1, 1 - (dist - 2) / 14));
@@ -6110,18 +6211,18 @@ function drawEntInner(e){
   }
 
   if (e.t === T.BOOST){
-    // Fast Pass. Rides a little higher than a coin, same reasoning as a
+    // Speed Boost. Rides a little higher than a coin, same reasoning as a
     // letter: the rarer pickup needs to read as its own thing.
-    const p = floorPt(e.z, e.a, FASTPASS_LIFT);
+    const p = floorPt(e.z, e.a, SPEEDBOOST_PICKUP_LIFT);
     const dist = e.z - travelled;
     const grow = Math.max(0.25, Math.min(1, 1 - (dist - 2) / 14));
-    const h = FASTPASS_H * s * grow;
+    const h = SPEEDBOOST_PICKUP_H * s * grow;
     if (h < 6) return;
     // Same bob as a letter (LETTER_H's block) — every pickup now bounces the
     // same way, not just the letters.
     const by = p.y + Math.sin(performance.now() * 0.005 + e.spin) * h * 0.08;
-    fastPassGlow(p.x, by, h);
-    const img = IMG.fastPass;
+    speedBoostPickupGlow(p.x, by, h);
+    const img = IMG.speedBoostPickup;
     if (img){
       const w = h * (img.width / img.height);
       ctx.drawImage(img, p.x - w / 2, by - h / 2, w, h);
@@ -6132,7 +6233,7 @@ function drawEntInner(e){
       ctx.strokeStyle = C.ink; ctx.lineWidth = Math.max(2, 0.04 * s); ctx.stroke();
       ctx.font = "700 " + (r * 0.9).toFixed(1) + "px " + MONO;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillStyle = C.yellow; ctx.fillText("FP", p.x, by);
+      ctx.fillStyle = C.yellow; ctx.fillText("SB", p.x, by);
       ctx.textBaseline = "alphabetic";
     }
     return;
@@ -6140,13 +6241,13 @@ function drawEntInner(e){
 
   if (e.t === T.SOUVENIR){
     // Souvenir Bottle. Same "ride higher, read as its own thing" reasoning as
-    // Fast Pass and the letters.
+    // Speed Boost and the letters.
     const p = floorPt(e.z, e.a, SOUVENIR_LIFT);
     const dist = e.z - travelled;
     const grow = Math.max(0.25, Math.min(1, 1 - (dist - 2) / 14));
     const h = SOUVENIR_H * s * grow;
     if (h < 6) return;
-    // Same bob as a letter — see FastPass's block above.
+    // Same bob as a letter — see SpeedBoost's block above.
     const by = p.y + Math.sin(performance.now() * 0.005 + e.spin) * h * 0.08;
     souvenirGlow(p.x, by, h);
     const img = IMG.souvenir;
@@ -6168,15 +6269,15 @@ function drawEntInner(e){
 
   if (e.t === T.EXTRALIFE){
     // Extra Life. Same "ride higher, read as its own thing" reasoning as
-    // Fast Pass and Souvenir.
+    // Speed Boost and Souvenir.
     const p = floorPt(e.z, e.a, EXTRALIFE_LIFT);
     const dist = e.z - travelled;
     const grow = Math.max(0.25, Math.min(1, 1 - (dist - 2) / 14));
     const h = EXTRALIFE_H * s * grow;
     if (h < 6) return;
-    // Same bob as a letter — see FastPass's block above.
+    // Same bob as a letter — see SpeedBoost's block above.
     const by = p.y + Math.sin(performance.now() * 0.005 + e.spin) * h * 0.08;
-    // Drawn BEFORE the smell lines, unlike Fast Pass/Souvenir's glow-then-
+    // Drawn BEFORE the smell lines, unlike Speed Boost/Souvenir's glow-then-
     // sprite order — smell lines rise off the food and read wrong if the tray
     // art draws on top of them and clips their base.
     const img = IMG.extraLife;
@@ -6200,7 +6301,7 @@ function drawEntInner(e){
   if (e.t === T.WHIRLPOOL){
     // Whirlpool. Same "ride higher, read as its own thing" reasoning as the
     // other pickups; the dive-in motes run off the clock rather than any
-    // game-state timer, same as fastPassGlow/souvenirGlow, since this is the
+    // game-state timer, same as speedBoostPickupGlow/souvenirGlow, since this is the
     // uncollected world pickup, not the active effect. The icon itself stays
     // put — see whirlpoolMotes's own comment for why it no longer spins.
     const p = floorPt(e.z, e.a, WHIRLPOOL_LIFT);
@@ -6209,7 +6310,7 @@ function drawEntInner(e){
     const h = WHIRLPOOL_H * s * grow;
     if (h < 6) return;
     const t = performance.now() * 0.001;
-    // Same bob as a letter — see FastPass's block above. Purely vertical, so
+    // Same bob as a letter — see SpeedBoost's block above. Purely vertical, so
     // it doesn't reintroduce the icon rotation Adam had removed (see
     // whirlpoolMotes's comment) — the badge still holds its own orientation.
     const by = p.y + Math.sin(performance.now() * 0.005 + e.spin) * h * 0.08;
@@ -6238,7 +6339,7 @@ function drawEntInner(e){
     const grow = Math.max(0.25, Math.min(1, 1 - (dist - 2) / 14));
     const h = SEASONPASS_H * s * grow;
     if (h < 6) return;
-    // Same bob as a letter — see FastPass's block above.
+    // Same bob as a letter — see SpeedBoost's block above.
     const by = p.y + Math.sin(performance.now() * 0.005 + e.spin) * h * 0.08;
     seasonPassGlow(p.x, by, h, 1);
     const img = IMG.seasonPass;
@@ -6523,10 +6624,10 @@ const MONO = "ui-monospace,Menlo,Consolas,monospace";
    own silhouette), so this is a best-effort correction, not a confirmed
    root cause. */
 const FLIP_REG = [
-  { s: 2.3528, cx: 0.5403, cy: 0.4706 },
-  { s: 2.4377, cx: 0.4089, cy: 0.5821 },
-  { s: 2.3046, cx: 0.5226, cy: 0.4291 },   // inverted
-  { s: 2.5569, cx: 0.5599, cy: 0.4977 },
+  { s: 2.2257, cx: 0.4991, cy: 0.4763 },
+  { s: 2.3229, cx: 0.4663, cy: 0.5078 },
+  { s: 2.2932, cx: 0.4797, cy: 0.3839 },   // inverted
+  { s: 2.3040, cx: 0.5333, cy: 0.4706 },
 ];
 const RIDER_CX = 0.5271, RIDER_CY = 0.5669;   // resting sprite's centroid
 
@@ -6538,19 +6639,21 @@ const RIDER_CX = 0.5271, RIDER_CY = 0.5669;   // resting sprite's centroid
    point, so it overrides jump/duck rather than the other way around —
    see drawRider's priority comment).
    Same rotation-invariant handles as FLIP_REG, for the same reason: the
-   assembly turns as a whole, the four canvases differ in size (619x489
-   down to 601x488), and a profile frame's tube is genuinely narrower on
-   screen than the front frame's (foreshortening, not just cropping), so
-   tube-width registration (DUCK_REG's approach) would incorrectly stretch
-   it back out. sqrt(area) holds his SIZE steady since opaque area survives
-   rotation; the opaque centroid is the point he turns about. Measured off
-   the alpha; re-measure if this art is re-exported.
+   assembly turns as a whole, and a profile frame's tube is genuinely
+   narrower on screen than the front frame's (foreshortening, not just
+   cropping), so tube-width registration (DUCK_REG's approach) would
+   incorrectly stretch it back out. sqrt(area) holds his SIZE steady since
+   opaque area survives rotation; the opaque centroid is the point he turns
+   about. Measured off the alpha via tools/spin-frame-measure.js against the
+   cowabunga-sprites/spin art (all four frames a uniform 507x507 canvas);
+   re-measure if this art is re-exported, or if typhoon-rider.png (the
+   resting sprite s is scaled against) ever is.
    ------------------------------------------------------------------ */
 const SPIN_REG = [
-  { s: 2.4070, cx: 0.5315, cy: 0.5945 },   // spin_01, front
-  { s: 2.3724, cx: 0.5388, cy: 0.5865 },   // spin_02, quarter-turn
-  { s: 2.4880, cx: 0.5203, cy: 0.5775 },   // spin_03, back
-  { s: 2.5030, cx: 0.4724, cy: 0.5763 },   // spin_04, quarter-turn (other side)
+  { s: 2.4334, cx: 0.4830, cy: 0.5788 },   // spin_01, front
+  { s: 2.5205, cx: 0.4701, cy: 0.5848 },   // spin_02, quarter-turn
+  { s: 2.4972, cx: 0.4778, cy: 0.5812 },   // spin_03, back
+  { s: 2.4790, cx: 0.5009, cy: 0.5882 },   // spin_04, quarter-turn (other side)
 ];
 const SPIN_FRAME_DUR = 0.12;   // seconds per frame — ~8.3fps, tuned by eye for
                                // a lively continuous spin rather than a slow tumble
@@ -6563,22 +6666,18 @@ const spinFrame = (t) => Math.floor(t / SPIN_FRAME_DUR) % SPIN_REG.length;
    each frame is on screen for ~60ms and the lean read as a flicker
    rather than as a weight shift — one pose held long enough to see
    beats three the eye can't resolve.
-   Position is tube-registered like the duck: he leans while the ring
-   stays in the water, so cx/by are measured off the tube and hold it
-   planted.
-   SIZE is not. tw here is NOT the tube's measured width (0.8503 and
-   0.9330) — it is back-solved from sqrt(opaque area), the rotation
-   invariant handle FLIP_REG uses. The lean tilts the ring in-plane,
-   and a tilted ellipse's WIDTH is not invariant, so registering on it
-   would resize his body against the resting pose every time a lane
-   change starts and ends. Area matches both to within 0.1%.
-   Re-measuring means re-deriving against the resting sprite's area,
-   not just the frame's.
+   Replaced 2026-09-11 with a split of Adam's cowabunga-lean.png sheet
+   (the sheet's left half is the move-right pose, its right half is
+   move-left) into cowabunga-move-left.png/cowabunga-move-right.png,
+   the same self-contained cow-in-a-tube badge art as IDLE/EAT, not
+   Typhoon's body leaning atop a separately-pinned tube — so like
+   those two, it draws off its OWN aspect ratio sized directly to `h`
+   (idleImg/eatImg's branch below), not a tube fit against
+   RIDER_TUBE_W. Each half is cropped tight to its own opaque bbox (0%
+   padding, like cowIdle/eat) so the same own-aspect sizing lands at a
+   consistent height next to idle instead of drifting with however
+   much the sheet padded each pose.
    ------------------------------------------------------------------ */
-const MOVE_REG = {
-  "-1": { tw: 0.8930, cx: 0.5336, by: 0.9866 },   // move-left_01
-   "1": { tw: 0.9315, cx: 0.4880, by: 0.9738 },   // move-right_01
-};
 const MOVE_KEY = { "-1": "mvL", "1": "mvR" };
 
 /* The resting sprite's own tube, which every tube-registered set is matched to.
@@ -6597,49 +6696,109 @@ const MOVE_DUR = 0.42;
 /* ------------------------------------------------------------------
    DUCK
    Three frames flattening him into the tube: alarmed, crouching, flat.
-   Tube-registered like the spin — he genuinely shrinks as he tucks
-   (opaque area falls 210k -> 166k), so an area fit would grow the flat
-   frame to compensate. The tube itself holds steady across all three.
+   Tube-registered like the spin — he genuinely shrinks as he tucks, so an
+   area fit would grow the flat frame to compensate. The tube itself holds
+   steady across all three.
    Driven by duckA rather than by tuckT directly. tuckT is a countdown
    that a held duck keeps topping up to ~0.25, so reading frames off it
    would stall him halfway down and never reach flat. duckA instead
    ramps to 1 and STAYS there while the duck is held, then eases back
    out through the same frames in reverse.
+   Replaced 2026-09-11 with a 3-panel split of Adam's cowabunga-sprites/
+   duck/duck.png sheet (was Typhoon's own alarmed/crouch/flat pose,
+   tube-registered against RIDER_TUBE_W same as die/hurt used to be). The new
+   art is a self-contained cow-in-a-tube badge, same design as IDLE/EAT/MOVE,
+   not Typhoon's body reacting atop a separately-pinned tube — so tw/cx/by
+   below are measured off THIS art's own teal ring (tools/duck-frame-measure.js,
+   adapted from eat-frame-measure.js's same teal-ring probe — the ring is
+   split into a couple of big arcs by the cow's crossed arms resting on it,
+   so the tool unions every connected piece wide enough to plausibly be a
+   piece of the ring itself, rather than trusting a single largest blob,
+   which the water-splash decorations scattered around the badge can outrank
+   depending on how close they happen to sit to the ring in a given frame).
+   Unlike die (still Typhoon's tube), drawRider pins this against
+   IDLE_TUBE_W/CX/BY — this art's OWN resting tube (measured off
+   cowabunga-idle_02.png with the same tool) — not RIDER_TUBE_W, which
+   belongs to the old typhoon-rider.png tube and has no relation to this
+   art's tube size; pinning to RIDER_TUBE_W the way die still does would
+   size duck_01 (barely tucked) visibly different from idle, per the same
+   mismatch IDLE/EAT/MOVE's own comments already describe.
    ------------------------------------------------------------------ */
 const DUCK_REG = [
-  { tw: 0.9560, cx: 0.4963, by: 0.9840 },   // duck_01, dropping
-  { tw: 0.9663, cx: 0.5019, by: 0.9981 },   // duck_02, crouched
-  { tw: 0.9608, cx: 0.4947, by: 0.9978 },   // duck_03, flat
+  { tw: 0.8935, cx: 0.4517, by: 0.9810 },   // duck_01, dropping
+  { tw: 0.8600, cx: 0.4425, by: 0.9395 },   // duck_02, crouched
+  { tw: 0.8281, cx: 0.4851, by: 0.9807 },   // duck_03, flat
 ];
 const duckIdx = (a) => a < 0.34 ? 0 : a < 0.68 ? 1 : 2;
+/* This art's own resting tube (cowabunga-idle_02.png's ring, same probe as
+   DUCK_REG above) — what DUCK_REG's tw is pinned against, in place of the
+   old typhoon-rider.png-derived RIDER_TUBE_W/CX/BY. */
+const IDLE_TUBE_W  = 0.8944;
+const IDLE_TUBE_CX = 0.5176;
+const IDLE_TUBE_BY = 0.9908;
 
 /* ------------------------------------------------------------------
    HURT and DIE
-   Both are tube-registered like the duck and spin sets — the rider
-   reacts while the ring stays put, so the tube is the fixed feature.
+   Both are tube-registered like the duck set — the rider reacts while the
+   ring stays put, so the tube is the fixed feature. DIE gets its own timer
+   because the run has to WAIT for it: the game-over panel used to slam up
+   the instant lives hit zero, which would have covered the animation
+   completely.
    HURT runs over the same 1.4s hurtT that already drives the damage
-   blink, so the pose and the flicker stay in step.
-   DIE gets its own timer because the run has to WAIT for it: the
-   game-over panel used to slam up the instant lives hit zero, which
-   would have covered the animation completely.
+   blink, so the pose and the flicker stay in step. Replaced 2026-09-14
+   with a 3-panel split of Adam's cowabunga-sprites/hurt art (was
+   Typhoon's own impact/wince/shake-it-off pose, tube-registered against
+   RIDER_TUBE_W same as die used to be). The new art is a self-contained
+   cow-in-a-tube badge, same design as IDLE/EAT/MOVE/DUCK, not Typhoon's
+   body reacting atop a separately-pinned tube.
+   A first pass drew it off its OWN aspect ratio sized directly to `h`, the
+   same idleImg/eatImg/moveImg treatment EAT/MOVE get — but
+   tools/sprite-size-audit.js's OWN_ASPECT set immediately flagged it:
+   hurt0/hurt1/hurt2 came out at apparent areas of roughly 0.60/0.66/0.72
+   (hurt2 ~20% bigger than hurt0), because hurt_01's tall spark/lightning
+   burst and hurt_03's puff decoration eat into each frame's own opaque
+   bbox height by a different amount, and own-aspect sizing scales that
+   WHOLE bbox (decorations included) to a fixed h — so the cow himself
+   shrinks whenever the decoration reaches higher, exactly the "changing
+   size between frames" Adam flagged by eye. Fixed by tube-pinning it
+   instead, same as duck/die: tw/cx/by below are measured off THIS art's
+   own teal ring (tools/hurt-frame-measure.js, adapted from
+   duck-frame-measure.js's same teal-ring probe) and, like duck/die,
+   pinned against IDLE_TUBE_W/CX/BY — this art's OWN resting tube — not
+   RIDER_TUBE_W, which belongs to the old typhoon-rider.png tube and has no
+   relation to this art's tube size. The ring itself doesn't move frame to
+   frame (a reaction, not a resize, same as duck's flat frames don't need
+   an internal-consistency exemption the way duck's own tuck does), so
+   pinning to it is what actually keeps the cow reading as one consistent
+   size through the animation.
    ------------------------------------------------------------------ */
 const HURT_REG = [
-  { tw: 0.9613, cx: 0.4903, by: 0.9941 },   // impact
-  { tw: 0.9227, cx: 0.4871, by: 0.9912 },   // wincing
-  { tw: 0.9242, cx: 0.5024, by: 0.9869 },   // shaking it off
+  { tw: 0.9499, cx: 0.4810, by: 0.9794 },   // impact
+  { tw: 0.9309, cx: 0.4849, by: 0.9916 },   // wincing
+  { tw: 0.9395, cx: 0.4944, by: 0.9932 },   // shaking it off
 ];
-/* die_03's tw is corrected, not measured directly: tools/sprite-size-audit.js
-   flagged it ~12% smaller in apparent on-screen area than die_01/02 (which
-   the audit did not flag) — his sprawled-out "out cold" pose widens the
-   tube's raw pixel width without his body actually shrinking, the same
-   width-isn't-size-invariant trap MOVE_REG's own tw already works around.
-   Re-solved against die_01/02's own apparent area, holding cx/by as
-   measured. This is the frame the wipeout screen holds on, so it is worth
-   rechecking by eye after any re-export. */
+/* Replaced 2026-09-14 with a 3-panel cowabunga-sprites/die/die_0N.png set
+   (was Typhoon's own impact/dizzy/out-cold pose, tube-registered against
+   RIDER_TUBE_W). Unlike hurt above, die keeps the tube-fit treatment
+   rather than joining the own-aspect branch: unlike hurt's pose (a
+   reaction that holds still in the barrel), die's poses genuinely widen
+   as he slumps/sprawls, so an own-aspect fit would grow him frame to
+   frame the way duck's own-aspect alternative would have. So it's
+   tube-pinned like duck, but against THIS art's own tube
+   (IDLE_TUBE_W/CX/BY, cowabunga-idle_02.png's ring) rather than
+   RIDER_TUBE_W (the old typhoon-rider.png tube, unrelated to this badge
+   art's proportions) — see DUCK_REG's own comment for why.
+   tw/cx/by measured off the real PNG alpha/color data via
+   tools/die-frame-measure.js (adapted from duck-frame-measure.js's same
+   teal-ring probe — the ring is broken into arcs by his flailing arms in
+   every pose, so the tool unions every connected piece wide enough to
+   plausibly be a piece of the ring itself, rather than trusting a single
+   largest blob, which the water-splash decorations can outrank).
+   Re-measure if this art is re-exported. */
 const DIE_REG = [
-  { tw: 0.9613, cx: 0.4903, by: 0.9941 },
-  { tw: 0.9298, cx: 0.4868, by: 0.9961 },
-  { tw: 0.8865, cx: 0.4833, by: 0.9936 },   // out cold
+  { tw: 0.9499, cx: 0.4810, by: 0.9794 },
+  { tw: 0.9307, cx: 0.4968, by: 0.9869 },
+  { tw: 0.9436, cx: 0.4870, by: 0.9873 },   // out cold
 ];
 const HURT_DUR = 1.4;      // matches hurtT, set by hitRider
 const DIE_DUR  = 1.6;      // how long the wipeout plays before the panel
@@ -6652,78 +6811,85 @@ const triIdx = (t) => t < 0.34 ? 0 : t < 0.68 ? 1 : 2;
 
 /* ------------------------------------------------------------------
    EXTRA LIFE EATING
-   Four frames of Typhoon working through a pizza slice, tube-registered
-   like hurt/die/duck — he digs in while the ring stays planted. Plays right
-   on the grab, riding the same eatT-counts-down/quadIdx-picks-the-frame
+   Four frames of the Cowabunga cow mascot working through a hot dog. Plays
+   right on the grab, riding the same eatT-counts-down/quadIdx-picks-the-frame
    shape as HURT_DUR/triIdx.
+   Replaced 2026-09-11 with a 4-panel cow-mascot sheet (was Typhoon's own
+   pizza-eating pose, tube-registered like hurt/die/duck). The new art is a
+   self-contained cow-in-a-tube badge, same as IDLE's cowIdle frames, not
+   Typhoon's body reacting atop a separately-pinned tube — so like IDLE
+   (see its own comment above drawRider), it draws off its OWN aspect ratio
+   sized directly to `h`, not EAT_REG/RIDER_TUBE_W. Tube-pinning it produced
+   a rider that visibly shrank relative to idle: RIDER_TUBE_W was measured
+   off the old typhoon-rider.png's own tube, which has no relation to this
+   art's tube size. Each extra-life_0N.png is cropped tight to its own
+   opaque bbox (0% padding, like cowIdle) so the same own-aspect sizing
+   lands at a consistent height across all four frames.
    EAT_DUR is the extra-life.mp3 + slurp.mp3 pair's combined runtime (2.30s +
    0.91s), so the pose holds through both sounds instead of snapping back
    to idle mid-chew. ------------------------------------------------------------------ */
-const EAT_REG = [
-  { tw: 0.9307, cx: 0.4990, by: 0.9980 },   // reaching for the slice
-  { tw: 0.9689, cx: 0.4886, by: 0.9960 },   // first bite
-  { tw: 0.9715, cx: 0.5020, by: 0.9961 },   // mid bite
-  { tw: 0.9717, cx: 0.4980, by: 0.9940 },   // savoring the last of it
-];
 const EAT_DUR = 3.22;
 const quadIdx = (t) => t < 0.25 ? 0 : t < 0.5 ? 1 : t < 0.75 ? 2 : 3;
 
 /* ------------------------------------------------------------------
    SEASON PASS
-   Nine frames, tube-registered like duck/hurt/eat (measured off the alpha —
-   tools/season-pass-measure.js — same as every other set here; re-measure if
-   this art is re-exported). Reads seasonPassIntroT/seasonPassT directly
-   rather than its own timer, same reasoning as the speed-boost frames
-   reading boostT — the two phase clocks already drive the whole reveal/
-   effect, so the animation just rides them instead of needing a third clock
-   to stay in sync with either.
+   Eleven frames (the cowabunga-sprites cow, re-exported 2026-09-15,
+   replacing the old typhoon-sprites rider set — same 9-frame slot count
+   until then), tube-registered against RIDER_TUBE_W like die (measured off
+   the alpha — tools/season-pass-measure.js — same as every other set here;
+   re-measure if this art is re-exported). The new art's tube ring is BLUE,
+   not the old set's orange, and several frames hold the rewards card up
+   near the top of the canvas — its own little logo is blue too, so the
+   measure tool keeps only the LARGEST connected blue blob (the ring) rather
+   than a naive color bbox, which the held card would otherwise blow out.
+   See the tool's own comment for the full reasoning.
+   Reads seasonPassIntroT/seasonPassT directly rather than its own timer,
+   same reasoning as the speed-boost frames reading boostT — the two phase
+   clocks already drive the whole reveal/effect, so the animation just rides
+   them instead of needing a third clock to stay in sync with either.
 
    The arc: hyping up over the pass (01-03) and settling into the tube with
    it (04-06) during the FROZEN reveal (seasonPassIntroT, paced to
    SEASONPASS_INTRO_DUR — see its own comment for why that's tied to the
    stinger's real length) — held on 06, blissed out, once the world resumes
-   and for the bulk of the resumed effect (seasonPassT) — then winding up and
-   tossing the card away (07-09) as seasonPassT runs out, landing on the last
-   frame at the exact instant it hits 0. */
+   and for the bulk of the resumed effect (seasonPassT) — then raising the
+   card again, winding up, and tossing it away, ending empty-handed (07-11)
+   as seasonPassT runs out, landing on the last frame at the exact instant
+   it hits 0. */
 const SEASONPASS_REG = [
-  { tw: 0.9289, cx: 0.4920, by: 0.9979 },   // 01, reveals the pass
-  { tw: 0.9184, cx: 0.4864, by: 0.9979 },   // 02, pumped
-  { tw: 0.9385, cx: 0.4824, by: 0.9979 },   // 03, big celebration
-  /* 04's tw is corrected the same way 09's is below: its radiating
-     star/streak burst pads this canvas (556x517) noticeably wider than 03
-     (455x481) or 05 (491x511) without him actually growing, so matching
-     tube WIDTH alone shrank his rendered HEIGHT — visibly smaller on
-     screen than 01-03/05, per Adam. Re-solved from tools/
-     sprite-size-audit.js's opaque-pixel apparent-area metric against the
-     other 8 frames' own average, holding cx/by as measured. Re-measure if
-     this frame is re-exported. */
-  { tw: 0.8594, cx: 0.4928, by: 0.9594 },   // 04, thumbs up
-  { tw: 0.9145, cx: 0.5143, by: 0.9785 },   // 05, settling in
-  { tw: 0.9560, cx: 0.4927, by: 0.9831 },   // 06, blissed out — the hold frame
-  { tw: 0.9391, cx: 0.5034, by: 0.9899 },   // 07, winding up to toss
-  { tw: 0.9429, cx: 0.4874, by: 0.9744 },   // 08, throwing it
-  /* 09's tw is corrected, not measured directly (0.9125 was the genuine
-     tube-pixel-width measurement, from tools/season-pass-measure.js). The
-     thrown card's swoosh trail pads this canvas ~1.28x wider than 07/08's
-     without him actually growing, so matching tube WIDTH alone shrinks his
-     rendered HEIGHT ~20% via dh = dw * (img.height/img.width) — visually
-     confirmed live via tools/seasonpass-outro-shrink-check.js's drawImage()
-     capture: dw held ~111-115px across 07/08/09 but dh dropped from
-     ~124-129px to ~101px on 09 alone. Re-solved from tools/
-     sprite-size-audit.js's opaque-pixel apparent-area metric against the
-     other 8 frames' own average (none of which the audit flagged this
-     strongly), holding cx/by as measured so he stays planted on the tube.
-     Re-measure if this frame is re-exported. */
-  { tw: 0.7854, cx: 0.5188, by: 0.9696 },   // 09, tossed
+  { tw: 0.9808, cx: 0.5041, by: 0.9912 },   // 01, reveals the card
+  { tw: 0.9811, cx: 0.5068, by: 0.9941 },   // 02, waves it
+  { tw: 0.9015, cx: 0.5468, by: 0.9971 },   // 03, big celebration
+  /* 04, 06, and 11's tw are corrected, not measured directly (0.8945/0.9888/
+     0.9845 were the genuine tube-pixel-width measurements, from tools/
+     season-pass-measure.js) — tools/sprite-size-audit.js flagged all three
+     past its default 8% threshold (+18.0%/-12.7%/-14.7% apparent-area
+     deviation respectively). 04's peak-celebration sparkle burst and 11's
+     motion-line-free calm pose both pad/crop their canvas differently than
+     most other frames without him actually changing size; 06 is worth
+     getting right in particular since it's the HOLD frame, on screen for
+     the bulk of the effect's run. Re-solved from the audit's own
+     opaque-pixel apparent-area metric against the other 8 frames' (01-03,
+     05, 07-10) own average, holding cx/by as measured so he stays planted
+     on the tube. Re-measure and re-run the audit if any of this art is
+     re-exported. */
+  { tw: 0.9660, cx: 0.4925, by: 0.9968 },   // 04, peak celebration
+  { tw: 0.9856, cx: 0.4986, by: 0.9968 },   // 05, thumbs up
+  { tw: 0.9188, cx: 0.4944, by: 0.9968 },   // 06, blissed out — the hold frame
+  { tw: 0.8886, cx: 0.4496, by: 0.9934 },   // 07, still settled
+  { tw: 0.9861, cx: 0.4958, by: 0.9968 },   // 08, raises the card again
+  { tw: 0.9510, cx: 0.5116, by: 0.9969 },   // 09, raises it further
+  { tw: 0.8376, cx: 0.5749, by: 0.9871 },   // 10, winds up and throws
+  { tw: 0.9040, cx: 0.4948, by: 0.9967 },   // 11, empty-handed, calm
 ];
 const SEASONPASS_INTRO_FRAMES    = 6;   // 01-06, played out over the freeze
 const SEASONPASS_INTRO_FRAME_DUR = SEASONPASS_INTRO_DUR / SEASONPASS_INTRO_FRAMES;
 const SEASONPASS_OUTRO_DUR       = 1.8;   // the last slice of SEASONPASS_DUR
-                                          // spent on 07-09, three frames —
+                                          // spent on 07-11, five frames —
                                           // slower per frame than the intro
-                                          // (0.6s vs 0.5s), a deliberate,
+                                          // (0.36s vs 0.3s), a deliberate,
                                           // readable send-off, not a snap cut
-const SEASONPASS_OUTRO_FRAME_DUR = SEASONPASS_OUTRO_DUR / 3;
+const SEASONPASS_OUTRO_FRAME_DUR = SEASONPASS_OUTRO_DUR / 5;
 function seasonPassFrame(){
   if (seasonPassIntroT > 0){
     const introElapsed = SEASONPASS_INTRO_DUR - seasonPassIntroT;
@@ -6733,7 +6899,7 @@ function seasonPassFrame(){
   const elapsed = SEASONPASS_DUR - seasonPassT;
   const outroStart = SEASONPASS_DUR - SEASONPASS_OUTRO_DUR;
   if (elapsed > outroStart)
-    return Math.min(8, 6 + Math.floor((elapsed - outroStart) / SEASONPASS_OUTRO_FRAME_DUR));
+    return Math.min(10, 6 + Math.floor((elapsed - outroStart) / SEASONPASS_OUTRO_FRAME_DUR));
   return 5;   // held on season-pass_06 for the whole middle stretch
 }
 
@@ -6742,7 +6908,7 @@ function seasonPassFrame(){
    Four frames of the splash building around him and, in frame 4, a blue
    energy glow behind it. Reads boostT directly rather than its own timer:
    boostT/BOOST_DUR/boostSuper are already the single shared state for BOTH
-   triggers this animation has to cover — a tunnel and the Fast Pass pickup
+   triggers this animation has to cover — a tunnel and the Speed Boost pickup
    set them identically — so no second clock was needed, and a future
    third way to trigger the same boost gets this animation for free.
    Adam's call: climb 1->2->3->4 as the boost kicks in, then for the
@@ -6753,17 +6919,67 @@ function seasonPassFrame(){
    boost runs out. Both ramps are timed off SPEED_RAMP, a fixed slice of
    BOOST_DUR, not a fixed wall-clock length independent of it, so a future
    change to BOOST_DUR keeps the ramps proportionate automatically.
-   Same rotation-invariant handles as FLIP_REG/SPIN_REG, not a tube fit:
-   the splash billows outward a different amount each frame (597x477 up
-   to 662x505), not an in-plane turn, so a tube-width fit would stretch
-   frame 4's wider bloom to match frame 1's tighter one. Measured off the
-   alpha; re-measure if this art is re-exported.
-   ------------------------------------------------------------------ */
+   Getting this registration right took four tries:
+   1. sqrt(opaque AREA) (FLIP_REG/SPIN_REG's rotation-invariant scheme) —
+      technically consistent (total on-screen footprint held flat across
+      frames) but wrong for this art: holding TOTAL area flat while the
+      splash balloons forces the cow+tube portion to shrink to compensate —
+      Adam reported this in-game (2026-09-11: "it appears like the size of
+      the tube and the cow are shrinking between frames").
+   2. Height-pinned against each frame's own opaque-bbox HEIGHT (a since-
+      removed SPEED_REG, mirroring DUCK_REG's width pin onto the other
+      axis) — reasoned as "the cow+tube's own opaque-bbox height barely
+      moves frame to frame (403px up to 438px, ~9%)," but that bbox height
+      ISN'T cow+tube-only, it's the WHOLE opaque region including the
+      splash, which reaches further down as it grows (minY held at
+      179-181px every frame — the cow's own head-top never moves — while
+      maxY climbed 582->618px purely from splash reaching lower). Pinning
+      dh to hold that (cow+splash) height constant still shrank the cow
+      ~8% to compensate, so Adam reported the same complaint again.
+   3. Own-aspect off native canvas height (also 2026-09-14) — every canvas
+      IS a constant 768px tall, so this gave perfect frame-to-frame
+      consistency, but was wrong in a different way: these canvases are NOT
+      tightly cropped to their opaque content the way idle/eat/move are
+      (403-438px of actual content inside a 768px-tall canvas, ~45%
+      padding), so sizing the whole 768px canvas to `h` rendered the cow at
+      roughly half the height it should be — confirmed by screenshot, tiny
+      next to a same-depth obstacle.
+   4. A "waist" scan (also 2026-09-14, same day) — the narrowest
+      center-connected opaque span at y=250-360, reasoned as a splash-free
+      stable feature (183/182/186/186px, a ~2% spread) and fed into the SAME
+      tube-width formula duck/hurt use, on the claim that this art's splash
+      is "fused by color to the ring" so flood-fill can't isolate the ring
+      itself. That claim was never actually checked against the art, and
+      it's false — Adam reported the REAL bug this produced (2026-09-14:
+      "speed-boost animation on the cow is so much larger than the normal
+      rider"): the waist is a real, stable feature, but it's the cow's own
+      crossed-arm pinch point (~1/3 of frame width), not the tube ring
+      (~85-92% of frame width, same order as DUCK_REG/IDLE_TUBE_W). Feeding
+      a ~0.35 value into a formula that expects a ~0.85-0.92 one
+      (`dw = imW * IDLE_TUBE_W / R.tw`) inflated dw — and dh, which derives
+      from it — by roughly that same ~2.5x ratio.
+   The actual fix (2026-09-14, fourth attempt): the ring IS isolatable by
+   color after all, same teal COWABUNGA-tube mask duck/hurt/idle already use
+   (tools/speed-frame-measure.js) — per-row opaque-width vs teal-width
+   checks in the ring's own band match almost exactly (the splash there is
+   white/foam, which fails the teal test), so a plain color-masked bbox
+   recovers the ring cleanly with no flood-fill component filtering needed
+   (duck's own >35%-width component filter actively hurt this art: the
+   ring's teal mask splits into arcs each under that threshold on some
+   frames, silently dropping real ring pixels). The one real contamination
+   source is spray picking up a teal tint well above the ring on the
+   biggest-splash frames (observed up to y=251 on speed_04) — restricting
+   the scan to the y-band where the ring actually sits on every frame
+   (0.45h-0.85h) avoids it. Registered against IDLE_TUBE_W/CX/BY exactly
+   like DUCK_REG (same tube-width-pin shape), tw spread 9.1% across the four
+   frames — in line with DUCK_REG's own ~7%. Re-measure if this art is
+   re-exported — and if a future export moves the ring outside 0.45h-0.85h,
+   re-verify the band itself rather than assuming it still applies. */
 const SPEED_REG = [
-  { s: 2.2777, cx: 0.5460, cy: 0.5773 },   // speed_01
-  { s: 2.2053, cx: 0.5425, cy: 0.5702 },   // speed_02
-  { s: 2.1779, cx: 0.5257, cy: 0.5825 },   // speed_03
-  { s: 2.1467, cx: 0.5499, cy: 0.5701 },   // speed_04, adds the energy glow
+  { tw: 0.8439, cx: 0.4785, by: 0.7578 },   // speed_01
+  { tw: 0.8500, cx: 0.5096, by: 0.7643 },   // speed_02
+  { tw: 0.8981, cx: 0.5132, by: 0.7799 },   // speed_03
+  { tw: 0.9209, cx: 0.4964, by: 0.8047 },   // speed_04, biggest splash bloom
 ];
 const SPEED_RAMP = 0.4;         // seconds to climb 1->4, and separately to
                                 // fall back 4->1 at the end
@@ -6780,19 +6996,36 @@ const speedFrame = (boostT) => {
 
 /* ------------------------------------------------------------------
    IDLE
-   The two lightest speed-boost frames (splash barely built up, same resting
-   pose) reused as a standing loop for whenever nothing else is claiming the
-   pose — no lane lean, no jump/duck/eat, no power-up cue. Lowest priority
-   in drawRider's chain on purpose: every other animation is either a
-   deliberate player action or an auto-triggered cue, and idle is neither,
-   so it steps aside for all of them rather than the reverse.
+   The cowabunga-idle_02/03 loop (cropped 2026-09-11 from Adam's
+   cowabunga-idle.png sheet — near-identical cow-in-tube frames, cropped to
+   one shared 682x654 box so neither wobbles in size; _01 was cropped from
+   the same sheet but sat a hair left of the other two, read as the tube
+   drifting sideways, and was dropped rather than re-cropped)
+   for whenever nothing else is claiming the pose — no lane lean, no
+   jump/duck/eat, no power-up cue. Lowest priority in drawRider's chain on
+   purpose: every other animation is either a deliberate player action or an
+   auto-triggered cue, and idle is neither, so it steps aside for all of them
+   rather than the reverse.
+   Deliberately NOT drawn off `img`/`w` (IMG.rider, the old typhoon horse) —
+   every other pose (jump/duck/hurt/die/move/speed/Season Pass) is pinned to
+   THAT image's own measured RIDER_CX/RIDER_TUBE_* constants, and the one time
+   IMG.rider itself got swapped to a differently-shaped image (2026-09-11),
+   changing what `w` meant broke every single one of those poses at once —
+   not just idle. So idle computes its own width from its own frame's aspect
+   ratio and draws through the same plain bottom-anchored blit the obstacle
+   sprite() helper uses for its own tightly-cropped art (0.9, not the bare
+   `img` branch's 0.88 — these frames have ~0% baked-in bottom padding, unlike
+   typhoon-rider.png, which has enough that 0.88 lands in the right place for
+   it specifically). See drawRider's idling branch.
    Continuous, off wall-clock time like SPIN_FRAME_DUR's spin, not a
    boostT-style countdown — there is no event that starts or ends it, it
    just runs whenever it's on top.
    ------------------------------------------------------------------ */
 const IDLE_FRAME_DUR = 0.6;   // seconds per frame — slow enough to read as a
                                // breathing/hair-drift idle, not a flicker
-const idleFrame = (t) => Math.floor(t / IDLE_FRAME_DUR) % 2;
+// idle_01 dropped (2026-09-11): its crop sat a hair left of 02/03's, which
+// read as the tube drifting sideways every time the loop cycled through it.
+const idleFrame = (t) => 1 + Math.floor(t / IDLE_FRAME_DUR) % 2;
 
 /* Weighted so the inverted frame covers the apex of the lift arc rather
    than being split evenly — that is where the flip reads. */
@@ -6877,7 +7110,7 @@ function drawRider(){
      never pause while their draw is skipped for eat/jump/Season Pass — same
      as they already did for each other; see below. The spin still outranks
      speed boost and lane moves, deliberately: it is the rarer of the two
-     auto-triggered cues, so boost (every tunnel plus every Fast Pass grab) is
+     auto-triggered cues, so boost (every tunnel plus every Speed Boost grab) is
      the one that steps aside, same reasoning as eat over jump. */
   const dyi     = (state === "dying" || state === "over")
                     ? (state === "over" ? 2 : triIdx(1 - dieT / DIE_DUR)) : -1;
@@ -6902,9 +7135,9 @@ function drawRider(){
   const leaning = !dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && !flipImg && !spinImg && !speedImg && moveT > 0 && moveDir;
   const moveImg = leaning ? IMG[MOVE_KEY[moveDir]] : null;
   const idling  = !dieImg && !hurtImg && !seasonPassImg && !duckImg && !eatImg && !flipImg && !spinImg && !speedImg && !moveImg
-                    && IMG.speed0 && IMG.speed1;
+                    && IMG.cowIdle1 && IMG.cowIdle2;
   const ii      = idling ? idleFrame(performance.now() * 0.001) : -1;
-  const idleImg = ii >= 0 ? IMG["speed" + ii] : null;
+  const idleImg = ii >= 0 ? IMG["cowIdle" + ii] : null;
 
   // wake, so he sits in the water rather than on it. Faded out on the wipeout
   // screen, where the water is stopped and he has been moved off the track.
@@ -6950,7 +7183,7 @@ function drawRider(){
   } else if (spinImg){
     // Same rotation-invariant registration as the flip frames just above,
     // for the same reason: a yaw turn foreshortens the tube, so a
-    // tube-width fit (the dieImg/hurtImg/duckImg/moveImg branch) would
+    // tube-width fit (the dieImg/seasonPassImg/duckImg branch) would
     // stretch the profile frames back out to the front frame's width.
     const R  = SPIN_REG[si];
     const k  = (h / img.height) * R.s;
@@ -6958,57 +7191,103 @@ function drawRider(){
     const ccx = (RIDER_CX - 0.5) * w;
     const ccy = (RIDER_CY - 0.88) * h;
     ctx.drawImage(spinImg, ccx - R.cx * dw, ccy - R.cy * dh, dw, dh);
-  } else if (speedImg){
-    // Same rotation-invariant registration as the spin/flip frames above —
-    // the splash bloom grows a different amount each frame, so a tube fit
-    // would stretch the frame to match the others' footprint instead of
-    // letting it actually grow.
-    const R  = SPEED_REG[spi];
-    const k  = (h / img.height) * R.s;
-    const dw = speedImg.width * k, dh = speedImg.height * k;
-    const ccx = (RIDER_CX - 0.5) * w;
-    const ccy = (RIDER_CY - 0.88) * h;
-    ctx.drawImage(speedImg, ccx - R.cx * dw, ccy - R.cy * dh, dw, dh);
-  } else if (idleImg){
-    // Same art, same rotation-invariant registration as the speedImg branch
-    // above — SPEED_REG[ii] is just speed_01/02's own measured handles.
-    const R  = SPEED_REG[ii];
-    const k  = (h / img.height) * R.s;
-    const dw = idleImg.width * k, dh = idleImg.height * k;
-    const ccx = (RIDER_CX - 0.5) * w;
-    const ccy = (RIDER_CY - 0.88) * h;
-    ctx.drawImage(idleImg, ccx - R.cx * dw, ccy - R.cy * dh, dw, dh);
-  } else if (dieImg || hurtImg || seasonPassImg || duckImg || eatImg || moveImg){
-    // All tube-pinned, so the ring stays planted in the water while he reacts.
-    // No sy squash here: the duck art already flattens him, and squashing a
-    // yawed spin frame would distort its tube.
-    const R   = dieImg  ? DIE_REG[dyi]  : hurtImg ? HURT_REG[hi]
-              : seasonPassImg ? SEASONPASS_REG[spi2]
-              : duckImg ? DUCK_REG[di]  : eatImg  ? EAT_REG[ei] : MOVE_REG[moveDir];
-    const im  = dieImg || hurtImg || seasonPassImg || duckImg || eatImg || moveImg;
-    const dw  = (w * RIDER_TUBE_W) / R.tw;
+  } else if (idleImg || eatImg || moveImg){
+    // Own width off its own aspect ratio — NOT `w` (that's IMG.rider's, the
+    // old horse, which every other branch above/below pins itself to). See
+    // IDLE's comment for why sharing it broke every other pose the one time
+    // this tried reusing IMG.rider directly instead. eatImg joined this
+    // branch 2026-09-11 for the same reason: it's now a self-contained
+    // cow-in-a-tube badge like cowIdle, not Typhoon's body pinned to a
+    // separate tube, so it wants the same own-aspect treatment, not
+    // RIDER_TUBE_W/EAT_REG (see EAT_REG's old comment for why that shrank it).
+    // moveImg joined the same day for the same reason (see LANE MOVE above).
+    // hurt and speed do NOT belong here despite being the same badge art —
+    // both need a tube-width fit instead (see HURT and DIE's, and SPEED
+    // BOOST's, own comments above for why a plain own-aspect draw shrank or
+    // undersized each of them) — see the duckImg/dieImg/hurtImg/speedImg
+    // branch below for the fix.
+    const im  = idleImg || eatImg || moveImg;
+    const imW = h * (im.width / im.height);
+    ctx.drawImage(im, -imW*sx/2, -h*sy*0.9, imW*sx, h*sy);
+  } else if (duckImg || dieImg || hurtImg || speedImg){
+    // Tube-pinned so the ring stays planted while the pose moves inside it
+    // — pinned against THIS art's own tube (IDLE_TUBE_W/CX/BY,
+    // cowabunga-idle_02.png's ring), not RIDER_TUBE_W (the old
+    // typhoon-rider.png tube, unrelated to this badge art's tube size —
+    // see DUCK_REG's own comment). idleImg's own on-screen width (imW,
+    // same formula the idle/eat/move branch above uses) stands in for `w`
+    // for the same reason: it's the reference every other own-aspect
+    // cowabunga badge already sizes against.
+    // dieImg joined 2026-09-14, same reasoning as duck — see DIE_REG's own
+    // comment above for why it keeps a tube fit. hurtImg joined the same
+    // day for the same reason, after a plain own-aspect draw was shown to
+    // make the cow visibly change size frame to frame — see HURT and DIE's
+    // own comment above for the measured apparent-area numbers that caught
+    // it. speedImg joined last, after TWO other registration schemes (see
+    // SPEED BOOST's own comment above) still got it wrong — R.tw here is a
+    // "waist" width (narrowest point of the silhouette, not a flood-filled
+    // ring, since this art's splash is fused by color to the ring in a way
+    // duck's separate droplets aren't), not the ring itself, but the same
+    // formula shape applies since it's still a stable width feature at a
+    // comparable position.
+    // No sy squash here either: this art already flattens/widens him frame
+    // to frame (dh falls out of R.tw fixing dw, then dh = dw * the frame's
+    // own aspect ratio), so squashing on top would double it.
+    const im  = duckImg || dieImg || hurtImg || speedImg;
+    const R   = duckImg ? DUCK_REG[di] : dieImg ? DIE_REG[dyi] : hurtImg ? HURT_REG[hi] : SPEED_REG[spi];
+    const imW = h * (IMG.cowIdle2.width / IMG.cowIdle2.height);
+    const dw  = (imW * IDLE_TUBE_W) / R.tw;
     const dh  = dw * (im.height / im.width);
+    const tcx = (IDLE_TUBE_CX - 0.5) * imW;        // idle's own tube centre
+    const tby = (IDLE_TUBE_BY - 0.9) * h;          // and base, in local coords
+    ctx.drawImage(im, tcx - R.cx * dw, tby - R.by * dh, dw, dh);
+  } else if (seasonPassImg){
+    // Still tube-pinned against the old typhoon-rider.png tube — Season
+    // Pass hasn't been re-exported to the cowabunga badge art yet (unlike
+    // duck/hurt/die above), so RIDER_TUBE_W/CX/BY is still the right
+    // reference for it.
+    const R   = SEASONPASS_REG[spi2];
+    const dw  = (w * RIDER_TUBE_W) / R.tw;
+    const dh  = dw * (seasonPassImg.height / seasonPassImg.width);
     const tcx = (RIDER_TUBE_CX - 0.5) * w;         // resting tube's centre and
     const tby = (RIDER_TUBE_BY - 0.88) * h;        // base, in local coords
-    ctx.drawImage(im, tcx - R.cx * dw, tby - R.by * dh, dw, dh);
+    ctx.drawImage(seasonPassImg, tcx - R.cx * dw, tby - R.by * dh, dw, dh);
   } else {
     ctx.drawImage(img, -w*sx/2, -h*sy*0.88, w*sx, h*sy);
   }
   ctx.restore();
 }
 
+/* Read once off :root rather than a hand-copied set of numbers -- see the
+   --panel-glow-rgb/--panel-glow-a/--panel-shade-rgb/--panel-shade-a comment
+   in PALETTE for why: a second, separately-typed copy here is exactly what
+   let this gradient drift out of sync with .panel's own (Adam's report,
+   2026-09-15, "not as transparent as the others" — the shade stop had
+   drifted to .97 against .panel's .7). rgb/rgba both take the same
+   comma-joined "r,g,b" a canvas fillStyle string needs; the CSS side keeps
+   its own space-separated "r g b" for its rgb(var(--x) / a%) syntax. */
+const PANEL_GLOW_RGB  = getComputedStyle(document.documentElement)
+  .getPropertyValue("--panel-glow-rgb").trim().split(/\s+/).join(",");
+const PANEL_SHADE_RGB = getComputedStyle(document.documentElement)
+  .getPropertyValue("--panel-shade-rgb").trim().split(/\s+/).join(",");
+const PANEL_GLOW_A  = parseFloat(getComputedStyle(document.documentElement)
+  .getPropertyValue("--panel-glow-a"));
+const PANEL_SHADE_A = parseFloat(getComputedStyle(document.documentElement)
+  .getPropertyValue("--panel-shade-a"));
+
 /* The wipeout overlay lives on the CANVAS, not on the results panel, and it
    stays up for the "over" state as well as the wipeout itself. That is the only
    way Typhoon can sit on top of it: the panel is a DOM layer above the canvas,
    so a background painted there would bury him no matter the z-order.
-   #overPanel's own background is switched off in the CSS to match — it now
-   contributes only its text and buttons, and this gradient does the dimming. */
+   #overPanel's own background is switched off in the CSS to match (see that
+   rule's own comment) — it now contributes only its text and buttons, and
+   this gradient, at the SAME two stops .panel itself uses, does the dimming. */
 function deathWash(){
   if (state !== "dying" && state !== "over") return;
   const k = state === "over" ? 1 : Math.min(1, (DIE_DUR - dieT) / 0.45);
   const g = ctx.createRadialGradient(W/2, H*0.15, 0, W/2, H*0.15, Math.max(W, H) * 1.05);
-  g.addColorStop(0, "rgba(48,180,252," + (0.82 * k).toFixed(3) + ")");
-  g.addColorStop(1, "rgba(30,48,72,"  + (0.97 * k).toFixed(3) + ")");
+  g.addColorStop(0, "rgba(" + PANEL_GLOW_RGB  + "," + (PANEL_GLOW_A  * k).toFixed(3) + ")");
+  g.addColorStop(1, "rgba(" + PANEL_SHADE_RGB + "," + (PANEL_SHADE_A * k).toFixed(3) + ")");
   ctx.fillStyle = g;
   ctx.fillRect(-OVER, -OVER, W + OVER*2, H + OVER*2);
 }
@@ -7121,14 +7400,14 @@ function speedLines(){
    overshoot rather than a plain fade, so grabbing one reads as a payoff
    rather than a status update. Drawn in fixed screen space, same reasoning as
    drawFlyers() — it names a moment, not a place in the rolling world. */
-const FASTPASS_POP = 0.18;   // seconds to reach full size
+const SPEEDBOOST_PICKUP_POP = 0.18;   // seconds to reach full size
 
-function fastPassLabel(){
-  if (fastPassLabelT <= 0) return;
-  const k = 1 - fastPassLabelT / FASTPASS_LABEL_DUR;    // 0 at pickup -> 1 as it clears
-  const pop = Math.min(1, k / FASTPASS_POP);
+function speedBoostLabel(){
+  if (speedBoostLabelT <= 0) return;
+  const k = 1 - speedBoostLabelT / SPEEDBOOST_LABEL_DUR;    // 0 at pickup -> 1 as it clears
+  const pop = Math.min(1, k / SPEEDBOOST_PICKUP_POP);
   const scale = pop < 1 ? 0.6 + 0.52 * pop
-                        : 1 + 0.12 * Math.max(0, 1 - (k - FASTPASS_POP) / 0.12);
+                        : 1 + 0.12 * Math.max(0, 1 - (k - SPEEDBOOST_PICKUP_POP) / 0.12);
   const alpha = Math.min(1, pop * 3) * Math.min(1, (1 - k) / 0.35);
   if (alpha <= 0.01) return;
   ctx.save();
@@ -7138,9 +7417,9 @@ function fastPassLabel(){
   ctx.font = "900 " + Math.max(22, Math.min(44, W * 0.085)).toFixed(0) + "px " + MONO;
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.lineWidth = 6; ctx.strokeStyle = C.ink;
-  ctx.strokeText("FAST PASS!", 0, 0);
+  ctx.strokeText("SPEED BOOST!", 0, 0);
   ctx.fillStyle = C.yellow;
-  ctx.fillText("FAST PASS!", 0, 0);
+  ctx.fillText("SPEED BOOST!", 0, 0);
   ctx.restore();
 }
 
@@ -7190,7 +7469,7 @@ function whirlpoolActive(){
    rule 7 hangs on for the whole effect. Up for the frozen reveal AND the
    resumed effect (seasonPassIntroT OR seasonPassT), so the cue covers the
    entire presentation, pickup to power-down — drawn in fixed screen space
-   (see its render() call, alongside fastPassLabel()) since a screen tint has
+   (see its render() call, alongside speedBoostLabel()) since a screen tint has
    no business banking with a camera turn the way a world object would. */
 // Screen-scale companions to the wash above, added for "epic" flair
 // (Adam: gold-only read as flat) without adding a SINGLE animated element —
@@ -7329,43 +7608,14 @@ function render(){
     drawCoinSpill();
     drawFlyers();
   }
-  if (fastPassLabelT > 0){
+  if (speedBoostLabelT > 0){
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    fastPassLabel();
+    speedBoostLabel();
   }
   if (seasonPassIntroT > 0 || seasonPassT > 0){
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     seasonPassScreenOverlay();
   }
-}
-
-/* ==================================================================
-   TITLE LINE DANCE
-   Twelve frames on the title card, swapped on the <img> rather than drawn
-   to the canvas — the panel is a DOM layer above the canvas, so a canvas
-   dance would be painted underneath its own card.
-   Driven off the existing rAF loop instead of its own setInterval: a second
-   timer would keep firing behind the game and drift against the frame clock.
-   The title only ever appears on first load — start() hides it and the
-   wipeout brings back #overPanel instead — so this stops on its own.
-   ================================================================== */
-/* Nine frames, not twelve: 10-12 were dropped from the loop on 2026-08-14 and
-   are no longer part of the dance. */
-const DANCE_KEYS = ["ld01","ld02","ld03","ld04","ld05",
-                    "ld06","ld07","ld08","ld09"];
-const DANCE_FPS  = 3;              // 3s a lap at nine frames (was 4s at twelve)
-const heroDance  = $("heroDance");
-let danceT = 0, danceI = -1;
-
-function danceTick(dt){
-  if (state !== "title") return;
-  danceT += dt;
-  const i = Math.floor(danceT * DANCE_FPS) % DANCE_KEYS.length;
-  if (i === danceI) return;         // only touch the DOM when the frame changes
-  const im = IMG[DANCE_KEYS[i]];
-  if (!im) return;                  // a frame that failed to load holds the last
-  danceI = i;
-  heroDance.src = im.src;           // im.src, so it can only swap to a decoded frame
 }
 
 /* Diagnostic-only frame-rate HUD, gated so it costs nothing and renders
@@ -7436,7 +7686,6 @@ function frame(now){
     skyT += dt;                     // sky drifts in every state, title included
     rushPhase = (rushPhase + dt * (0.75 + ((boostT > 0 || seasonPassT > 0) ? 1.5 : 0))) % 1;
     update(dt);
-    danceTick(dt);
   }
   hatTick(dt);                      // outside the guard: the card is only ever
                                     // up while the run is paused
@@ -7541,32 +7790,32 @@ window.addEventListener("keydown",     () => startTitleMusic(true));
    negative-personality connotation, leaving a 99x100 = 9,900-pair pool.
    Mirrored in the plugin
    at waterpark-leaderboard/includes/class-name-pool.php — keep both in sync. */
-const NAME_A = ["Dusty","Rowdy","Soggy","Rusty","Lucky","Wild","Trusty","Sandy",
+const NAME_A = ["Salty","Rowdy","Soggy","Rusty","Lucky","Wild","Trusty","Sandy",
   "Muddy","Sunbaked","Splashy","Gritty","Speedy","Bouncy","Rugged","Breezy",
   "Sizzlin'","Drippy","Twisty","Wobbly","Hasty","Jumpy","Zippy","Peppy","Sunny",
   "Stormy","Boomin'","Rollin'","Tumblin'","Whistlin'","Hollerin'","Ramblin'",
   "Roamin'","Frosty","Dizzy","Scrappy","Plucky","Nimble","Sturdy","Cheerful",
-  "Scorchin'","Blazing","Weathered","Leathery","Windswept","Sunburnt","Rangy",
-  "Wiry","Feisty","Hardy","Hitchin'","Stampedin'","Canyon-bred","Corral-tough",
-  "Untamed","Free-roamin'","Yippin'","Whoopin'","Hootin'","Rodeo-ready",
-  "Rip-roarin'","Wranglin'","Saddlesore","Rootin'-tootin'","Barnstormin'",
-  "Spurred","Ranch-raised","Dune-hoppin'","Sagebrush","Prairie-bred",
-  "Trailworn","Splashin'","Drenched","Soaked","Waterlogged","Bubbly","Foamy",
+  "Scorchin'","Blazing","Weathered","Sunkissed","Windswept","Sunburnt","Barefoot",
+  "Wiry","Feisty","Hardy","Coastal","Driftin'","Cruisin'","Glidin'",
+  "Untamed","Free-roamin'","Shreddin'","Whoopin'","Barrelin'","Laidback",
+  "Rip-roarin'","Beachbound","Sun-drenched","Tide-tossed","Palm-shaded",
+  "Surfside","Curlin'","Dune-hoppin'","Crested","Shorebound",
+  "Tanned","Splashin'","Drenched","Soaked","Waterlogged","Bubbly","Foamy",
   "Fizzy","Slick","Sloshy","Wavy","Rippling","Gushing","Misty",
   "Dewy","Damp","Drizzly","Poolside","Tubular","Slidin'","Divin'",
   "Cannonballin'","Floatin'","Bobbin'","Sudsy","Frothy","Sparkling","Chilly",
   "Dripping"];
-const NAME_B = ["Longhorn","Armadillo","Bronco","Rattler","Buckaroo","Coyote",
-  "Tumbleweed","Mustang","Wrangler","Stallion","Roadrunner","Jackrabbit","Cactus",
-  "Sheriff","Ranger","Drifter","Maverick","Cowpoke","Prairiedog","Bluebonnet",
+const NAME_B = ["Surfboard","Longboard","Boogieboard","Paddleboard","Wetsuit","Driftwood",
+  "Palmtree","Coconut","Pineapple","Hibiscus","Seashell","Sandbar","Sanddollar",
+  "Seagull","Albatross","Cormorant","Sandpiper","Osprey","Reef","Lagoon",
   "Cannonball","Riptide","Bellyflop","Flume","Geyser","Gator","Catfish","Otter",
   "Pelican","Dolphin","Splashdown","Whirlpool","Ripcurl","Sunfish","Seahorse",
   "Bullfrog","Turtle","Minnow","Anchor","Torpedo",
-  "Deputy","Outlaw","Bandit","Gunslinger","Pioneer","Trailblazer","Rustler",
-  "Vaquero","Rancher","Buffalo","Bison","Mule","Burro","Bobcat","Sidewinder",
-  "Scorpion","Vulture","Buzzard","Falcon","Wildcat","Lariat","Corral","Canyon",
-  "Mesa","Butte","Frontier","Homestead","Chuckwagon","Stagecoach","Wagonwheel",
-  "Campfire","Lantern","Saloon","Cantina","Tidalwave","Wavepool","Lazyriver",
+  "Cove","Atoll","Undertow","Swell","Breaker","Crest","Foam",
+  "Spray","Mist","Horizon","Sunset","Sunrise","Boardwalk","Cabana","Tiki",
+  "Hammock","Flipflop","Sunhat","Beachcomber","Lighthouse","Bonfire","Firepit","Sandpit",
+  "Palmshade","Tradewind","Monsoon","Squall","Barrel","Pipeline","Fin",
+  "Campfire","Lantern","Current","Bay","Tidalwave","Wavepool","Lazyriver",
   "Waterslide","Slipnslide","Splashpad","Kayak","Jetski","Lifeguard","Snorkel",
   "Flipper","Mermaid","Narwhal","Stingray","Barracuda","Piranha","Manatee",
   "Walrus","Pufferfish","Jellyfish","Starfish","Hermitcrab","Sandcastle",

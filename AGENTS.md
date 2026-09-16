@@ -93,6 +93,21 @@ action.
 - Even so, check `ListAgents`/process start times before killing anything
   matching `stampede-cdp-*` by hand, in case another session is still using
   it.
+- **Never pass `-f` to `pkill`/`pgrep` more than once, and never use `-f`
+  with a short/generic pattern.** Only the *last* `-f` wins — a second `-f`
+  silently discards the first pattern entirely — and whatever pattern
+  survives is matched as a substring against the **full command line of
+  every process on the machine**, not just this project's. On 2026-09-14,
+  `pkill -f "^python3 server.py$" -f "cowabunga-wild-rush"` (intended to
+  stop one leftover local `server.py`) actually ran as
+  `pkill -f "cowabunga-wild-rush"` and crashed the user's VS Code and
+  browser by killing unrelated processes that happened to carry the repo
+  path in their arguments. Kill a known PID (`kill <pid>` from `ps`/`lsof`,
+  or `stopChrome()` for anything CDP-launched) instead of pattern-matching;
+  if you must use `pkill -f`, pass exactly one `-f`, anchor the pattern
+  (`^...$`), and treat the match as machine-wide, not repo-scoped. Also
+  remember `-n` on `pkill`/`pgrep` means "newest match only" — it is not a
+  dry run, and does not make the signal any safer.
 - **Distrust your own tools before you distrust the code.** Calibrate a
   metric against a known-good case before trusting its verdict.
 

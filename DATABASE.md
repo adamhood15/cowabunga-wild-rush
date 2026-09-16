@@ -256,3 +256,54 @@ got the same word-by-word read the original 80 got. Only `Slippery` was cut
   above, kept.
 - `Flipper`, `Stingray`, `Barracuda` — trademark/brand association, same
   category as `Longhorn`/`Mustang` above, kept as non-infringing use.
+
+**Western-to-beach reskin (2026-09-14):** the game's theme moved from
+western/ranch to beach/surfer (see [AGENTS.md](AGENTS.md) and the sprite
+rename work in the same session), so every western/desert/ranch-coded word
+was pulled from the pool and replaced with a beach/surf word — this
+supersedes the trademark/tone calls above for any word that no longer
+exists (`Longhorn`, `Mustang`, `Bronco`, `Wrangler`, `Maverick`, `Cowpoke`,
+`Stallion`, `Saddlesore`, `Vulture`, `Buzzard`, `Gunslinger`, `Sidewinder`,
+`Saloon`, `Cantina` among them — those bullets above are kept as history of
+what was decided *at the time*, not as a description of the current pool).
+Counts are unchanged (`NAME_A` still 99, `NAME_B` still 100, still a
+9,900-pair pool) — every removed word was replaced 1:1, never dropped
+outright, so no re-audit of the pool SIZE was needed, only of its content.
+
+- **NAME_A (19 words replaced):** `Dusty`→`Salty`, `Leathery`→`Sunkissed`,
+  `Rangy`→`Barefoot`, `Hitchin'`→`Coastal`, `Stampedin'`→`Driftin'`,
+  `Canyon-bred`→`Cruisin'`, `Corral-tough`→`Glidin'`, `Yippin'`→`Shreddin'`,
+  `Hootin'`→`Barrelin'`, `Rodeo-ready`→`Laidback`, `Wranglin'`→`Beachbound`,
+  `Saddlesore`→`Sun-drenched`, `Rootin'-tootin'`→`Tide-tossed`,
+  `Barnstormin'`→`Palm-shaded`, `Spurred`→`Surfside`, `Ranch-raised`→`Curlin'`,
+  `Sagebrush`→`Crested`, `Prairie-bred`→`Shorebound`, `Trailworn`→`Tanned`.
+- **NAME_B (52 words replaced):** `Longhorn`→`Surfboard`,
+  `Armadillo`→`Longboard`, `Bronco`→`Boogieboard`, `Rattler`→`Paddleboard`,
+  `Buckaroo`→`Wetsuit`, `Coyote`→`Driftwood`, `Tumbleweed`→`Palmtree`,
+  `Mustang`→`Coconut`, `Wrangler`→`Pineapple`, `Stallion`→`Hibiscus`,
+  `Roadrunner`→`Seashell`, `Jackrabbit`→`Sandbar`, `Cactus`→`Sanddollar`,
+  `Sheriff`→`Seagull`, `Ranger`→`Albatross`, `Drifter`→`Cormorant`,
+  `Maverick`→`Sandpiper`, `Cowpoke`→`Osprey`, `Prairiedog`→`Reef`,
+  `Bluebonnet`→`Lagoon`, `Deputy`→`Cove`, `Outlaw`→`Atoll`,
+  `Bandit`→`Undertow`, `Gunslinger`→`Swell`, `Pioneer`→`Breaker`,
+  `Trailblazer`→`Crest`, `Rustler`→`Foam`, `Vaquero`→`Spray`,
+  `Rancher`→`Mist`, `Buffalo`→`Horizon`, `Bison`→`Sunset`, `Mule`→`Sunrise`,
+  `Burro`→`Boardwalk`, `Bobcat`→`Cabana`, `Sidewinder`→`Tiki`,
+  `Scorpion`→`Hammock`, `Vulture`→`Flipflop`, `Buzzard`→`Sunhat`,
+  `Falcon`→`Beachcomber`, `Wildcat`→`Lighthouse`, `Lariat`→`Bonfire`,
+  `Corral`→`Firepit`, `Canyon`→`Sandpit`, `Mesa`→`Palmshade`,
+  `Butte`→`Tradewind`, `Frontier`→`Monsoon`, `Homestead`→`Squall`,
+  `Chuckwagon`→`Barrel`, `Stagecoach`→`Pipeline`, `Wagonwheel`→`Fin`,
+  `Saloon`→`Current`, `Cantina`→`Bay`.
+- Everything already on-theme for a water park (`Riptide`, `Whirlpool`,
+  `Dolphin`, `Mermaid`, `Sandcastle`, etc.) was left untouched — this pass
+  only removed the ranch/desert/frontier layer, not the whole pool.
+- Mirrored in `leaderboard-service/src/namePool.js` (verified byte-for-byte
+  identical to `index.html`'s arrays) and in the test fixtures that spelled
+  out example rider names (`leaderboard-service/test/*.test.js`) — those
+  fixtures aren't validated against the pool, but leaving western words in
+  them as illustrative names would have been stale.
+- **Not re-run:** the word-by-word tone/trademark audit the two passes above
+  got. The new words were chosen avoiding obvious trademarks and culturally
+  loaded terms, but haven't had the dedicated read-through this pool has
+  gotten twice before — flag it if that's wanted before this ships.

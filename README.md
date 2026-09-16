@@ -1,7 +1,7 @@
 # Cowabunga: Wild Rush — Typhoon Texas
 
 A single-file HTML5 canvas water-slide runner. Steer down an infinite flume,
-dodge obstacles, jump waves, and collect Buckaroos (coins) for as long as you
+dodge obstacles, jump waves, and collect Breakers (coins) for as long as you
 can survive.
 
 Everything — markup, styling, and game logic — lives in `index.html`
@@ -72,10 +72,10 @@ your score the instant you grab it, on top of whatever else it does.
 
 | Power-up | Benefit | Sound |
 |---|---|---|
-| **Fast Pass** | Surges you past top speed for a few seconds — the same rush a tunnel gives, just something you have to grab. | The existing "Speed Boost 05" effect |
-| **Souvenir Bottle** | Instantly banks 100 Buckaroos, same as if you'd collected them one at a time. Coins spill out of it the whole way up to the HUD, and the Buckaroos HUD figure flashes yellow when it lands. | Its own sound effect |
+| **Speed Boost** | Surges you past top speed for a few seconds — the same rush a tunnel gives, just something you have to grab. | The existing "Speed Boost 05" effect |
+| **Souvenir Bottle** | Instantly banks 100 Breakers, same as if you'd collected them one at a time. Coins spill out of it the whole way up to the HUD, and the Breakers HUD figure flashes yellow when it lands. | Its own sound effect |
 | **Extra Life** | Flies up to the HUD and adds a bonus pizza slice to the left of your normal three. It's spent first: the next hit lands like any other (same shake, flash and hurt sound), but instead of costing a real life the bonus slice explodes — only the hit after that costs a life. Only one can ever be held — a second won't spawn until it's used. | Its own sound effect |
-| **Whirlpool** | Swirls in the water beneath you for 6 seconds. Any Buckaroo coin nearby is pulled in and collected automatically — no steering onto it required. Survives a crash; only runs its course or ends when the run does. | Its own sound effect, looped for the whole 6 seconds |
+| **Whirlpool** | Swirls in the water beneath you for 6 seconds. Any Breaker coin nearby is pulled in and collected automatically — no steering onto it required. Survives a crash; only runs its course or ends when the run does. | Its own sound effect, looped for the whole 6 seconds |
 | **Season Pass** | The grand finale — only ever shows up once per run. Grabbing it freezes the action for a 3-second reveal, then resumes into 9 seconds of total invincibility (a hazard hit plays a "that didn't hurt" chime instead of the usual shake/flash/hurt), +75% top speed, and Whirlpool's magnet widened to every collectible on the chute, not just coins. A translucent white-and-gold wash glows across the whole screen for the entire reveal-plus-effect, and Typhoon rides it out in his own animation — hyping up over the pass, settling in for the blissed-out middle stretch, then tossing the card away right as the effect ends. | Its own pickup stinger, then its own music track once the reveal ends and the effect takes over |
 
 ## Project structure

@@ -11,7 +11,7 @@
 //   during the frozen reveal would be a bug (nothing should be able to touch
 //   the rider while the world is frozen anyway, but the guard is checked)
 // - it only ever spawns once per run
-// - the outro (sp6-sp8) plays in the last SEASONPASS_OUTRO_DUR of seasonPassT
+// - the outro (sp6-sp10) plays in the last SEASONPASS_OUTRO_DUR of seasonPassT
 //   and the whole effect + its music end together
 // - the outro is ALSO frozen, same as the intro reveal -- travelled/collisions
 //   hold still through it, but seasonPassT keeps ticking down inside the
@@ -192,7 +192,7 @@ async function main() {
         return { frameJustBefore, seasonPassT, travelledAdvanced: travelled > beforeTravelled, musicCalls: window.__musicCalls };
       })()
     `);
-    allPass &= ok("animation reaches the last frame (index 8) as the effect ends", expiry.frameJustBefore === 8, expiry);
+    allPass &= ok("animation reaches the last frame (index 10) as the effect ends", expiry.frameJustBefore === 10, expiry);
     allPass &= ok("seasonPassT reaches exactly 0", expiry.seasonPassT === 0, expiry);
     allPass &= ok("travelled still frozen for the run-out of the outro", !expiry.travelledAdvanced, expiry);
     allPass &= ok("music hands back to \"ride\" exactly once, at the same instant as before", expiry.musicCalls.filter(n => n === "ride").length === 1, expiry);

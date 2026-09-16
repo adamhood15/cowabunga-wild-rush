@@ -58,7 +58,7 @@ async function main() {
         return { boostT, boostSuper, triggered: e.triggered };
       })()
     `);
-    const fastPassTrigger = await evaluate(session, `
+    const speedBoostPickupTrigger = await evaluate(session, `
       (() => {
         boostT = 0; boostSuper = false;
         const e = add(T.BOOST, travelled + 0.05, 0);
@@ -158,14 +158,11 @@ async function main() {
     `);
 
     // 5. A survived hit clears boostT (unlike whirlpool) -- confirm the
-    // animation actually stops, not just that the timer hit zero. Can't
-    // check this by asserting the drawn frame isn't named "speed*": idle
-    // deliberately reuses the speed0/speed1 art as its own standing loop
-    // (see the IDLE block above drawRider), so a "speed"-named frame is
-    // exactly what a correctly-stopped boost should show whenever idle's
-    // own wall-clock phase lands on it. Instead confirm the render matches
-    // idleFrame()'s own deterministic formula -- i.e. the idle branch is
-    // what actually fired, not boost's boostT-driven one coincidentally
+    // animation actually stops, not just that the timer hit zero. Idle now
+    // has its own dedicated cowIdle1/cowIdle2 art (cowabunga-idle_02/03.png),
+    // so the fired frame should be a "cowIdle*" key -- confirm the render
+    // matches idleFrame()'s own deterministic formula -- i.e. the idle
+    // branch is what actually fired, not some other pose coincidentally
     // landing on the same sprite name.
     const clearedByHit = await evaluate(session, `
       (() => {
@@ -181,7 +178,7 @@ async function main() {
         // unrelated render-cost change elsewhere shifted the ambient rAF
         // loop's timing just enough to flip which beat this landed on).
         hurtT = 0; invuln = 0;
-        const expectedIdle = "speed" + idleFrame(performance.now() * 0.001);
+        const expectedIdle = "cowIdle" + idleFrame(performance.now() * 0.001);
         drawRider();
         return { boostTAfterHit: boostT, frame: window.__lastRiderFrame, expectedIdle };
       })()
@@ -198,7 +195,7 @@ async function main() {
     await new Promise(r => setTimeout(r, 50));   // let any async exception land
 
     const result = {
-      tunnelTrigger, fastPassTrigger,
+      tunnelTrigger, speedBoostPickupTrigger,
       rampStart, holdFrames, rampTail,
       vsWhirlpool, vsDuck, vsJump, vsEat, vsLean,
       clearedByHit,
@@ -209,7 +206,7 @@ async function main() {
     const holdSet = new Set(holdFrames);
     const ok =
       tunnelTrigger.boostT === 2.4 && tunnelTrigger.boostSuper === true && tunnelTrigger.triggered === true &&
-      fastPassTrigger.boostT === 2.4 && fastPassTrigger.boostSuper === true && fastPassTrigger.dead === true &&
+      speedBoostPickupTrigger.boostT === 2.4 && speedBoostPickupTrigger.boostSuper === true && speedBoostPickupTrigger.dead === true &&
       rampStart.frame === "speed0" &&
       holdFrames.length > 0 &&
       [...holdSet].every(f => f === "speed2" || f === "speed3") &&

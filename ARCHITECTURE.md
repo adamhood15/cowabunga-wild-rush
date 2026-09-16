@@ -127,10 +127,10 @@ screen): `die > hurt > Season Pass > duck > eat > jump(flip) > whirlpool spin
 > speed boost > move(lean)`. `eat` is the Extra Life pickup's pizza-eating
 pose (`eatT`/`EAT_DUR`/`quadIdx`, `EAT_REG`) — plays the instant the pickup is
 grabbed on the track, not once the flyer lands (see
-[Power-ups](#power-ups)). `speed boost` (`boostT`/`SPEED_REG`/`speedFrame`) is
+[Power-ups](#power-ups)). `speed boost` (`boostT`/`speedFrame`) is
 ranked below the whirlpool spin and eat, and any future *auto-triggered,
 interruptible* power-up animation belongs in that same low cluster — it's the
-most frequent of the effects (every tunnel plus every Fast Pass grab), so
+most frequent of the effects (every tunnel plus every Speed Boost grab), so
 it's the one that steps aside, same logic as the spin stepping aside for
 jump/duck. Season Pass (`seasonPassT`/`SEASONPASS_REG`/`seasonPassFrame`) is
 the one exception, ranked just below hurt instead: Adam's spec was for it to
@@ -141,8 +141,18 @@ statement of intent.
 
 **Sprite registration constants were measured off the PNG alpha channels**,
 not guessed — `RIDER_CX/CY`, `RIDER_TUBE_*`, `FLIP_REG`, `MOVE_REG`,
-`DUCK_REG`, `HURT_REG`, `DIE_REG`, `EAT_REG`, `SPIN_REG`, `SPEED_REG`,
-`SEASONPASS_REG`, `PIG_RING_*`, `PIG_REG`. **If a sprite is replaced or
+`DUCK_REG`, `DIE_REG`, `HURT_REG`, `SPEED_REG`, `SPIN_REG`, `SEASONPASS_REG`,
+`PIG_RING_*`, `PIG_REG`. Idle, eat, and move are cow-in-a-tube own-aspect
+art instead — no registration constant, just a tight 0%-padded crop to each
+PNG's own opaque bbox. `SPEED_REG` took three tries to land on a
+tube-width-style fit like `DUCK_REG`'s (pinned to a measured "waist," the
+narrowest point of the silhouette where the cow's crossed arms pinch the
+tube's visible width, since this art's splash is fused by color to the ring
+in a way that rules out `DUCK_REG`'s own flood-fill approach) — see its own
+entry below for the two earlier, wrong attempts (sqrt-area, then a
+bbox-height pin, then briefly own-aspect off native canvas height, each of
+which either let the cow shrink as the splash grew or rendered it at the
+wrong absolute size). **If a sprite is replaced or
 re-encoded, re-measure them** — `tools/season-pass-measure.js` is the
 headless-canvas probe used for `SEASONPASS_REG` specifically (locates the
 tube by its orange color within each frame's own alpha bbox, same tw/cx/by
@@ -243,7 +253,7 @@ Rules and the 10-point checklist live in [AGENTS.md](AGENTS.md#power-ups).
 entity type to `POWERUP_TYPES`, never a second spawn function, or rule 3
 ("not too often") quietly breaks as more types are added.
 
-Built: **Fast Pass** (`T.BOOST`), **Souvenir Bottle** (`T.SOUVENIR`),
+Built: **Speed Boost** (`T.BOOST`), **Souvenir Bottle** (`T.SOUVENIR`),
 **Extra Life** (`T.EXTRALIFE`), **Whirlpool** (`T.WHIRLPOOL`), **Season Pass**
 (`T.SEASONPASS`) — see the README's power-up table for player-facing
 descriptions. That's the full 4-5 (rule 1) — no slots left.
@@ -255,18 +265,25 @@ branch (2026-08-27). It stacks with whatever a power-up already grants —
 Souvenir Bottle's own `SOUVENIR_BONUS` included — rather than replacing it, so
 the grab always reads as strictly better than before.
 
-**The speed-boost rider animation** (`SPEED_REG`, `speedFrame`, see
+**The speed-boost rider animation** (`speedFrame`, `SPEED_REG`, drawn via
+the same tube-width-pinned path as duck/die/hurt — see
 [Rider animation](#rider-animation--sprite-registration)) covers BOTH ways
-the boost is granted — a tunnel and the Fast Pass pickup — because both
+the boost is granted — a tunnel and the Speed Boost pickup — because both
 already set the same `boostT`/`boostSuper` pair, so the animation just reads
 `boostT` rather than needing a trigger-specific flag. It climbs
 `speed_01`→`speed_04` as the boost kicks in, flickers between `speed_03` and
 `speed_04` (the two highest-splash frames) for the middle of `BOOST_DUR`
 rather than holding flat on one frame, then ramps back down to `speed_01` as
 the boost runs out — all timed off `SPEED_RAMP`, a fixed slice of `BOOST_DUR`,
-so it stays proportionate if `BOOST_DUR` ever changes. `speedFrame` is a pure
-function of `boostT` (no independent timer), so retriggering the boost
-mid-ride (grabbing a second Fast Pass, or a second tunnel, before the first
+so it stays proportionate if `BOOST_DUR` ever changes. Sizing is pinned to
+each frame's own measured "waist" width (`tools/speed-frame-measure.js` —
+re-run it if this art is ever re-exported) rather than the whole opaque
+region, since the splash bloom reaching further down/sideways each frame
+would otherwise get baked into the scale factor — see
+[Rider animation](#rider-animation--sprite-registration) for the two earlier
+attempts that got this wrong before landing on the waist fit. `speedFrame`
+is a pure function of `boostT` (no independent timer), so retriggering the boost
+mid-ride (grabbing a second Speed Boost, or a second tunnel, before the first
 runs out) resets the whole ramp cleanly along with `boostT` itself.
 
 **Whirlpool** grants a 6s magnet (`WHIRLPOOL_DUR`), pulling every live coin
@@ -343,12 +360,14 @@ the instant it's grabbed (`Sound.musicStop(0.15)`) and stays silent through
 the whole reveal; `Sound.seasonPass()` plays the `season-pass.mp3` stinger
 over that silence. Once `seasonPassIntroT` ticks down to 0, the world resumes
 and the SAME clock hands off to the real effect: `seasonPassT = SEASONPASS_DUR`
-(9s) starts, and `Sound.music("seasonPass", null, 0.3)` fades in
+(11.9s, re-measured 2026-09-15 off a re-exported season-pass-music.mp3 — was
+9s off the original ~9.14s file) starts, and `Sound.music("seasonPass", null,
+0.3)` fades in
 `season-pass-music.mp3` on the shared channel — timed off `SEASONPASS_INTRO_DUR`
 directly, not the stinger sample's own `onended`, so the freeze/reveal
 animation and the music switch stay in lockstep even if `seasonPass()` falls
-back to its synth tones. Total presentation is intro (3s) + effect (9s), not
-one flat 10s/12s number.
+back to its synth tones. Total presentation is intro (1.8s) + effect (11.9s),
+not one flat number.
 
 The exit gets the same "action pauses" treatment as the intro, not just a
 cosmetic wind-up: `update()` early-returns again once `seasonPassT` drops to
@@ -447,20 +466,20 @@ Every mechanical effect starts together the instant `seasonPassT` takes over:
 - **+75% top speed.** `update()`'s target-speed formula takes
   `Math.max(boostMult, seasonMult)` rather than stacking the two — Season
   Pass's `SEASONPASS_SPEED_MULT` (1.75, raised from 1.5 on 2026-08-27 —
-  Adam's call to make the already-bigger-than-Fast-Pass bonus ~50% bigger
-  still) simply wins over a concurrent Fast Pass/tunnel boost's
+  Adam's call to make the already-bigger-than-Speed-Boost bonus ~50% bigger
+  still) simply wins over a concurrent Speed Boost/tunnel boost's
   `BOOST_SUPER_MULT` (1.25) rather than compounding with it. Ramps to target
-  via its own `SEASONPASS_RAMP_MULT` (8, vs. Fast Pass/tunnel's
+  via its own `SEASONPASS_RAMP_MULT` (8, vs. Speed Boost/tunnel's
   `BOOST_RAMP_MULT` = 6, both replacing what used to be one shared bare `6`)
   — raising `SEASONPASS_SPEED_MULT` to 1.75 without also raising the ramp left
   the rider never actually reaching the new, higher target before the 1.8s
   outro freeze cut the ramp off (peaked ~13 of 14); `SEASONPASS_RAMP_MULT` = 8
   closes that gap with roughly the same proportional margin the old shared
-  6x left before the 1.5x target, still not fast enough to change Fast
-  Pass's own feel. Same "going fast" vignette/rush-line read in
+  6x left before the 1.5x target, still not fast enough to change Speed
+  Boost's own feel. Same "going fast" vignette/rush-line read in
   `speedLines()`/`frame()`'s `rushPhase` update — both now check
   `seasonPassT > 0` alongside `boostT > 0`, since the rider is genuinely
-  moving faster and the existing cue is generic, not Fast-Pass-specific.
+  moving faster and the existing cue is generic, not Speed-Boost-specific.
 - **The magnet, widened.** The same pull loop Whirlpool uses now runs when
   *either* `whirlpoolT` or `seasonPassT` is > 0, sharing one loop rather than
   a second copy: whichever is active picks the rate/range
@@ -493,7 +512,7 @@ Every mechanical effect starts together the instant `seasonPassT` takes over:
 - **The pickup glow.** `seasonPassGlow(x, y, h, scale)` is its own motif for
   rule 5 — a bright white core, a golden halo, and slow concentric gold rings
   expanding outward and fading (the literal "spreads out around it") —
-  neither Fast Pass's rotating spokes nor Whirlpool's diving motes/pinwheel
+  neither Speed Boost's rotating spokes nor Whirlpool's diving motes/pinwheel
   blur. Only draws the uncollected world pickup now (`scale = 1`) — see the
   screen overlay below for the active cue, which replaced an earlier
   rider-anchored version of this same glow at a larger scale. Pickup also
@@ -505,7 +524,7 @@ Every mechanical effect starts together the instant `seasonPassT` takes over:
   `seasonPassScreenOverlay()` washes a translucent white-to-gold radial
   gradient across the WHOLE canvas (`ctx.fillRect(0, 0, W, H)`, drawn in
   fixed screen space after the roll/camera transform is reset, alongside
-  `fastPassLabel()`), so the cue reads as the screen itself glowing rather
+  `speedBoostLabel()`), so the cue reads as the screen itself glowing rather
   than a badge trailing him. Gated on `seasonPassIntroT > 0 || seasonPassT >
   0` — up for the frozen reveal AND the resumed effect, pickup to
   power-down — and fades in over the reveal's first 0.3s, holds fully
@@ -533,7 +552,7 @@ Every mechanical effect starts together the instant `seasonPassT` takes over:
   centre is computed by hand rather than drawn inside the rolled camera
   transform `drawRider()` itself uses: this function runs in fixed screen
   space, after that transform has already been reset (see its `render()`
-  call, alongside `fastPassLabel()`), so `floorPt(travelled, laneA,
+  call, alongside `speedBoostLabel()`), so `floorPt(travelled, laneA,
   riderLift())` is un-rolled by `rollAngle()`'s cos/sin the same way
   `flyLetter()`/`flySouvenir()` already un-roll a world point for a
   fixed-screen draw — same shape, reused rather than re-derived. `riderH *

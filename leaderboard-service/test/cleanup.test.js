@@ -25,7 +25,7 @@ async function seedClaim(redis, { token, name, claimedAtSec }) {
 test("releases a claim past the grace window and frees its name", async () => {
   const redis = new FakeRedis();
   const now = Math.floor(Date.now() / 1000);
-  await seedClaim(redis, { token: "stale", name: "Dusty Buckaroo", claimedAtSec: now - GRACE_SECONDS - 10 });
+  await seedClaim(redis, { token: "stale", name: "Salty Surfboard", claimedAtSec: now - GRACE_SECONDS - 10 });
 
   const released = await cleanupUnplayedClaims(redis, GAME_KEY);
 
@@ -49,7 +49,7 @@ test("does not touch a claim still inside the grace window", async () => {
 test("never touches a claim once it has a real score (removed from the unplayed tracker on submit)", async () => {
   const redis = new FakeRedis();
   const now = Math.floor(Date.now() / 1000);
-  await seedClaim(redis, { token: "played", name: "Zippy Mule", claimedAtSec: now - GRACE_SECONDS - 10 });
+  await seedClaim(redis, { token: "played", name: "Zippy Dolphin", claimedAtSec: now - GRACE_SECONDS - 10 });
   // submit.lua ZREMs the token from the unplayed tracker the moment a real
   // score lands — simulate that directly rather than going through /submit.
   await redis.zrem(keys.unplayed, "played");
@@ -57,7 +57,7 @@ test("never touches a claim once it has a real score (removed from the unplayed 
   const released = await cleanupUnplayedClaims(redis, GAME_KEY);
 
   assert.equal(released, 0);
-  assert.deepEqual(await redis.smembers(keys.names), ["Zippy Mule"]);
+  assert.deepEqual(await redis.smembers(keys.names), ["Zippy Dolphin"]);
 });
 
 // The actual race this fix closes: cleanup's ZRANGEBYSCORE scan finds a
@@ -68,7 +68,7 @@ test("never touches a claim once it has a real score (removed from the unplayed 
 test("a submit landing between the stale-token scan and deletion is never undone", async () => {
   const redis = new FakeRedis();
   const now = Math.floor(Date.now() / 1000);
-  await seedClaim(redis, { token: "raced", name: "Feisty Javelina", claimedAtSec: now - GRACE_SECONDS - 10 });
+  await seedClaim(redis, { token: "raced", name: "Feisty Pelican", claimedAtSec: now - GRACE_SECONDS - 10 });
 
   // Cleanup's scan would have found "raced" here...
   const staleTokens = await redis.zrangebyscore(keys.unplayed, 0, now - GRACE_SECONDS);
@@ -88,10 +88,10 @@ test("a submit landing between the stale-token scan and deletion is never undone
   );
 
   assert.equal(result, 0);
-  assert.deepEqual(await redis.smembers(keys.names), ["Feisty Javelina"]);
+  assert.deepEqual(await redis.smembers(keys.names), ["Feisty Pelican"]);
   assert.deepEqual(
     await redis.hmget(keys.player("raced"), "player_name", "score"),
-    ["Feisty Javelina", "150"]
+    ["Feisty Pelican", "150"]
   );
 });
 
@@ -101,7 +101,7 @@ test("a submit landing between the stale-token scan and deletion is never undone
 test("also refuses when the stored score is no longer 0, even if still listed as unplayed", async () => {
   const redis = new FakeRedis();
   const now = Math.floor(Date.now() / 1000);
-  await seedClaim(redis, { token: "safety-net", name: "Ornery Coyote", claimedAtSec: now - GRACE_SECONDS - 10 });
+  await seedClaim(redis, { token: "safety-net", name: "Ornery Reef", claimedAtSec: now - GRACE_SECONDS - 10 });
   await redis.hset(keys.player("safety-net"), "score", "42");
 
   const result = await redis.releaseUnplayedClaim(
@@ -110,14 +110,14 @@ test("also refuses when the stored score is no longer 0, even if still listed as
   );
 
   assert.equal(result, 0);
-  assert.deepEqual(await redis.smembers(keys.names), ["Ornery Coyote"]);
+  assert.deepEqual(await redis.smembers(keys.names), ["Ornery Reef"]);
 });
 
 test("releases multiple stale claims in one pass and leaves live ones alone", async () => {
   const redis = new FakeRedis();
   const now = Math.floor(Date.now() / 1000);
-  await seedClaim(redis, { token: "stale-1", name: "Wild Cactus", claimedAtSec: now - GRACE_SECONDS - 100 });
-  await seedClaim(redis, { token: "stale-2", name: "Sunny Rattler", claimedAtSec: now - GRACE_SECONDS - 1 });
+  await seedClaim(redis, { token: "stale-1", name: "Wild Lagoon", claimedAtSec: now - GRACE_SECONDS - 100 });
+  await seedClaim(redis, { token: "stale-2", name: "Sunny Stingray", claimedAtSec: now - GRACE_SECONDS - 1 });
   await seedClaim(redis, { token: "fresh-1", name: "Lucky Otter", claimedAtSec: now - 5 });
 
   const released = await cleanupUnplayedClaims(redis, GAME_KEY);
