@@ -182,7 +182,7 @@ async function checkRaceConditionOrdering(chrome) {
 
       pendingScore = 100;
       syncRankRow();                                  // run 1 finishes
-      const midFlightClass = el.classList.contains("calculating");
+      const midFlightClass = el.classList.contains("f-rank--calculating");
       const midFlightMeScore = Board.me().score;
 
       // Sample the figure a few times while run 1's lookup is the only one

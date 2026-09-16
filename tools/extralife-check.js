@@ -80,7 +80,7 @@ async function main() {
     // organically-spawned hazard can land on the rider in between.
     const pickup = await evaluate(session, `
       (() => {
-        const before = { extraLife, tubesExtra: document.querySelectorAll('#tubes .tube.extra').length };
+        const before = { extraLife, tubesExtra: document.querySelectorAll('#tubes .tube.tube--extra').length };
         add(T.EXTRALIFE, travelled + 0.05, 0);
         update(0.016);
         const chainedIdx = window.__starts.findIndex(n => !!n.onended);
@@ -97,7 +97,7 @@ async function main() {
         for (let i = 0; i < 60; i++) updateFlyers(0.02);
         const afterLand = {
           extraLife,
-          tubesExtra: document.querySelectorAll('#tubes .tube.extra').length,
+          tubesExtra: document.querySelectorAll('#tubes .tube.tube--extra').length,
           flyersLeft: flyers.length,
           startsCount: window.__starts.length,
         };
@@ -180,8 +180,8 @@ async function main() {
             lives, extraLife, invuln, shake, hurtT,
             speedDropped: speed < before.speed,
             boostCleared: boostT === 0 && !boostSuper && speedBoostLabelT === 0,
-            tubeExploding: !!document.querySelector('#tubes .tube.extra.exploding'),
-            tubeStillInDom: document.querySelectorAll('#tubes .tube.extra').length,
+            tubeExploding: !!document.querySelector('#tubes .tube.tube--extra.tube--exploding'),
+            tubeStillInDom: document.querySelectorAll('#tubes .tube.tube--extra').length,
           },
         };
       })()
@@ -189,7 +189,7 @@ async function main() {
     // Let the .38s CSS explosion keyframe actually finish and remove the tube.
     await new Promise(r => setTimeout(r, 500));
     const afterExplode = await evaluate(session, `
-      ({ tubesExtra: document.querySelectorAll('#tubes .tube.extra').length })
+      ({ tubesExtra: document.querySelectorAll('#tubes .tube.tube--extra').length })
     `);
 
     // --- 3. The NEXT hit is a real one. ---

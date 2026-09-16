@@ -74,7 +74,7 @@ async function main() {
         for (let i = 0; i < 60 && stampedeT < 0; i++) update(0.016);
         return {
           shownLetters, stampedeT, STAMPEDE_DUR,
-          hasRunClass: $("letters").classList.contains("run"),
+          hasRunClass: $("letters").classList.contains("letters--run"),
           stampedeSounds: window.__stampedeSounds,
           musicStoppedOnLanding: window.__musicStops.length > stopsBefore,
         };
@@ -129,7 +129,7 @@ async function main() {
         while (stampedeT > 0.02) update(0.016);
         update(0.05);   // cross the 0 boundary
         return {
-          stampedeT, hasGoneClass: $("letters").classList.contains("gone"), invuln, WIN_INVULN,
+          stampedeT, hasGoneClass: $("letters").classList.contains("letters--gone"), invuln, WIN_INVULN,
           lastMusicStart: window.__musicStarts[window.__musicStarts.length - 1],
         };
       })()

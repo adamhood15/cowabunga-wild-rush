@@ -15,8 +15,8 @@
 //     left edge)
 //   - el.scrollWidth > el.clientWidth                      (content wider
 //     than its own box), skipped for elements whose overflow-x is
-//     hidden/clip — those clip+ellipsis on purpose (.reelWord, .lbName,
-//     .lbScore) and are not a bug by themselves.
+//     hidden/clip — those clip+ellipsis on purpose (.reel__word, .lb-row__name,
+//     .lb-row__score) and are not a bug by themselves.
 //
 // Deliberately does not touch the live leaderboard API: the leaderboard and
 // name-claim screens are populated with synthetic worst-case rows/names
@@ -77,8 +77,8 @@ const SCREENS = [
     root: "#namePanel",
     setup: `
       dismissLoader();
-      $("titlePanel").classList.remove("on");
-      $("namePanel").classList.add("on");
+      $("titlePanel").classList.remove("panel--on");
+      $("namePanel").classList.add("panel--on");
       reelA = __longestOf(NAME_A); reelB = __longestOf(NAME_B);
       paintReels();
       true
@@ -131,7 +131,7 @@ const SCREENS = [
       $("fRankNote").textContent = __worstName;
       $("fRank").textContent = "#" + (999999).toLocaleString();
       overTextIn = true;
-      $("overPanel").classList.add("textIn", "riderIn");
+      $("overPanel").classList.add("panel--text-in", "panel--rider-in");
       true
     `,
     postSettleMs: 900, // let the staggered .textIn overIn animation (up to ~0.46s + per-child delay) finish before the screenshot
@@ -151,7 +151,7 @@ const SCREENS = [
       $("fRankNote").textContent = __worstName;
       $("fRank").textContent = "#" + (999999).toLocaleString();
       overTextIn = true;
-      $("overPanel").classList.add("textIn", "riderIn");
+      $("overPanel").classList.add("panel--text-in", "panel--rider-in");
       true
     `,
     postSettleMs: 900,
@@ -171,24 +171,24 @@ const SCREENS = [
     root: "#lbPanel",
     setup: `
       dismissLoader();
-      $("titlePanel").classList.remove("on");
-      $("lbPanel").classList.add("on");
+      $("titlePanel").classList.remove("panel--on");
+      $("lbPanel").classList.add("panel--on");
       const list = $("lbList"); list.innerHTML = "";
       for (let i = 0; i < 50; i++){
         const d = document.createElement("div");
-        d.className = "lbRow";
-        d.innerHTML = '<span class="lbPos"></span><span class="lbName"></span><span class="lbScore"></span>';
+        d.className = "lb-row";
+        d.innerHTML = '<span class="lb-row__pos"></span><span class="lb-row__name"></span><span class="lb-row__score"></span>';
         d.children[0].textContent = i + 1;
         d.children[1].textContent = __worstName;
         d.children[2].textContent = (999999999).toLocaleString();
         list.appendChild(d);
       }
-      $("lbEmpty").classList.remove("on");
+      $("lbEmpty").classList.remove("lb-empty--on");
       // The pinned "you" row below the top 50 (see renderBoard()).
       const you = $("lbYou"); you.innerHTML = "";
       const d = document.createElement("div");
-      d.className = "lbRow me";
-      d.innerHTML = '<span class="lbPos"></span><span class="lbName"></span><span class="lbScore"></span>';
+      d.className = "lb-row lb-row--me";
+      d.innerHTML = '<span class="lb-row__pos"></span><span class="lb-row__name"></span><span class="lb-row__score"></span>';
       d.children[0].textContent = "3,412";
       d.children[1].textContent = __worstName;
       d.children[2].textContent = (999999999).toLocaleString();
@@ -220,7 +220,7 @@ function scanExpr(rootSel) {
         if (leftOver > 0.5) flags.push("left");
         // >4px, not >1px: flex rows with a gap legitimately round scrollWidth
         // vs. clientWidth by a few px with no visible effect (verified against
-        // .ghostRow/.howSec/#revealBtns, which flagged 1-6px at every width
+        // .ghost-row/.how-sec/#revealBtns, which flagged 1-6px at every width
         // including desktop, with no left/right edge crossing — that is
         // rounding noise, not overflow). A real burst runs to tens/hundreds
         // of px and typically comes with a right/left flag too.

@@ -73,7 +73,7 @@
 
     /* Three-way font split: --display is reserved for buttons, major page
        titles, and leaderboard rank numbers (never scores); --display-card is
-       for the small bold labels inside a card (.ctl/.haz/.hgItem b);
+       for the small bold labels inside a card (.ctl/.haz/.hud-guide__item b);
        --copy is body text everywhere else. --mono stays put and is applied
        explicitly to the few tabular-nums figures (HUD/board digits, results
        stats, leaderboard scores, the load percentage) that need stable
@@ -96,24 +96,24 @@
        padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 16px;
        justify-content:space-between;align-items:flex-start;
        font-size:12px;letter-spacing:.12em}
-  #hud.on{display:flex}
+  #hud.hud--on{display:flex}
   /* Without these the boards size to their content and simply walk off the
      screen edge as the figures grow — there is nothing to detect and nothing to
      shrink against. See setFigure(). */
   #hud > *{min-width:0}
   .board{background:var(--hud-glow-8);border:3px solid var(--ink);border-radius:6px;max-width:100%;height:61px;
          padding:7px 12px 9px;box-shadow:4px 4px 0 var(--ink)}
-  .board .lbl{display:block;font-size:9px;letter-spacing:.2em;color:var(--sky-low);margin-bottom:3px}
+  .board .board__lbl{display:block;font-size:9px;letter-spacing:.2em;color:var(--sky-low);margin-bottom:3px}
   /* 25px is the starting point setFigure()/applyFit() shrinks from, same as
      the results-card figures — an outrageous score (coins are the one
      uncapped term in runScore()) shrinks the digits to fit the board rather
      than truncating them. Never ellipsise a figure: a cut-off number reads as
      a WRONG number. */
-  .board .val{display:block;font-family:var(--mono);font-size:25px;font-weight:400;line-height:1;
+  .board .board__val{display:block;font-family:var(--mono);font-size:25px;font-weight:400;line-height:1;
               white-space:nowrap;font-variant-numeric:tabular-nums}
   #hudRight{text-align:right}
   #coinRow{display:flex;align-items:center;gap:7px;justify-content:flex-end;min-width:0}
-  #coinRow .val{min-width:0}
+  #coinRow .board__val{min-width:0}
   /* flashCoins() toggles this inline, same pattern as #flash: transition set
      on the base rule so both the snap TO yellow and the fade back read as
      one motion rather than a hard cut on either end. */
@@ -127,20 +127,20 @@
   .tube{width:26px;aspect-ratio:50/33;
         background:no-repeat center/contain url("assets/sprites/hud/extra-life.png");
         filter:drop-shadow(1px 2px 0 rgba(10,10,10,.5))}
-  .tube.spent{opacity:.3;filter:grayscale(1)}
+  .tube.tube--spent{opacity:.3;filter:grayscale(1)}
   /* Extra Life's bonus slice. Placed first (drawTubes()), left of the normal
      three. tubeLand plays every time because drawTubes() rebuilds the row
      from scratch (same reasoning as #letters b.got), so there is no stale
      animation state to worry about. Plain pizza art, same as a real life —
      position (leftmost) plus the pop-in/explosion animations are the cue. */
-  .tube.extra{animation:tubeLand .3s cubic-bezier(.16,1.4,.4,1)}
+  .tube.tube--extra{animation:tubeLand .3s cubic-bezier(.16,1.4,.4,1)}
   @keyframes tubeLand{from{transform:scale(1.6)} to{transform:scale(1)}}
   /* Plays instead of tubeLand the instant a hit consumes the extra life —
      three classes beats two, so this wins outright with no !important.
      explodeExtraTube() adds .exploding and only removes the tube for real at
      animationend, so the player actually sees the burst rather than the slice
      just disappearing under a normal hit's flash/shake. */
-  .tube.extra.exploding{animation:tubeExplode .38s ease-out forwards}
+  .tube.tube--extra.tube--exploding{animation:tubeExplode .38s ease-out forwards}
   @keyframes tubeExplode{
     0%  {transform:scale(1);   opacity:1}
     35% {transform:scale(1.7); opacity:1}
@@ -152,7 +152,7 @@
      grow as the numbers climb. */
   #letters{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);
            transform:translateX(-50%);display:flex;gap:clamp(3px,1.2vw,10px)}
-  #letters.gone{display:none}
+  #letters.letters--gone{display:none}
   /* Below the boards on narrow screens: at full size the word plus both boards
      overrun a phone's width and the letters end up underneath them. */
   /* 90px cleared a single row of boards, but not #tubes underneath the
@@ -171,7 +171,7 @@
      — re-measured, not assumed, since the collision before only showed up
      once the score had enough digits to widen the board. */
   @media (max-width:560px){ #letters{top:calc(env(safe-area-inset-top,0px) + 112px)}
-.board .val {font-size:20px} }
+.board .board__val {font-size:20px} }
   .word{display:flex;justify-content:center}
   /* Each letter is a window onto its own artwork file rather than type: the
      word is a red-and-white candy-striped life-preserver ring per letter,
@@ -199,10 +199,10 @@
   /* Not yet collected: the same slice held back as a dark ghost, so the slot
      shows the shape you are hunting for rather than an empty space. */
   #letters b,.word b{filter:grayscale(1) brightness(.42) opacity(.5)}
-  #letters b.got,.word b.got{filter:none}
+  #letters b.word__letter--got,.word b.word__letter--got{filter:none}
   /* Lands rather than pops: the flyer has just arrived at this slot, so the
      letter takes over mid-flight instead of appearing from nothing. */
-  #letters b.got{filter:drop-shadow(0 4px 0 rgba(10,10,10,.3));
+  #letters b.word__letter--got{filter:drop-shadow(0 4px 0 rgba(10,10,10,.3));
                  animation:letterLand .26s cubic-bezier(.16,1.4,.4,1)}
   @keyframes letterLand{from{transform:scale(1.55)} to{transform:scale(1)}}
 
@@ -221,7 +221,7 @@
      ease-in curve: stretched over five seconds, an ease-in creeps for half the
      animation and then snaps, which reads as a stall rather than a run. Here it
      rears back, breaks away, and gains ground the whole way out. */
-  #letters.run b{animation:stampede 5.8s linear forwards;
+  #letters.letters--run b{animation:stampede 5.8s linear forwards;
                  animation-delay:calc(var(--i) * 336ms)}
   @keyframes stampede{
     0%  {transform:translateX(0) rotate(0deg)}
@@ -234,14 +234,14 @@
      lives inside #stats as a row rather than in a box of its own. Its styling
      is down there with the board. */
   @media (prefers-reduced-motion:reduce){
-    #letters b.got{animation:none}
-    #letters.run b{animation:none;opacity:0}
+    #letters b.word__letter--got{animation:none}
+    #letters.letters--run b{animation:none;opacity:0}
     /* The pill and the gold still carry the record; only the pop goes. */
-    #overPanel.textIn #stats .rec::after{animation:none}
+    #overPanel.panel--text-in #stats .stat-row__cell--record::after{animation:none}
     /* The card's copy still WAITS for Typhoon — that is sequencing, not motion,
        and it is the whole point of the beat. It just fades in place instead of
        rising, keeping the same stagger so the order still reads. */
-    #overPanel.textIn > :not(#overRider){animation-name:overFade}
+    #overPanel.panel--text-in > :not(#overRider){animation-name:overFade}
     @keyframes overFade{from{opacity:0} to{opacity:1}}
   }
 
@@ -263,13 +263,13 @@
               env(safe-area-inset-right,0px) + 144px)))}
   #speedbar i{flex:1 1 0;min-width:0;height:100%;
     background:no-repeat center/contain url("assets/sprites/hud/speed-indicator/speed-indicator_02.png")}
-  #speedbar i.lit{background-image:url("assets/sprites/hud/speed-indicator/speed-indicator_03.png")}
+  #speedbar i.speedbar-segment--lit{background-image:url("assets/sprites/hud/speed-indicator/speed-indicator_03.png")}
   /* Over top speed: filled icons jitter in place to read as "past the
      redline" instead of adding yet another colour tier. Staggered delays
      keep them from all snapping in perfect unison. */
-  #speedbar i.boosted{animation:speedShake .2s steps(2) infinite}
-  #speedbar i.boosted:nth-child(2n){animation-delay:.05s}
-  #speedbar i.boosted:nth-child(3n){animation-delay:.09s}
+  #speedbar i.speedbar-segment--boosted{animation:speedShake .2s steps(2) infinite}
+  #speedbar i.speedbar-segment--boosted:nth-child(2n){animation-delay:.05s}
+  #speedbar i.speedbar-segment--boosted:nth-child(3n){animation-delay:.09s}
   @keyframes speedShake{0%,100%{transform:translateX(0)} 50%{transform:translateX(1.5px)}}
 
   /* ---------- panels ---------- */
@@ -287,7 +287,7 @@
          padding:24px 20px calc(env(safe-area-inset-bottom,0px) + 66px);
          overflow-y:auto;touch-action:pan-y;
          background:radial-gradient(130% 100% at 50% 15%,rgb(var(--panel-glow-rgb) / var(--panel-glow-a)),rgb(var(--panel-shade-rgb) / var(--panel-shade-a)))}
-  .panel.on{display:flex}
+  .panel.panel--on{display:flex}
   /* Centred by a PAIR of auto margins rather than justify-content, because a
      centred flex column with overflow-y:auto clips its own top once the content
      is taller than the panel — auto margins collapse instead of clipping.
@@ -340,15 +340,15 @@
      centred and #overRider's position — which IS his target — depends on how
      tall the content above it is. Anything that changes the layout when the text
      appears would move the slot out from under him after he had landed. */
-  #overPanel:not(.textIn) > *{opacity:0;pointer-events:none}
+  #overPanel:not(.panel--text-in) > *{opacity:0;pointer-events:none}
   /* He is on his own switch, .riderIn, and it is thrown a beat AFTER the copy —
      see handOverRider. Until then he is still the canvas drawing, still easing
      into place, and this img must not show or there would be two of him.
      No fade: it is a swap between two identical rectangles inside one frame, and
      any transition would show the seam it is there to hide. */
-  #overPanel:not(.riderIn) > #overRider{opacity:0}
+  #overPanel:not(.panel--rider-in) > #overRider{opacity:0}
   /* Everything EXCEPT him gets the staggered entrance. */
-  #overPanel.textIn > :not(#overRider){
+  #overPanel.panel--text-in > :not(#overRider){
     animation:overIn .46s cubic-bezier(.16,1.25,.4,1) both;
     animation-delay:calc(var(--d,0) * 1ms)}
   /* `translate`, not `transform`: .ride and .btn are permanently skewed, and a
@@ -373,12 +373,12 @@
         font-size:clamp(37px,5.5vw,118px);line-height:.84;color:var(--yellow);margin:0;
         -webkit-text-stroke:4px var(--ink);paint-order:stroke fill;
         }
-  .rideLogo{width:min(60vw,500px);height:auto;margin:0;
+  .ride-logo{width:min(60vw,500px);height:auto;margin:0;
         filter:drop-shadow(4px 6px 0 rgba(10,10,10,.4))}
-  .rideLogo.howHead{width:min(84vw,340px)}
-  .parkLogoLink{display:inline-block;margin:0 0 14px}
-  .parkLogo{display:block;width:250px;height:auto}
-  @media (max-width:561px){ .parkLogo{width:200px} }
+  .ride-logo.ride-logo--how-head{width:min(84vw,340px)}
+  .park-logo-link{display:inline-block;margin:0 0 14px}
+  .park-logo{display:block;width:250px;height:auto}
+  @media (max-width:561px){ .park-logo{width:200px} }
   .tag{margin:14px 0 0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
        color:rgba(252,246,240,.85);max-width:32ch;line-height:1.7}
   #heroWrap{position:relative;display:flex;align-items:flex-end;justify-content:center;
@@ -410,38 +410,38 @@
        rule the primary uses (6px: 4+2 here; 4px: 2+2). Straight-down only (no
        x offset), matching the soft single-direction drop the Board Wax specimen
        used instead of the old diagonal ink-solid shadow. Written as compound
-       selectors, not just inherited from .btn:hover: .btn.ghost,.btn.tertiary's
+       selectors, not just inherited from .btn:hover: .btn.btn--ghost,.btn.btn--tertiary's
        own box-shadow rule below ties this in specificity and sits later in
        the sheet, so .btn:hover alone would lose that fight on box-shadow and
        these two would never visibly look pressed. */
-    .btn.ghost:hover,.btn.tertiary:hover{transform:skewX(-7deg) translate(0,2px);box-shadow:0 2px 0 rgba(10,10,10,.35)}
+    .btn.btn--ghost:hover,.btn.btn--tertiary:hover{transform:skewX(-7deg) translate(0,2px);box-shadow:0 2px 0 rgba(10,10,10,.35)}
   }
   /* Secondary (turquoise) and tertiary (navy) share one size/shape — only the
      colour differs — because the three-button rule always pairs them side by
-     side under the primary: see .ghostRow below. */
-  .btn.ghost,.btn.tertiary{color:var(--white);font-size:14px;
+     side under the primary: see .ghost-row below. */
+  .btn.btn--ghost,.btn.btn--tertiary{color:var(--white);font-size:14px;
              padding:10px 18px 11px;margin-top:12px;box-shadow:0 4px 0 rgba(10,10,10,.35);text-shadow:2px 2px 0 var(--ink)}
-  .btn.ghost{background:var(--turquoise)}
+  .btn.btn--ghost{background:var(--turquoise)}
   /* Night-surf navy, not another shade of the ghost turquoise: the third action
      in a trio needs its own colour to read as a distinct choice rather than
      as two ghosts of different sizes, and navy keeps it in palette and clear
      of the red primary. */
-  .btn.tertiary{background:var(--purple)}
+  .btn.btn--tertiary{background:var(--purple)}
   /* The lone-primary rule: whenever a screen has three actions, the primary
      sits alone on its own row and reads slightly bigger than the standard
      .btn, so it stays the obvious first move above the secondary/tertiary
      pair underneath. */
-  .btn.trioPrimary{font-size:30px;padding:14px 38px 16px}
+  .btn.btn--trio-primary{font-size:30px;padding:14px 38px 16px}
   .btn:focus-visible,.hudbtn:focus-visible{outline:3px solid var(--yellow);outline-offset:4px}
 
   @media (max-width:560px){
-    .btn.ghost, .btn.tertiary{font-size:12px;padding:8px 14px 9px;margin-top:10px;box-shadow:0 3px 0 rgba(10,10,10,.35)}
+    .btn.btn--ghost, .btn.btn--tertiary{font-size:12px;padding:8px 14px 9px;margin-top:10px;box-shadow:0 3px 0 rgba(10,10,10,.35)}
   }
   /* A narrow window with a real mouse hits both this and the 560px rule above
      at once — rescaled again for the 3px shadow that applies there, same
      translate+remaining-shadow=base-shadow rule (3px: 1+2). */
   @media (max-width:560px) and (hover:hover) and (pointer:fine){
-    .btn.ghost:hover, .btn.tertiary:hover{transform:skewX(-7deg) translate(0,1px);box-shadow:0 2px 0 rgba(10,10,10,.35)}
+    .btn.btn--ghost:hover, .btn.btn--tertiary:hover{transform:skewX(-7deg) translate(0,1px);box-shadow:0 2px 0 rgba(10,10,10,.35)}
   }
 
   /* ---------- controls ----------
@@ -467,20 +467,20 @@
             min-width:52px;height:40px;padding:0 10px;border-radius:6px;
             background:var(--white);color:var(--ink);border:3px solid var(--ink);
             box-shadow:0 4px 0 var(--ink);font-size:19px;line-height:1}
-  /* Title/caption type shared verbatim with .haz b/span and .hgItem b/span —
+  /* Title/caption type shared verbatim with .haz b/span and .hud-guide__item b/span —
      one card vocabulary for every section on the how-to-play card, not three
      near-identical ones drifting apart a property at a time. */
   .ctl b{font-family:var(--copy);text-transform:uppercase;transform:skewX(-7deg);
          font-size:17px;letter-spacing:.04em;color:var(--white)}
   .ctl span{font-size:14px;line-height:1.6;letter-spacing:.1em;display:none;
             color:rgba(252,246,240,.72)}
-  .howSec .ctl span{display:block}    
+  .how-sec .ctl span{display:block}    
   /* Slide/Jump/Duck stay in one row on the how-to card too, same compact
      vertical .ctl the title screen uses — the paragraph-length explanation
      here just wraps to more lines instead of the caption's one or two. */
-  .tc{display:none}
-  body.touch .tc{display:block}
-  body.touch .kb{display:none}
+  .ctl__tc{display:none}
+  body.is-touch .ctl__tc{display:block}
+  body.is-touch .ctl__kb{display:none}
 
   /* ---------- how to play ----------
      The one panel that can outgrow the screen, so it scrolls. touch-action has
@@ -513,20 +513,20 @@
   @media (max-width:560px){
     #lbScroll{padding-left:9px;padding-right:9px}
   }
-  .lbLead{max-width:min(92vw,420px);font-size:13px;line-height:1.6;
+  .lb-lead{max-width:min(92vw,420px);font-size:13px;line-height:1.6;
           color:var(--pale);opacity:.85;margin:2px 0 16px}
 
   /* Two smaller buttons side by side, under a primary that gets its own row.
      Used for a pair of secondaries (title: How to Play + Leaderboard, both
-     .ghost) and for the secondary/tertiary pair the three-button rule calls
-     for (pause: How to Play .ghost + Start Over .tertiary) — either way, a
+     .btn--ghost) and for the secondary/tertiary pair the three-button rule calls
+     for (pause: How to Play .btn--ghost + Start Over .btn--tertiary) — either way, a
      lone .btn above beats a stack of three competing buttons. */
-  .ghostRow{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;
+  .ghost-row{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;
             align-items:center;max-width:100%}
-  /* .btn and .btn.ghost/.tertiary carry different margin-tops (20 vs 12) for
+  /* .btn and .btn.btn--ghost/.btn--tertiary carry different margin-tops (20 vs 12) for
      the stacked layout they were built for; side by side that reads as a
      misalignment. */
-  .ghostRow .btn{margin-top:14px}
+  .ghost-row .btn{margin-top:14px}
 
   /* reels ---------------------------------------------------------------- */
   #reels{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
@@ -540,12 +540,12 @@
         box-shadow:4px 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
   /* The word clips, NOT the button. overflow:hidden on .reel would cut the
      badge and rays off at the bottom edge, which is exactly where they live. */
-  .reelWord{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .reel__word{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .reel:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
   /* The flick is on the WORD, not the button: the badge and its rays are
      anchored to the bottom edge, and animating the whole button would throw
      them around with it. */
-  .reel.rolling .reelWord{animation:reelRoll .38s ease}
+  .reel.reel--rolling .reel__word{animation:reelRoll .38s ease}
   @keyframes reelRoll{
     0%{transform:translateY(0)}   30%{transform:translateY(-7px)}
     60%{transform:translateY(4px)} 100%{transform:translateY(0)}}
@@ -553,7 +553,7 @@
   /* A swap badge straddling the bottom edge, with a burst of rays behind it.
      Without a cue the reels read as two labels rather than two controls, and
      the line of copy that says otherwise is the thing people skip.
-     Both are pseudo-elements: paintReels writes into .reelWord, so nothing here
+     Both are pseudo-elements: paintReels writes into .reel__word, so nothing here
      can be wiped by a reroll. bottom:0 plus a shared translateY(62%) hangs both
      mostly BELOW the button edge — concentric with each other, and clear of the
      word rather than sitting across it. */
@@ -575,33 +575,33 @@
 
   /* Naming is its own screen now, between the loader and the title card, so the
      leaderboard panel no longer carries a claim step at all. */
-  #namePanel .nameHead{font-size:clamp(28px,8.4vw,58px);line-height:.92;
+  #namePanel .ride--name-head{font-size:clamp(28px,8.4vw,58px);line-height:.92;
                        max-width:min(94vw,520px);margin:0 0 26px}
   /* #reels clears the badge overhang (half of a 38px badge) before the caption,
      which now sits under the generator rather than above it. */
   #namePanel #reels{margin-bottom:38px}
-  #namePanel .lbLead{margin:0}
+  #namePanel .lb-lead{margin:0}
 
   /* Reels stay blank rather than painting a name that could jump the instant
      the taken-names fetch resolves — no flicker, just a brief empty beat. */
-  #reels.loading .reelWord{opacity:0}
-  #reels.disabled{pointer-events:none;opacity:.6}
+  #reels.reels--loading .reel__word{opacity:0}
+  #reels.reels--disabled{pointer-events:none;opacity:.6}
 
   /* Button swaps its label for a spinner rather than changing size, so the
      panel doesn't jump while a claim is in flight. */
   #nameGo{position:relative}
-  #nameGo.busy .btnLabel{visibility:hidden}
+  #nameGo.btn--busy .btn__label{visibility:hidden}
   #nameGo .spinner{display:none}
-  #nameGo.busy .spinner{display:block;position:absolute;left:50%;top:50%;
+  #nameGo.btn--busy .spinner{display:block;position:absolute;left:50%;top:50%;
     width:22px;height:22px;margin:-11px 0 0 -11px;
     border:3px solid var(--ink);border-top-color:transparent;border-radius:50%;
     animation:btnSpin .7s linear infinite}
   @keyframes btnSpin{to{transform:rotate(360deg)}}
   @media (prefers-reduced-motion:reduce){
-    #nameGo.busy .spinner{animation:none;border-top-color:var(--ink)}}
+    #nameGo.btn--busy .spinner{animation:none;border-top-color:var(--ink)}}
 
-  #namePanel .nameError{display:none;color:var(--yellow);margin-top:10px}
-  #namePanel .nameError.on{display:block}
+  #namePanel .name-error{display:none;color:var(--yellow);margin-top:10px}
+  #namePanel .name-error.name-error--on{display:block}
 
   /* A failed claim otherwise just sits there quietly — on a flaky connection
      a player who looked away while it "loaded" can miss it entirely. The
@@ -613,18 +613,18 @@
     30%,50%,70%{transform:translateX(-4px)}
     40%,60%{transform:translateX(4px)}
   }
-  #namePanel.shake{animation:nameShake .4s}
+  #namePanel.panel--shake{animation:nameShake .4s}
   @media (prefers-reduced-motion:reduce){
-    #namePanel.shake{animation:none}}
+    #namePanel.panel--shake{animation:none}}
 
   /* Only ever shown alongside a failed claim — see #nameGo's click handler.
      A broken/unreachable backend must never be a hard wall between the
      player and the game. */
-  #namePanel .skipLink{display:none;background:none;border:none;padding:0;
+  #namePanel .skip-link{display:none;background:none;border:none;padding:0;
     margin-top:12px;font-family:inherit;font-size:12px;color:var(--pale);
     opacity:.7;text-decoration:underline;cursor:pointer}
-  #namePanel .skipLink.on{display:inline-block}
-  #namePanel .skipLink:active{opacity:1}
+  #namePanel .skip-link.skip-link--on{display:inline-block}
+  #namePanel .skip-link:active{opacity:1}
 
   /* rows ------------------------------------------------------------------
      An explicit 3-column grid, NOT flex: the rank and score columns are sized
@@ -637,20 +637,20 @@
      than the board above it. Size the containers, and let the rows (block-level
      grids) simply fill them. */
   #lbHead,#lbList,#lbYou{width:100%;max-width:min(90vw,470px)}
-  #lbHead,.lbRow{display:grid;grid-template-columns:2.6em 1fr auto;gap:10px;
+  #lbHead,.lb-row{display:grid;grid-template-columns:2.6em 1fr auto;gap:10px;
                  align-items:center;text-align:left}
   #lbHead{font-size:9px;letter-spacing:.2em;text-transform:uppercase;font-family:var(--display-card);
           color:var(--yellow);opacity:.8;padding:0 12px 6px;-webkit-text-stroke:1px var(--ink);paint-order:stroke fill}
-  #lbHead span:last-child,.lbRow .lbScore{text-align:right}
-  .lbRow{background:var(--hud-glow-9);border:3px solid var(--ink);border-radius:5px;
+  #lbHead span:last-child,.lb-row .lb-row__score{text-align:right}
+  .lb-row{background:var(--hud-glow-9);border:3px solid var(--ink);border-radius:5px;
          padding:9px 12px 10px;margin-bottom:7px;box-shadow:3px 3px 0 var(--ink)}
-  .lbRow .lbPos{font-family:var(--display);font-size:17px;color:var(--sky-low)}
-  .lbRow .lbName{font-size:14px;letter-spacing:.04em;color:var(--white);
+  .lb-row .lb-row__pos{font-family:var(--display);font-size:17px;color:var(--sky-low)}
+  .lb-row .lb-row__name{font-size:14px;letter-spacing:.04em;color:var(--white);
                  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-  .lbRow .lbScore{font-family:var(--mono);font-size:17px;color:var(--yellow);white-space:nowrap;
+  .lb-row .lb-row__score{font-family:var(--mono);font-size:17px;color:var(--yellow);white-space:nowrap;
                   font-variant-numeric:tabular-nums}
-  .lbRow.me{background:var(--yellow)}
-  .lbRow.me .lbPos,.lbRow.me .lbName,.lbRow.me .lbScore {color:var(--ink)}
+  .lb-row.lb-row--me{background:var(--yellow)}
+  .lb-row.lb-row--me .lb-row__pos,.lb-row.lb-row--me .lb-row__name,.lb-row.lb-row--me .lb-row__score {color:var(--ink)}
   /* At 320px the default sizing spent so much of the row on the rank and score
      columns that most names ellipsised — technically correct (the number is
      never the thing that gets cut) but useless to read. Give the name back its
@@ -664,24 +664,24 @@
      figure has a line of its own. */
   @media (max-width:560px){
     #lbHead{display:none}
-    #lbHead,.lbRow{grid-template-columns:2.4em 1fr;
+    #lbHead,.lb-row{grid-template-columns:2.4em 1fr;
                    grid-template-areas:"pos name" "pos score";
                    row-gap:1px;gap:8px}
-    .lbRow{padding:8px 12px 9px}
-    .lbRow .lbPos{grid-area:pos;align-self:center;font-size:19px;text-align:center}
-    .lbRow .lbName{grid-area:name;font-size:14px}
-    .lbRow .lbScore{grid-area:score;text-align:left;font-size:20px;
+    .lb-row{padding:8px 12px 9px}
+    .lb-row .lb-row__pos{grid-area:pos;align-self:center;font-size:19px;text-align:center}
+    .lb-row .lb-row__name{grid-area:name;font-size:14px}
+    .lb-row .lb-row__score{grid-area:score;text-align:left;font-size:20px;
                     }
   }
   @media (max-width:380px){
-    .lbRow{padding-left:9px;padding-right:9px}
-    .lbRow .lbName{font-size:13px;letter-spacing:.01em}
-    .lbRow .lbScore{font-size:18px}
+    .lb-row{padding-left:9px;padding-right:9px}
+    .lb-row .lb-row__name{font-size:13px;letter-spacing:.01em}
+    .lb-row .lb-row__score{font-size:18px}
   }
   #lbYou{margin-top:4px}
   #lbYou:not(:empty){padding-top:12px;border-top:3px dashed rgba(126,222,252,.35)}
   #lbEmpty{display:none;font-size:13px;color:var(--pale);opacity:.75;margin:18px 0}
-  #lbEmpty.on{display:block}
+  #lbEmpty.lb-empty--on{display:block}
 
   /* Covers renderBoard()'s fetch and, when opened from the rank stat, the
      jump to the player's row — both happen behind this rather than in front
@@ -690,8 +690,8 @@
      #lbScroll: the jump needs real layout/getBoundingClientRect() numbers
      from it, which display:none would zero out. */
   #lbLoading{display:none;position:absolute;inset:0;align-items:center;justify-content:center}
-  #lbPanel.loading #lbLoading{display:flex}
-  #lbPanel.loading #lbScroll{visibility:hidden}
+  #lbPanel.panel--loading #lbLoading{display:flex}
+  #lbPanel.panel--loading #lbScroll{visibility:hidden}
   #lbLoading .spinner{width:38px;height:38px;border:4px solid rgba(255,255,255,.25);
                       border-top-color:var(--orange);border-radius:50%;
                       animation:btnSpin .7s linear infinite}
@@ -735,26 +735,27 @@
              text-align:center;
              padding:calc(env(safe-area-inset-top,0px) + 28px) 22px
                      calc(env(safe-area-inset-bottom,0px) + 34px)}
-  .howHead{font-size:clamp(30px,9vw,48px);margin-bottom:4px}
-  /* .howHead's own 4px margin-bottom is sized for #howPanel, where the next
-     thing down is a .howSec that supplies its own 26px margin-top. #lbTitle
-     has no such buffer of its own — #lbHead butts straight up against it
-     above 560px, and below it #lbHead is display:none so the first .lbRow
-     would butt up against it instead — so it needs a real gap of its own,
+  .ride--how-head,.ride-logo--how-head{font-size:clamp(30px,9vw,48px);margin-bottom:4px}
+  /* .ride--how-head/.ride-logo--how-head's own 4px margin-bottom is sized for
+     #howPanel, where the next thing down is a .how-sec that supplies its own
+     26px margin-top. #lbTitle has no such buffer of its own — #lbHead butts
+     straight up against it above 560px, and below it #lbHead is display:none
+     so the first .lb-row would butt up against it instead — so it needs a
+     real gap of its own,
      on every screen size, independent of whichever sibling ends up next. */
   #lbTitle{margin-bottom:20px}
-  .howSec{width:100%;max-width:min(92vw,560px);margin-top:26px;
+  .how-sec{width:100%;max-width:min(92vw,560px);margin-top:26px;
           padding-top:22px;border-top:3px solid rgba(10,10,10,.35)}
-  .howSec:first-of-type{border-top:none;padding-top:0}
-  .howSec h3{font-family:var(--display-card);text-transform:uppercase;transform:skewX(-7deg);
+  .how-sec:first-of-type{border-top:none;padding-top:0}
+  .how-sec h3{font-family:var(--display-card);text-transform:uppercase;transform:skewX(-7deg);
              font-size:23px;letter-spacing:.05em;color:var(--white);margin:0 0 12px;
              -webkit-text-stroke:4px var(--ink);paint-order:stroke fill}
-  .howSec p{margin:12px auto 0;max-width:40ch;font-size:15px;line-height:1.85;
+  .how-sec p{margin:12px auto 0;max-width:40ch;font-size:15px;line-height:1.85;
             letter-spacing:.08em;color:#ffffff}
-  .howSec .word{--lh:clamp(30px,4.6vw,30px)}
-  .howCoin{width:54px;height:54px;object-fit:contain;
+  .how-sec .word{--lh:clamp(30px,4.6vw,30px)}
+  .how-sec__coin{width:54px;height:54px;object-fit:contain;
            filter:drop-shadow(0 4px 0 rgba(10,10,10,.3))}
-  .howLead{margin-top:0 !important}
+  .how-sec__lead{margin-top:0 !important}
 
   #hazards,#powerups{margin-top:16px;display:grid;gap:12px;
            grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
@@ -769,7 +770,7 @@
      background, a green accent line and the whole row to itself, which made it
      read as a different KIND of thing — a banner sitting under the grid rather
      than the fifth card in it.
-     Sentence case, not uppercase — matches .hgItem span. The captions here are
+     Sentence case, not uppercase — matches .hud-guide__item span. The captions here are
      now full sentences ("Ride through for a speed boost!"), and shouting a
      whole sentence reads worse than shouting a two-word label did. */
   .haz span{font-size:14px;line-height:1.6;letter-spacing:.1em;color:rgba(252,246,240,.72)}
@@ -778,69 +779,69 @@
      Same one-card-per-entry grid as #hazards, but the tiles are not all the
      same shape — a 48px icon square next to a full-width speed bar next to a
      three-up row of stat cards — so cards size to their own content and the
-     wide ones (.hgWide) span the whole row instead of being squeezed into a
+     wide ones (.hud-guide__row3--wide/.hud-guide__item--wide) span the whole row instead of being squeezed into a
      hazard-sized cell. A class, not an id: the Buttons and Gameplay Stats
      sections each get their own instance of this grid. */
-  .hudGuide{margin-top:16px;display:grid;gap:12px;
+  .hud-guide{margin-top:16px;display:grid;gap:12px;
             grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
-  .hgItem{display:flex;flex-direction:column;align-items:center;gap:6px;
+  .hud-guide__item{display:flex;flex-direction:column;align-items:center;gap:6px;
           padding:14px 8px 12px;border-radius:8px;background:var(--hud-glow-55);
           border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
-  .hgItem b{font-family:var(--copy);transform:skewX(-7deg);
+  .hud-guide__item b{font-family:var(--copy);transform:skewX(-7deg);
             font-size:17px;letter-spacing:.04em;color:var(--white)}
-  .hgItem span{font-size:14px;letter-spacing:.1em;line-height:1.6;
+  .hud-guide__item span{font-size:14px;letter-spacing:.1em;line-height:1.6;
                color:rgba(252,246,240,.72)}
-  .hgWide{grid-column:1 / -1}
+  .hud-guide__row3--wide,.hud-guide__item--wide{grid-column:1 / -1}
   /* Score, Breakers and Tubes share one row (like Mute/Back/Play do as
      ordinary auto-fit tiles) instead of each claiming a full-width row of its
      own — flex:1 1 0 + min-width:0 is the same shrink-safe three-across trick
      #stats already uses for its own row of figures. */
-  .hgRow3{display:flex;gap:12px}
-  .hgRow3 .hgItem{flex:1 1 0;min-width:0}
+  .hud-guide__row3{display:flex;gap:12px}
+  .hud-guide__row3 .hud-guide__item{flex:1 1 0;min-width:0}
   /* The real .board's figure is sized for a HUD corner with nothing beside
      it; squeezed to a third of this card it needs to give up some size to
      keep from overflowing or forcing the row to scroll. */
-  .hgRow3 .board{height:auto;padding:7px 8px 8px}
-  .hgRow3 .board .val{font-size:17px}
-  .hgRow3 .hgCoinRow img{width:18px;height:18px}
-  .hgRow3 .hgCoinRow{gap:4px}
+  .hud-guide__row3 .board{height:auto;padding:7px 8px 8px}
+  .hud-guide__row3 .board .board__val{font-size:17px}
+  .hud-guide__row3 .hud-guide__coin-row img{width:18px;height:18px}
+  .hud-guide__row3 .hud-guide__coin-row{gap:4px}
   /* A static double of .hudbtn's chrome — same box, same icon sizing — but in
      normal flow rather than pinned to a screen corner, since this is an
      illustration sitting in a card, not a real button. */
-  .hgIcon{width:48px;height:48px;flex:none;display:flex;align-items:center;
+  .hud-guide__icon{width:48px;height:48px;flex:none;display:flex;align-items:center;
           justify-content:center;background:var(--hud-glow-8);
           border:3px solid var(--ink);border-radius:5px;color:var(--sky-low);
           box-shadow:3px 3px 0 var(--ink)}
-  .hgIcon svg{width:23px;height:23px;display:block;fill:currentColor}
+  .hud-guide__icon svg{width:23px;height:23px;display:block;fill:currentColor}
   /* Score/Breakers: the real .board dropped into the grid with sample
      figures instead of live ones. */
-  .hgCoinRow{display:flex;align-items:center;gap:7px;justify-content:center}
-  .hgCoinRow img{width:26px;height:26px;display:block}
+  .hud-guide__coin-row{display:flex;align-items:center;gap:7px;justify-content:center}
+  .hud-guide__coin-row img{width:26px;height:26px;display:block}
   /* Three life icons at the real size, one spent, so the row itself shows
      "you lose these one at a time" rather than just decorating. */
-  .hgTubes{display:flex;gap:6px}
+  .hud-guide__tubes{display:flex;gap:6px}
   /* One #speedbar strip laid flat in the card instead of floating over the
      canvas — same sprites, same lit/boosted rule, just not position:absolute
      about it. */
-  .hgSpeedbar{display:flex;align-items:center;gap:4px;width:100%;max-width:280px;
+  .hud-guide__speedbar{display:flex;align-items:center;gap:4px;width:100%;max-width:280px;
               box-sizing:border-box;padding:6px 10px;background:var(--hud-glow-8);
               border:3px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink)}
-  .hgSpeedbar i{flex:1 1 0;min-width:0;aspect-ratio:185/161;
+  .hud-guide__speedbar i{flex:1 1 0;min-width:0;aspect-ratio:185/161;
                 background:no-repeat center/contain url("assets/sprites/hud/speed-indicator/speed-indicator_02.png")}
-  .hgSpeedbar i.lit{background-image:url("assets/sprites/hud/speed-indicator/speed-indicator_03.png")}
-  .hgSpeedbar i.boosted{animation:speedShake .2s steps(2) infinite}
+  .hud-guide__speedbar i.hud-guide__speedbar-segment--lit{background-image:url("assets/sprites/hud/speed-indicator/speed-indicator_03.png")}
+  .hud-guide__speedbar i.hud-guide__speedbar-segment--boosted{animation:speedShake .2s steps(2) infinite}
   /* Every three-across row on the how-to card goes two-up on a phone instead —
      Slide/Jump/Duck and Score/Breakers/Tubes both fit this, and any future
-     three-card row picking up .controls or .hgRow3 gets it for free. The odd
+     three-card row picking up .controls or .hud-guide__row3 gets it for free. The odd
      third card wraps onto its own row and sits flush left, same as a fifth
-     .hgItem left over in .hudGuide's grid — one rule for every orphaned card
+     .hud-guide__item left over in .hud-guide's grid — one rule for every orphaned card
      on this screen, not a centred one here and a left-aligned one there. */
   @media (max-width:560px){
     
     #howPanel .controls,
-    #howPanel .hgRow3{flex-wrap:wrap;justify-content:flex-start}
+    #howPanel .hud-guide__row3{flex-wrap:wrap;justify-content:flex-start}
     #howPanel .controls > .ctl{flex:0 0 calc(50% - 5px);max-width:calc(50% - 5px)}
-    #howPanel .hgRow3 > .hgItem{flex:0 0 calc(50% - 6px);max-width:calc(50% - 6px)}
+    #howPanel .hud-guide__row3 > .hud-guide__item{flex:0 0 calc(50% - 6px);max-width:calc(50% - 6px)}
   }
 
 
@@ -862,30 +863,30 @@
      clipped #statRank (the last row) almost entirely out of existence and
      out of reach. Verified on a Samsung S23-realistic 360x650 viewport with
      every stat at once triggering "New best". */
-  /* width:100% is load-bearing, same trap as .statRow > div below but one
+  /* width:100% is load-bearing, same trap as .stat-row > div below but one
      level up: #overPanel is align-items:center, not stretch, so without an
      explicit width #stats sizes to its own content instead of the panel's
      available width — and centers the overflow evenly past both edges. Only
      showed up at real worst-case figures (9-digit score/coins/distance);
-     .statRow > div's min-width:0 alone was verified against smaller ones
+     .stat-row > div's min-width:0 alone was verified against smaller ones
      (see its comment) and looked sufficient until then. */
   #stats{display:flex;flex-direction:column;flex-shrink:0;margin-top:20px;width:100%;max-width:600px;
          border:3px solid var(--ink);border-radius:6px;
          overflow:hidden;box-shadow:5px 5px 0 var(--ink)}
-  .statRow{display:flex}
+  .stat-row{display:flex}
   /* Side padding gives way on narrow screens. The cells are equal thirds now
      (flex:1 1 0), so on a 360px phone each is ~100px, and a fixed 20px a side
      left only 60px of content — less than "Breakers" needs at 9px/.2em, let
      alone the New best pill. It relaxes back to the roomier 20px by tablet. */
-  .statRow > div{padding:12px clamp(10px,3.4vw,20px) 13px;
+  .stat-row > div{padding:12px clamp(10px,3.4vw,20px) 13px;
                  background:var(--hud-glow-9);flex:1 1 0;min-width:0}
   /* min-width:0 is load-bearing. A flex item defaults to min-width:auto, which
      refuses to shrink below its content, so a long figure does not compress the
      cell — it bursts the whole row out past both screen edges. Measured before
      the fix: 12,940 already overflowed at 320px, 1,284,930 overflowed at 412px.
      .ctl hit the same trap and was fixed the same way. */
-  .statRow > div + div{border-left:3px solid var(--ink)}
-  .statRow + .statRow{border-top:3px solid var(--ink)}
+  .stat-row > div + div{border-left:3px solid var(--ink)}
+  .stat-row + .stat-row{border-top:3px solid var(--ink)}
   #stats span{display:block;font-size:9px;letter-spacing:.2em;color:var(--sky-low);margin-bottom:4px}
   /* BLOCK, so the New best pill below can never come up alongside the figure.
      strong is inline by default and the pill is inline-block, so the two share a
@@ -917,7 +918,7 @@
      A pill under the figure, gold on ink like every other chip in the game. It
      is inside the cell rather than pinned to a corner, so it cannot collide with
      the label on the narrowest cell at the narrowest viewport — it just makes
-     the row a line taller, and .statRow's default stretch keeps the cells that
+     the row a line taller, and .stat-row's default stretch keeps the cells that
      did not set a record the same height.
      Nothing else in the cell changes — the label and the figure stay exactly as
      they are on a cell that set no record, and the pill is the whole signal.
@@ -931,7 +932,7 @@
      exists: 320px viewport, ~87px cell, ~65px of content once the side padding
      is out. At .16em/8px it came to 69px and overflowed into #stats's
      overflow:hidden. .12em/6px brings it to ~62px. */
-  #stats .rec::after{content:"New best";display:inline-block;margin-top:7px;
+  #stats .stat-row__cell--record::after{content:"New best";display:inline-block;margin-top:7px;
         font-size:8px;letter-spacing:.12em;text-transform:uppercase;line-height:1;
         color:var(--ink);background:var(--green-lt);
         border:2px solid var(--ink);border-radius:999px;padding:3px 6px 4px}
@@ -943,7 +944,7 @@
      The rec class is set in showOver, a couple of seconds before the card's copy
      is revealed, so an unscoped animation ran out its 0.42s behind opacity:0 and
      the pill was simply sitting there by the time anyone saw it. */
-  #overPanel.textIn #stats .rec::after{animation:recPop .42s cubic-bezier(.16,1.4,.4,1);
+  #overPanel.panel--text-in #stats .stat-row__cell--record::after{animation:recPop .42s cubic-bezier(.16,1.4,.4,1);
                                        animation-delay:calc(var(--d,0) * 1ms + 200ms);
                                        animation-fill-mode:both}
   @keyframes recPop{from{transform:scale(.4);opacity:0} to{transform:scale(1);opacity:1}}
@@ -972,12 +973,12 @@
      .panel — the SAME --panel-glow-rgb/-a and --panel-shade-rgb/-a stops, not
      a separate hand-typed copy — so the win screen actually sits in the same
      family as pause and game over rather than just claiming to. */
-  #reveal.on{display:flex;pointer-events:auto;overflow-y:auto;touch-action:pan-y;
+  #reveal.reveal--on{display:flex;pointer-events:auto;overflow-y:auto;touch-action:pan-y;
     background:radial-gradient(130% 100% at 50% 15%,rgb(var(--panel-glow-rgb) / var(--panel-glow-a)),rgb(var(--panel-shade-rgb) / var(--panel-shade-a)))}
   /* The flash moved onto a pseudo-element. It used to animate #reveal's own
      background, which cannot cross-fade from a flat colour into the gradient
      above — the card flashed white and then popped to the wash. */
-  #reveal.on::before{content:"";position:absolute;inset:0;z-index:0;
+  #reveal.reveal--on::before{content:"";position:absolute;inset:0;z-index:0;
     background:rgba(252,246,240,.85);animation:flashOut .5s ease-out forwards}
   #reveal > *{position:relative;z-index:1}   /* keeps content over the flash */
 
@@ -1003,7 +1004,7 @@
      strip of dead page under a card that fitted perfectly well.
      Masked to a soft disc around the art so it reads as light coming off the
      slide rather than as a graphic with an edge. */
-  #reveal.on::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
+  #reveal.reveal--on::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;
     background:repeating-conic-gradient(from 8deg at 50% 30%,
       rgba(252,246,240,.17) 0deg 7deg, rgba(252,246,240,0) 7deg 18deg);
     -webkit-mask-image:radial-gradient(72% 46% at 50% 30%,#000 22%,rgba(0,0,0,.45) 58%,transparent 82%);
@@ -1066,8 +1067,8 @@
        nameplate. Both get a vh term so they shrink as one. */
     #revealSlide{width:min(88vw, calc(38vh * 1.176), 640px)}
     #reveal .slab{padding:8px 18px 10px;border-width:4px;box-shadow:8px 8px 0 var(--ink)}
-    #reveal .slab .k{font-size:9px;margin-bottom:4px}
-    #reveal .slab .n{font-size:max(22px, min(6.6vw, 8vh));-webkit-text-stroke-width:4px}
+    #reveal .slab .slab__kicker{font-size:9px;margin-bottom:4px}
+    #reveal .slab .slab__name{font-size:max(22px, min(6.6vw, 8vh));-webkit-text-stroke-width:4px}
     #revealNote{display:none}          /* the exit outranks the copy on a 360px-tall screen */
     #revealBtns{margin-top:14px}
     #revealBtns .btn{font-size:20px;padding:8px 22px 10px}
@@ -1104,11 +1105,11 @@
   #reveal .slab{background:var(--orange);border:5px solid var(--ink);padding:14px 28px 18px;
     transform:skewX(-7deg) rotate(-2.5deg);box-shadow:12px 12px 0 var(--ink);
     animation:slam .45s cubic-bezier(.16,1.4,.4,1) .14s both}
-  #reveal .slab .k{font-size:10px;letter-spacing:.38em;text-transform:uppercase;
+  #reveal .slab .slab__kicker{font-size:10px;letter-spacing:.38em;text-transform:uppercase;
                    color:var(--ink);margin-bottom:8px}
   /* The vh term is the guard against a wide, short window sizing the name off
      the width alone and running it past the artwork it belongs to. */
-  #reveal .slab .n{font-family:var(--display);text-transform:uppercase;
+  #reveal .slab .slab__name{font-family:var(--display);text-transform:uppercase;
     font-size:clamp(38px,min(10.5vw,15vh),84px);line-height:.85;color:var(--white);
     -webkit-text-stroke:6px var(--ink);paint-order:stroke fill}
   @keyframes slam{from{transform:skewX(-7deg) rotate(-2.5deg) scale(2.1);opacity:0}
@@ -1138,7 +1139,7 @@
 
   #mute{display:flex;left:calc(env(safe-area-inset-left,0px) + 14px)}
   #pause{display:none;right:calc(env(safe-area-inset-right,0px) + 14px)}
-  #pause.on{display:flex}
+  #pause.hudbtn--on{display:flex}
   /* Shares #pause's corner rather than getting its own: #pause is always off
      (.on not set) whenever #lbPanel, #howPanel or #overPanel can be open, so
      none of the four ever contend for it. #lbPanel is a title-screen-only
@@ -1158,12 +1159,12 @@
 
   /* Both glyphs of each pair ship in the markup; a class picks which shows, so
      toggling costs no reflow and needs no second request. */
-  #pause .ico-play{display:none}
-  #pause.paused .ico-pause{display:none}
-  #pause.paused .ico-play{display:block}
-  #mute .ico-off{display:none}
-  #mute.off .ico-on{display:none}
-  #mute.off .ico-off{display:block}
+  #pause .hudbtn__ico-play{display:none}
+  #pause.hudbtn--paused .hudbtn__ico-pause{display:none}
+  #pause.hudbtn--paused .hudbtn__ico-play{display:block}
+  #mute .hudbtn__ico-off{display:none}
+  #mute.hudbtn--off .hudbtn__ico-on{display:none}
+  #mute.hudbtn--off .hudbtn__ico-off{display:block}
   #hint{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 46px);
         transform:translateX(-50%);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
         color:rgba(252,246,240,.75);pointer-events:none;transition:opacity .6s;
@@ -1187,8 +1188,8 @@
   /* Deliberately still pointer-blocking while it fades. Going click-through on
      the tap that dismisses it let the browser re-hit-test the click onto DROP IN
      underneath, skipping the title screen entirely. .gone takes it out. */
-  #load.off{opacity:0}
-  #load.gone{display:none}
+  #load.load--off{opacity:0}
+  #load.load--gone{display:none}
   #loadTrack{position:relative;width:min(64vw,300px);height:18px;border-radius:9px;
              background:var(--hud-glow-55);border:3px solid var(--ink);
              box-shadow:4px 4px 0 var(--ink)}
@@ -1213,20 +1214,20 @@
            font-variant-numeric:tabular-nums}
   /* Waiting on the tap that buys us audio. The percentage has done its job by
      now, so it steps aside and the prompt takes the eye. */
-  #load.gate{cursor:pointer}
-  #load.gate #loadTrack{display:none}
-  #load.gate #loadPct{display:none}
-  #load.gate #loadMsg{color:var(--yellow);font-size:13px;
+  #load.load--gate{cursor:pointer}
+  #load.load--gate #loadTrack{display:none}
+  #load.load--gate #loadPct{display:none}
+  #load.load--gate #loadMsg{color:var(--yellow);font-size:13px;
                       animation:pulse 1.5s ease-in-out infinite}
   @keyframes pulse{50%{opacity:.4}}
   /* A hard load failure (retries exhausted) stops here rather than handing
      the player a run missing sprites — same layout as .gate, own copy/button. */
-  #load.error #loadTrack{display:none}
-  #load.error #loadPct{display:none}
-  #load.error #loadMsg{color:var(--orange);font-size:13px;text-align:center;
+  #load.load--error #loadTrack{display:none}
+  #load.load--error #loadPct{display:none}
+  #load.load--error #loadMsg{color:var(--orange);font-size:13px;text-align:center;
                        max-width:70vw;white-space:normal;letter-spacing:.08em}
   #load #loadRetryBtn{display:none}
-  #load.error #loadRetryBtn{display:inline-flex}
+  #load.load--error #loadRetryBtn{display:inline-flex}
   /* ::before included, or the flash would sit there at full opacity forever —
      its fade-out IS the animation being switched off. */
   @media (prefers-reduced-motion:reduce){
@@ -1234,9 +1235,9 @@
        the element's resting state, so switching them off leaves the finished
        poster exactly as designed — it simply arrives all at once. */
     #reveal .slab,#revealSlide,#revealHat,#revealNote,#revealBtns,
-    #reveal.on::after{animation:none}
-    #reveal.on::before{animation:none;opacity:0}
-    #loadFill::after,#loadTube,#load.gate #loadMsg{animation:none}
+    #reveal.reveal--on::after{animation:none}
+    #reveal.reveal--on::before{animation:none;opacity:0}
+    #loadFill::after,#loadTube,#load.load--gate #loadMsg{animation:none}
   }
 </style>
 </head>
@@ -1247,14 +1248,14 @@
   <div id="hud">
     <div id="hudLeft">
       <div class="board">
-        <span class="lbl">Score</span>
-        <span class="val" id="hudScore">0</span>
+        <span class="board__lbl">Score</span>
+        <span class="board__val" id="hudScore">0</span>
       </div>
     </div>
     <div id="hudRight">
       <div class="board">
-        <span class="lbl">Breakers</span>
-        <div id="coinRow"><img id="coinIcon" alt=""><span class="val" id="coins">0</span></div>
+        <span class="board__lbl">Breakers</span>
+        <div id="coinRow"><img id="coinIcon" alt=""><span class="board__val" id="coins">0</span></div>
       </div>
       <div id="tubes"></div>
     </div>
@@ -1263,12 +1264,12 @@
     <div id="hint">Hold &amp; slide to steer</div>
   </div>
 
-  <div class="panel on" id="titlePanel">
-    <a class="parkLogoLink" href="https://cowabungavegas.com/" target="_blank" rel="noopener noreferrer">
-      <img class="parkLogo" alt="Cowabunga Vegas"
+  <div class="panel panel--on" id="titlePanel">
+    <a class="park-logo-link" href="https://cowabungavegas.com/" target="_blank" rel="noopener noreferrer">
+      <img class="park-logo" alt="Cowabunga Vegas"
         src="assets/logo/CBV_White.png">
     </a>
-    <img class="rideLogo" id="rideLogo" alt="Cowabunga: Wild Rush"
+    <img class="ride-logo" id="rideLogo" alt="Cowabunga: Wild Rush"
       src="assets/logo/cowabunga-wild-rush-logo-500.png"
       srcset="assets/logo/cowabunga-wild-rush-logo-100.png 100w,
               assets/logo/cowabunga-wild-rush-logo-200.png 200w,
@@ -1282,29 +1283,29 @@
     </div>
     <!-- Three-button rule: Drop In alone on its row and a size up, How to
          Play (orange) and Leaderboard (blue) side by side underneath. -->
-    <button class="btn trioPrimary" id="playBtn" type="button">Drop In</button>
-    <div class="ghostRow">
-      <button class="btn ghost" id="howBtn" type="button">How to Play</button>
-      <button class="btn tertiary" id="lbBtn" type="button">Leaderboard</button>
+    <button class="btn btn--trio-primary" id="playBtn" type="button">Drop In</button>
+    <div class="ghost-row">
+      <button class="btn btn--ghost" id="howBtn" type="button">How to Play</button>
+      <button class="btn btn--tertiary" id="lbBtn" type="button">Leaderboard</button>
     </div>
     <div class="controls">
       <div class="ctl">
         <div class="cap">&larr;&nbsp;&rarr;</div>
         <b>Slide</b>
-        <span class="kb">Hold an arrow</span>
-        <span class="tc">Hold &amp; slide</span>
+        <span class="ctl__kb">Hold an arrow</span>
+        <span class="ctl__tc">Hold &amp; slide</span>
       </div>
       <div class="ctl">
         <div class="cap">&uarr;</div>
         <b>Jump</b>
-        <span class="kb">Up or Space</span>
-        <span class="tc">Flick up</span>
+        <span class="ctl__kb">Up or Space</span>
+        <span class="ctl__tc">Flick up</span>
       </div>
       <div class="ctl">
         <div class="cap">&darr;</div>
         <b>Duck</b>
-        <span class="kb">Down key</span>
-        <span class="tc">Flick down</span>
+        <span class="ctl__kb">Down key</span>
+        <span class="ctl__tc">Flick down</span>
       </div>
     </div>
   </div>
@@ -1315,24 +1316,24 @@
        and ask mid-flow. Shown only when there is no stored rider. -->
   <div class="panel" id="namePanel">
     <div class="eyebrow">Hey There, Dude,</div>
-    <h1 class="ride nameHead">What Do They Call Ya?</h1>
+    <h1 class="ride ride--name-head">What Do They Call Ya?</h1>
     <div id="reels">
-      <button class="reel" id="reelA" type="button"><span class="reelWord"></span></button>
-      <button class="reel" id="reelB" type="button"><span class="reelWord"></span></button>
+      <button class="reel" id="reelA" type="button"><span class="reel__word"></span></button>
+      <button class="reel" id="reelB" type="button"><span class="reel__word"></span></button>
     </div>
-    <p class="lbLead">Tap to switch up your name</p>
+    <p class="lb-lead">Tap to switch up your name</p>
     <button class="btn" id="nameGo" type="button">
-      <span class="btnLabel">Let's Ride!</span>
+      <span class="btn__label">Let's Ride!</span>
       <span class="spinner" aria-hidden="true"></span>
     </button>
-    <p class="lbLead nameError" id="nameError"></p>
-    <button class="skipLink" id="nameSkip" type="button">Play without saving your name</button>
+    <p class="lb-lead name-error" id="nameError"></p>
+    <button class="skip-link" id="nameSkip" type="button">Play without saving your name</button>
   </div>
 
   <div class="panel" id="howPanel">
     <div id="howScroll">
       <div class="eyebrow">How to Play</div>
-      <img class="rideLogo howHead" alt="Cowabunga: Wild Rush"
+      <img class="ride-logo ride-logo--how-head" alt="Cowabunga: Wild Rush"
         src="assets/logo/cowabunga-wild-rush-logo-500.png"
         srcset="assets/logo/cowabunga-wild-rush-logo-100.png 100w,
                 assets/logo/cowabunga-wild-rush-logo-200.png 200w,
@@ -1342,47 +1343,47 @@
                 assets/logo/cowabunga-wild-rush-logo-2100.png 2100w"
         sizes="min(84vw,340px)">
 
-      <section class="howSec">
+      <section class="how-sec">
         <h3>Complete the Word</h3>
         <div id="howWord" class="word"></div>
         <h4 style="font-family: var(--display);">COWABUNGA</h4>
         <p>Grab all 9 COWABUNGA letters before your run ends!</p>
       </section>
 
-      <section class="howSec">
+      <section class="how-sec">
         <h3>Grab Breakers</h3>
-        <img class="howCoin" id="howCoin" alt="">
+        <img class="how-sec__coin" id="howCoin" alt="">
         <p>Grab Breakers along the way to boost your score!</p>
       </section>
 
-      <section class="howSec">
+      <section class="how-sec">
         <h3>Controls</h3>
-        <p class="howLead">Steer, jump, and duck your way down the slide!</p>
+        <p class="how-sec__lead">Steer, jump, and duck your way down the slide!</p>
         <div class="controls">
           <div class="ctl">
             <div class="cap">&larr;&nbsp;&rarr;</div>
             <b>Slide</b>
-            <span class="kb">Hold &larr; or &rarr; to steer.</span>
-            <span class="tc">Hold and move left or right.</span>
+            <span class="ctl__kb">Hold &larr; or &rarr; to steer.</span>
+            <span class="ctl__tc">Hold and move left or right.</span>
           </div>
           <div class="ctl">
             <div class="cap">&uarr;</div>
             <b>Jump</b>
-            <span class="kb">Press &uarr;, W, or Space.</span>
-            <span class="tc">Tap or flick up.</span>
+            <span class="ctl__kb">Press &uarr;, W, or Space.</span>
+            <span class="ctl__tc">Tap or flick up.</span>
           </div>
           <div class="ctl">
             <div class="cap">&darr;</div>
             <b>Duck</b>
-            <span class="kb">Press &darr; or S.</span>
-            <span class="tc">Flick down and hold.</span>
+            <span class="ctl__kb">Press &darr; or S.</span>
+            <span class="ctl__tc">Flick down and hold.</span>
           </div>
         </div>
       </section>
 
-      <section class="howSec">
+      <section class="how-sec">
         <h3>Dodge, Jump &amp; Duck</h3>
-        <p class="howLead">Dodge the hazards and hang on to your 3 lives!</p>
+        <p class="how-sec__lead">Dodge the hazards and hang on to your 3 lives!</p>
         <div id="hazards">
           <div class="haz"><img id="hazCow" alt=""><b>Typhoon</b><span>Slide around him!</span></div>
           <div class="haz"><img id="hazYeti" alt=""><b>Snowman Tube</b><span>Slide around it!</span></div>
@@ -1417,9 +1418,9 @@
         </div>
       </section>
 
-      <section class="howSec">
+      <section class="how-sec">
         <h3>Power-Ups</h3>
-        <p class="howLead">Snag Power-Ups for a little extra help on the trail!</p>
+        <p class="how-sec__lead">Snag Power-Ups for a little extra help on the trail!</p>
         <div id="powerups">
           <div class="haz"><img id="hazSpeedBoost" alt=""><b>Speed Boost</b><span>Blast past top speed!</span></div>
           <div class="haz"><img id="hazSouvenir" alt=""><b>Souvenir Bottle</b><span>Score 100 Breakers!</span></div>
@@ -1429,47 +1430,47 @@
         </div>
       </section>
 
-      <section class="howSec">
+      <section class="how-sec">
         <h3>Gameplay HUD</h3>
-        <p class="howLead">Keep an eye on these while you ride.</p>
-        <div class="hudGuide">
-          <div class="hgRow3 hgWide">
-            <div class="hgItem">
-              <div class="board"><span class="lbl">Score</span><span class="val">24,180</span></div>
+        <p class="how-sec__lead">Keep an eye on these while you ride.</p>
+        <div class="hud-guide">
+          <div class="hud-guide__row3 hud-guide__row3--wide">
+            <div class="hud-guide__item">
+              <div class="board"><span class="board__lbl">Score</span><span class="board__val">24,180</span></div>
               <b>Score</b><span>Your total score for this run.</span>
             </div>
 
-            <div class="hgItem">
-              <div class="board"><span class="lbl">Breakers</span>
-                <div class="hgCoinRow"><img id="hudCoin" alt=""><span class="val">42</span></div>
+            <div class="hud-guide__item">
+              <div class="board"><span class="board__lbl">Breakers</span>
+                <div class="hud-guide__coin-row"><img id="hudCoin" alt=""><span class="board__val">42</span></div>
               </div>
               <b>Breakers</b><span>Breakers you've caught.</span>
             </div>
 
-            <div class="hgItem">
-              <div class="hgTubes">
-                <span class="tube"></span><span class="tube"></span><span class="tube spent"></span>
+            <div class="hud-guide__item">
+              <div class="hud-guide__tubes">
+                <span class="tube"></span><span class="tube"></span><span class="tube tube--spent"></span>
               </div>
               <b>Lives</b><span>Three lives — don't lose 'em all!</span>
             </div>
           </div>
 
-          <div class="hgItem hgWide">
-            <div class="hgSpeedbar">
-              <i></i><i class="lit"></i><i class="lit"></i>
-              <i class="lit boosted"></i><i class="lit boosted"></i>
+          <div class="hud-guide__item hud-guide__item--wide">
+            <div class="hud-guide__speedbar">
+              <i></i><i class="hud-guide__speedbar-segment--lit"></i><i class="hud-guide__speedbar-segment--lit"></i>
+              <i class="hud-guide__speedbar-segment--lit hud-guide__speedbar-segment--boosted"></i><i class="hud-guide__speedbar-segment--lit hud-guide__speedbar-segment--boosted"></i>
             </div>
             <b>Speed</b><span>More lit icons means more speed!</span>
           </div>
         </div>
       </section>
 
-      <section class="howSec">
+      <section class="how-sec">
         <h3>The Buttons</h3>
-        <p class="howLead">Use these buttons to control your game.</p>
-        <div class="hudGuide">
-          <div class="hgItem">
-            <div class="hgIcon">
+        <p class="how-sec__lead">Use these buttons to control your game.</p>
+        <div class="hud-guide">
+          <div class="hud-guide__item">
+            <div class="hud-guide__icon">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M4 9.5v5h3.2L12 19V5L7.2 9.5H4z"/>
                 <g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
@@ -1481,8 +1482,8 @@
             <b>Mute</b><span>Turn game sounds on or off.</span>
           </div>
 
-          <div class="hgItem">
-            <div class="hgIcon">
+          <div class="hud-guide__item">
+            <div class="hud-guide__icon">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6"
                       stroke-linecap="round" stroke-linejoin="round"/>
@@ -1491,8 +1492,8 @@
             <b>Back</b><span>Head back one screen.</span>
           </div>
 
-          <div class="hgItem">
-            <div class="hgIcon">
+          <div class="hud-guide__item">
+            <div class="hud-guide__icon">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M7 4.2 19.5 12 7 19.8 Z" fill="currentColor"/>
               </svg>
@@ -1500,8 +1501,8 @@
             <b>Play</b><span>Get back in the action.</span>
           </div>
 
-          <div class="hgItem">
-            <div class="hgIcon">
+          <div class="hud-guide__item">
+            <div class="hud-guide__icon">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <rect x="6" y="4" width="4.5" height="16" rx="1.2" fill="currentColor"/>
                 <rect x="13.5" y="4" width="4.5" height="16" rx="1.2" fill="currentColor"/>
@@ -1510,8 +1511,8 @@
             <b>Pause</b><span>Hold your run right there.</span>
           </div>
 
-          <div class="hgItem">
-            <div class="hgIcon">
+          <div class="hud-guide__item">
+            <div class="hud-guide__icon">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M4 11.5L12 4l8 7.5" fill="none" stroke="currentColor" stroke-width="2.4"
                       stroke-linecap="round" stroke-linejoin="round"/>
@@ -1541,15 +1542,15 @@
     <div class="eyebrow" id="overKicker">Wipeout</div>
     <h2 class="ride" style="font-size:clamp(38px,11vw,80px)" id="overTitle">Nice Run</h2>
     <div id="stats">
-      <div class="statRow">
+      <div class="stat-row">
         <div><span>Descent</span><strong id="fDist">0</strong></div>
         <div><span>Breakers</span><strong id="fCoins">0</strong></div>
         <div><span>Score</span><strong id="fScore">0</strong></div>
       </div>
-      <div class="statRow" id="statWord">
+      <div class="stat-row" id="statWord">
         <div><span id="fWordLbl">Cowabunga letters</span><div id="fWord" class="word"></div></div>
       </div>
-      <div class="statRow" id="statRank">
+      <div class="stat-row" id="statRank">
         <div><em id="fRankNote">Tap to Submit</em><span>Leaderboard Ranking</span>
           <strong id="fRank">--</strong>
           <em id="fRankNote2">Tap to See Leaderboard</em>
@@ -1557,7 +1558,7 @@
       </div>
     </div>
     <button class="btn" id="againBtn" type="button">Ride Again</button>
-    <button class="btn ghost" id="ctaBtn" type="button">Get Season Passes</button>
+    <button class="btn btn--ghost" id="ctaBtn" type="button">Get Season Passes</button>
     <!-- Typhoon, for real. He is drawn on the CANVAS while he is still moving —
          the wipeout and the settle — and then HANDED OVER to this img the frame
          he lands, which is the frame the copy comes in (see revealOverText).
@@ -1605,8 +1606,8 @@
            becomes two columns and this is the right-hand one. -->
       <div id="revealSign">
         <div class="slab">
-          <div class="k">Coming Summer 2027</div>
-          <div class="n" id="revealName">Cowabunga</div>
+          <div class="slab__kicker">Coming Summer 2027</div>
+          <div class="slab__name" id="revealName">Cowabunga</div>
         </div>
         <p class="tag" id="revealNote"></p>
       </div>
@@ -1619,7 +1620,7 @@
   <div class="panel" id="lbPanel">
     <div id="lbScroll">
       <div class="eyebrow">Leaderboard</div>
-      <h2 class="ride howHead" id="lbTitle">Top Riders</h2>
+      <h2 class="ride ride--how-head" id="lbTitle">Top Riders</h2>
 
       <div id="lbHead"><span>#</span><span>Rider</span><span>Score</span></div>
       <div id="lbList"></div>
@@ -1644,14 +1645,14 @@
     <div class="eyebrow">Paused</div>
     <h2 class="ride" style="font-size:clamp(38px,11vw,80px)">Take a Breath</h2>
     <p class="tag">The slide will wait.</p>
-    <button class="btn trioPrimary" id="resumeBtn" type="button">Resume</button>
+    <button class="btn btn--trio-primary" id="resumeBtn" type="button">Resume</button>
     <!-- Three-button rule: the primary (Resume) gets its own row above, and
          the secondary/tertiary pair goes side by side below — orange first,
          so the run in progress cannot be thrown away by a thumb landing on
          the wrong half of the screen; blue Start Over sits past it. -->
-    <div class="ghostRow">
-      <button class="btn ghost" id="pauseHowBtn" type="button">How to Play</button>
-      <button class="btn tertiary" id="pauseAgainBtn" type="button">Start Over</button>
+    <div class="ghost-row">
+      <button class="btn btn--ghost" id="pauseHowBtn" type="button">How to Play</button>
+      <button class="btn btn--tertiary" id="pauseAgainBtn" type="button">Start Over</button>
     </div>
   </div>
 
@@ -1659,20 +1660,20 @@
   <button id="mute" class="hudbtn" type="button" aria-label="Mute sound">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M4 9.5v5h3.2L12 19V5L7.2 9.5H4z"/>
-      <g class="ico-on" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+      <g class="hudbtn__ico-on" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
         <path d="M15 9.4a3.8 3.8 0 0 1 0 5.2"/>
         <path d="M17.7 7a7.2 7.2 0 0 1 0 10"/>
       </g>
-      <g class="ico-off" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round">
+      <g class="hudbtn__ico-off" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round">
         <path d="M15.6 9.8l4.6 4.4M20.2 9.8l-4.6 4.4"/>
       </g>
     </svg>
   </button>
   <button id="pause" class="hudbtn" type="button" aria-label="Pause">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <rect class="ico-pause" x="6"  y="4" width="4.5" height="16" rx="1.2"/>
-      <rect class="ico-pause" x="13.5" y="4" width="4.5" height="16" rx="1.2"/>
-      <path class="ico-play" d="M7 4.2 19.5 12 7 19.8 Z"/>
+      <rect class="hudbtn__ico-pause" x="6"  y="4" width="4.5" height="16" rx="1.2"/>
+      <rect class="hudbtn__ico-pause" x="13.5" y="4" width="4.5" height="16" rx="1.2"/>
+      <path class="hudbtn__ico-play" d="M7 4.2 19.5 12 7 19.8 Z"/>
     </svg>
   </button>
   <div id="load">
@@ -1943,7 +1944,7 @@ async function ready(){
   // Every retry is spent — this isn't a blip, something is genuinely missing.
   // Stop here rather than handing the player a run short on sprites.
   if (hardFailed.length){
-    $("load").classList.add("error");
+    $("load").classList.add("load--error");
     $("loadMsg").textContent = "Couldn't load " + hardFailed.length +
       (hardFailed.length === 1 ? " asset" : " assets") + " — check your connection and retry.";
     return;
@@ -1965,15 +1966,15 @@ async function ready(){
 let skippedNaming = false;
 function afterLoader(){
   if (Board.me() || skippedNaming) return;
-  $("titlePanel").classList.remove("on");
-  $("namePanel").classList.add("on");
-  $("reels").classList.add("loading");
+  $("titlePanel").classList.remove("panel--on");
+  $("namePanel").classList.add("panel--on");
+  $("reels").classList.add("reels--loading");
   loadTakenNames();
 }
 
 function dismissLoader(){
-  $("load").classList.add("off");                          // fade
-  setTimeout(() => $("load").classList.add("gone"), 500);   // then out of the layout
+  $("load").classList.add("load--off");                          // fade
+  setTimeout(() => $("load").classList.add("load--gone"), 500);   // then out of the layout
 }
 
 /* ---------- the last step of loading is getting the sound on ----------
@@ -2001,7 +2002,7 @@ function finishLoading(){
     return;
   }
   $("loadMsg").textContent = "Tap to start";
-  $("load").classList.add("gate");
+  $("load").classList.add("load--gate");
   loaderGateArmed = true;
   /* The tap that dismisses the loader is also the one that unlocks audio, so the
      title tune is already running by the time the naming screen appears — the
@@ -2043,7 +2044,7 @@ $("revealName").textContent = RIDE_FULL_NAME;
    the title card's eyebrow/park text was replaced by the Typhoon Texas logo
    image (2026-09-03). */
 $("ctaBtn").textContent   = CONFIG.ctaLabel;
-$("reveal").querySelector(".k").textContent = CONFIG.openingLine;
+$("reveal").querySelector(".slab__kicker").textContent = CONFIG.openingLine;
 /* The one line of copy on the win card, under the sign. Blank hides it outright
    rather than leaving an empty box in the middle of the poster — same contract
    as ctaUrl below, so either can be switched off from CONFIG alone. */
@@ -3064,7 +3065,7 @@ function reset(){
      left set somewhere cannot take him off the water again. */
   overRiderDom = false; overTextIn = false; overTextT = 0; overTilt = 0;
   overWon = false;
-  $("overPanel").classList.remove("textIn", "riderIn");
+  $("overPanel").classList.remove("panel--text-in", "panel--rider-in");
   revealed = false;
   ents = []; spray = []; nextZ = 8; comboFree = 0;
   gotLetters = 0; shownLetters = 0; letterZ = LETTER_GAP * 0.55; stampedeT = -1;
@@ -3084,8 +3085,8 @@ function goHome(){
   if (state !== "over") return;
   reset();
   state = "title";
-  $("overPanel").classList.remove("on");
-  $("titlePanel").classList.add("on");
+  $("overPanel").classList.remove("panel--on");
+  $("titlePanel").classList.add("panel--on");
   // Same crossfade showReveal() uses to bring the title tune back in over
   // whatever the results screen was playing.
   Sound.musicStop(MUSIC_FADE);
@@ -3302,17 +3303,17 @@ window.addEventListener("keydown", (e) => {
      is only hidden, not torn down, so every title shortcut is still live. */
   /* Naming swallows the keyboard: the title card is only hidden behind it, so
      Space would otherwise start a run before the player has a name. */
-  if ($("namePanel").classList.contains("on")){
+  if ($("namePanel").classList.contains("panel--on")){
     if (k === "enter" || k === " ") $("nameGo").click();
     return;
   }
-  if ($("howPanel").classList.contains("on")){
+  if ($("howPanel").classList.contains("panel--on")){
     if (k === "escape" || k === "enter" || k === " ") closeHow();
     return;
   }
   /* Same reasoning as the how-to card: the screen underneath is only hidden,
      not torn down, so Space would start a run behind a board being read. */
-  if ($("lbPanel").classList.contains("on")){
+  if ($("lbPanel").classList.contains("panel--on")){
     if (k === "escape" || k === "enter" || k === " ") closeBoard();
     return;
   }
@@ -3351,8 +3352,8 @@ function popModal(){
 }
 window.addEventListener("popstate", () => {
   suppressPop = true;
-  if ($("howPanel").classList.contains("on")) closeHow();
-  else if ($("lbPanel").classList.contains("on")) closeBoard();
+  if ($("howPanel").classList.contains("panel--on")) closeHow();
+  else if ($("lbPanel").classList.contains("panel--on")) closeBoard();
   else if (state === "paused" && !revealOpen) resumeGame();
   suppressPop = false;
 });
@@ -3450,33 +3451,33 @@ for (const id in HOW_ART){
   if (src) $(id).src = src;
   else     $(id).closest(".haz")?.remove();
 }
-if ("ontouchstart" in window) document.body.classList.add("touch");
+if ("ontouchstart" in window) document.body.classList.add("is-touch");
 
 function openHow(){
   // Opened from either the title or the pause screen: whichever is showing
   // gets hidden behind it, and closeHow() below hands it back to the same one.
-  $("titlePanel").classList.remove("on");
+  $("titlePanel").classList.remove("panel--on");
   // #pause shares How to Play's corner with #howClose. It is only ever "on"
   // during a paused run (see #pause's CSS comment), but that assumption broke
   // the day How to Play became reachable from pause — without hiding it here,
   // it would sit on top of #howClose for as long as the card is open.
   if (state === "paused"){
-    $("pausePanel").classList.remove("on");
-    $("pause").classList.remove("on");
+    $("pausePanel").classList.remove("panel--on");
+    $("pause").classList.remove("hudbtn--on");
   }
-  $("howPanel").classList.add("on");
+  $("howPanel").classList.add("panel--on");
   // Always opens at the top, not where it was left after the last read.
   $("howScroll").scrollTop = 0;
   pushModal();
 }
 function closeHow(){
-  $("howPanel").classList.remove("on");
-  if (state === "title") $("titlePanel").classList.add("on");
+  $("howPanel").classList.remove("panel--on");
+  if (state === "title") $("titlePanel").classList.add("panel--on");
   if (state === "paused"){
-    $("pausePanel").classList.add("on");
+    $("pausePanel").classList.add("panel--on");
     // Still carries the "paused" class from pauseGame(), so this brings back
     // the Play icon, not the Pause one.
-    $("pause").classList.add("on");
+    $("pause").classList.add("hudbtn--on");
   }
   popModal();
 }
@@ -3497,7 +3498,7 @@ $("pauseAgainBtn").addEventListener("click", pauseRestart);
 $("revealScore").addEventListener("click", revealToScore);
 $("mute").addEventListener("click", () => {
   const on = Sound.toggle();
-  $("mute").classList.toggle("off", !on);
+  $("mute").classList.toggle("hudbtn--off", !on);
   $("mute").setAttribute("aria-label", on ? "Mute sound" : "Unmute sound");
 });
 /* ---------- leaving the page takes the sound with it ----------
@@ -3535,12 +3536,12 @@ function drawTubes(){
   // child lands on the left of the normal three. Never .spent.
   if (extraLife){
     const d = document.createElement("div");
-    d.className = "tube extra";
+    d.className = "tube tube--extra";
     box.appendChild(d);
   }
   for (let i = 0; i < CONFIG.lives; i++){
     const d = document.createElement("div");
-    d.className = "tube" + (i < lives ? "" : " spent");
+    d.className = "tube" + (i < lives ? "" : " tube--spent");
     box.appendChild(d);
   }
 }
@@ -3554,10 +3555,10 @@ function drawTubes(){
    plays. extraLife is already false by the time this runs (see hitRider()),
    so the drawTubes() at animationend rebuilds the row without it. */
 function explodeExtraTube(){
-  const el = document.querySelector("#tubes .tube.extra");
+  const el = document.querySelector("#tubes .tube.tube--extra");
   if (!el){ drawTubes(); return; }
   el.addEventListener("animationend", drawTubes, { once: true });
-  el.classList.add("exploding");
+  el.classList.add("tube--exploding");
 }
 
 /* Shared by the HUD row and the game-over recap. Rebuilt from scratch rather
@@ -3571,7 +3572,7 @@ function explodeExtraTube(){
    Toggled rather than only added: the panel is reused run after run and a
    record left over from the last one is a lie. */
 function markRecord(el, isRecord){
-  el.parentNode.classList.toggle("rec", !!isRecord);
+  el.parentNode.classList.toggle("stat-row__cell--record", !!isRecord);
 }
 
 function buildWord(box, upto){
@@ -3579,7 +3580,7 @@ function buildWord(box, upto){
   for (let i = 0; i < WORD.length; i++){
     const b = document.createElement("b");
     b.textContent = WORD[i];            // kept for screen readers; hidden in CSS
-    if (i < upto) b.className = "got";
+    if (i < upto) b.className = "word__letter--got";
     b.style.setProperty("--i", i);      // drives the stampede stagger
     // All in units of the letter's OWN height (WORD_SRC.h[i], not a shared
     // scalar — see WORD_SRC's comment), so one --lh drives the size of the
@@ -3596,7 +3597,7 @@ function buildWord(box, upto){
 }
 function paintLetters(){
   const box = $("letters");
-  box.className = "";                   // clears run/gone left by the last run
+  box.className = "";                   // clears letters--run/letters--gone left by the last run
   buildWord(box, shownLetters);
 }
 
@@ -3826,7 +3827,7 @@ function drawExtraLifeFlyer(x, y, h, alpha){
    The freeze's own onEnd (see freezeWorld()'s stampedeT block) hands the
    channel back once the run-off ends. */
 function runStampede(){
-  $("letters").classList.add("run");
+  $("letters").classList.add("letters--run");
   Sound.stampede(); puff(22);
   Sound.musicStop(0.15);
 }
@@ -3846,13 +3847,13 @@ function showReveal(){
      and render() only places the settled rider in the dying/over states. The
      results panel is simply held back until they ask for it. */
   state = "over";
-  $("pause").classList.remove("on");
+  $("pause").classList.remove("hudbtn--on");
   /* The HUD goes with it: the metre readout and breaker count sat ghosting
      through the wash in the corners the poster reaches into. */
-  $("hud").classList.remove("on");
-  $("overPanel").classList.remove("on");
+  $("hud").classList.remove("hud--on");
+  $("overPanel").classList.remove("panel--on");
   revealOpen = true; hatT = 0; hatI = -1;
-  $("reveal").classList.add("on"); Sound.reveal();
+  $("reveal").classList.add("reveal--on"); Sound.reveal();
 
   /* Same hand-off as the wipeout: the outgoing track is left ramping on its own
      schedule (musicStop detaches the source but lets it finish), so the incoming
@@ -3885,7 +3886,7 @@ function hatTick(dt){
 
 function closeReveal(){
   revealOpen = false;
-  $("reveal").classList.remove("on");
+  $("reveal").classList.remove("reveal--on");
 }
 
 /* Back into the same run, which is what makes it an endless mode rather than a
@@ -3946,8 +3947,8 @@ function syncHUD(){
   // horses rather than a further fill.
   const overMax = speed > CONFIG.maxSpeed;
   for (let i = 0; i < SPEED_HORSES; i++){
-    speedHorseEls[i].classList.toggle("lit", i < lit);
-    speedHorseEls[i].classList.toggle("boosted", overMax && i < lit);
+    speedHorseEls[i].classList.toggle("speedbar-segment--lit", i < lit);
+    speedHorseEls[i].classList.toggle("speedbar-segment--boosted", overMax && i < lit);
   }
 }
 function start(){
@@ -3956,22 +3957,22 @@ function start(){
   // gesture — see that section — without going through closeHow()/resumeGame,
   // so pop it here or a later back press lands on a stale entry instead of
   // actually leaving the game.
-  if ($("pausePanel").classList.contains("on") || $("howPanel").classList.contains("on")) popModal();
+  if ($("pausePanel").classList.contains("panel--on") || $("howPanel").classList.contains("panel--on")) popModal();
   Sound.unlock(); reset(); state = "play";
   Sound.unhold();
   // Faded rather than cut: musicPlay stops the current track outright, which
   // chopped the title tune off mid-note now that one is playing behind the card.
   Sound.musicStop(0.6);
   Sound.music("ride", null, 0.7);                   // eased in, not punched in
-  $("titlePanel").classList.remove("on");
-  $("overPanel").classList.remove("on");
-  $("pausePanel").classList.remove("on");
-  $("howPanel").classList.remove("on");   // a run can be started from the how-to
-  $("lbPanel").classList.remove("on");
-  $("pause").classList.add("on");
-  $("pause").classList.remove("paused");
+  $("titlePanel").classList.remove("panel--on");
+  $("overPanel").classList.remove("panel--on");
+  $("pausePanel").classList.remove("panel--on");
+  $("howPanel").classList.remove("panel--on");   // a run can be started from the how-to
+  $("lbPanel").classList.remove("panel--on");
+  $("pause").classList.add("hudbtn--on");
+  $("pause").classList.remove("hudbtn--paused");
   $("pause").setAttribute("aria-label", "Pause");
-  $("hud").classList.add("on");
+  $("hud").classList.add("hud--on");
   const h = $("hint"); h.style.opacity = 1;
   setTimeout(() => { h.style.opacity = 0; }, 3200);
   last = performance.now();
@@ -3985,8 +3986,8 @@ function pauseGame(){
   if (state !== "play") return;
   state = "paused";
   Sound.hold();                            // silent immediately, keeps its place
-  $("pausePanel").classList.add("on");
-  $("pause").classList.add("paused");
+  $("pausePanel").classList.add("panel--on");
+  $("pause").classList.add("hudbtn--paused");
   $("pause").setAttribute("aria-label", "Resume");
   pushModal();
 }
@@ -3997,8 +3998,8 @@ function resumeGame(){
   if (state !== "paused" || revealOpen) return;
   state = "play";
   Sound.unhold();
-  $("pausePanel").classList.remove("on");
-  $("pause").classList.remove("paused");
+  $("pausePanel").classList.remove("panel--on");
+  $("pause").classList.remove("hudbtn--paused");
   $("pause").setAttribute("aria-label", "Pause");
   last = performance.now();
   popModal();
@@ -4055,13 +4056,13 @@ function gameOver(){
      the badges live. Folding it in there keeps one place that can get it wrong
      rather than two. */
   Sound.dead();
-  $("pause").classList.remove("on");
-  $("pausePanel").classList.remove("on");
+  $("pause").classList.remove("hudbtn--on");
+  $("pausePanel").classList.remove("panel--on");
   /* The HUD goes NOW, not when the results card appears. It used to come down
      in showOver(), a full DIE_DUR later, so the metre readout, the breaker
      count, the spare tubes and the STAMPEDE word all sat over the wipeout for
      the whole 1.6s — and Typhoon tumbles up into that corner of the screen. */
-  $("hud").classList.remove("on");
+  $("hud").classList.remove("hud--on");
 }
 
 /* Where he sits before the panel exists to be measured — and the SAME number
@@ -4125,7 +4126,7 @@ function overEase(v, t, rate, dt){
 function revealOverText(){
   if (overTextIn) return;
   overTextIn = true;
-  $("overPanel").classList.add("textIn");
+  $("overPanel").classList.add("panel--text-in");
 }
 
 /* The other half of the sequence, and deliberately NOT tied to the copy.
@@ -4147,7 +4148,7 @@ function handOverRider(){
   deathY = overAnchorY || H * OVER_ANCHOR;
   overTilt = 0;
   overRiderDom = true;
-  $("overPanel").classList.add("riderIn");
+  $("overPanel").classList.add("panel--rider-in");
 }
 
 /* Sizes his box and works out where the canvas has to put him so that the two
@@ -4233,7 +4234,7 @@ function showOver(){
   overTextIn = false; overTextT = 0; overRiderDom = false; overTilt = 1;
   // Same bar as the (parked) reveal card: a run "won" if it spelled the word.
   overWon = gotLetters >= WORD.length;
-  $("overPanel").classList.remove("textIn", "riderIn");
+  $("overPanel").classList.remove("panel--text-in", "panel--rider-in");
 
   const dist = Math.floor(metres), score = runScore();
   setFigure($("fDist"),  dist,  26);
@@ -4272,7 +4273,7 @@ function showOver(){
     bestStored ? "(records persist)" : "(SESSION ONLY — storage blocked, likely file://)");
   $("overTitle").textContent = overWon ? "Nice Ride, Dude" : "Wipeout";
   $("overKicker").textContent = overWon ? RIDE_FULL_NAME : "Better Luck Next Time, Dude";
-  $("overPanel").classList.add("on");
+  $("overPanel").classList.add("panel--on");
   settleOverRider();          // only measurable once the panel is displayed
   /* Crossfade rather than a hand-off. The ride track is 1.6s into a 2.4s linear
      fade, so it is still audible; this rises over 1.3s and reaches full at 2.9s,
@@ -4587,7 +4588,7 @@ function update(dt){
       /* The card used to fire here, the instant the word finished. It is a
          curtain call now, not an interruption: the player keeps riding until
          the last life is gone and the reveal waits for them at the end. */
-      $("letters").classList.add("gone");
+      $("letters").classList.add("letters--gone");
       // Hands the channel back to whichever track runStampede() cut off.
       // seasonPassT is frozen (unchanged) for the whole run-off, so
       // seasonPassMusicPlaying still reflects whether Season Pass was the
@@ -8063,8 +8064,8 @@ function paintReels(){
   /* Writes to the inner span, not the button. The button owns the badge and the
      ray burst, and setting textContent on it would delete the span along with
      them on the first repaint. */
-  const wordA = $("reelA").querySelector(".reelWord");
-  const wordB = $("reelB").querySelector(".reelWord");
+  const wordA = $("reelA").querySelector(".reel__word");
+  const wordB = $("reelB").querySelector(".reel__word");
   wordA.textContent = reelA;
   wordB.textContent = reelB;
   fitReelWord(wordA);
@@ -8074,8 +8075,8 @@ function paintReels(){
    that fit before may not fit now (or a shrunk one no longer needs to be). */
 addEventListener("resize", () => { paintReels(); });
 function rollReel(el, pickFn, assign){
-  el.classList.remove("rolling"); void el.offsetWidth;   // restart the animation
-  el.classList.add("rolling");
+  el.classList.remove("reel--rolling"); void el.offsetWidth;   // restart the animation
+  el.classList.add("reel--rolling");
   assign(pickFn()); paintReels();
 }
 let claiming = false;
@@ -8092,7 +8093,7 @@ async function loadTakenNames(){
   takenSet = new Set(await namesPromise);
   [reelA, reelB] = pickPair();
   paintReels();
-  $("reels").classList.remove("loading");
+  $("reels").classList.remove("reels--loading");
 }
 
 /* Naming happens once, before the title card. Confirming hands straight to the
@@ -8101,37 +8102,37 @@ async function loadTakenNames(){
 $("nameGo").addEventListener("click", async () => {
   if (claiming) return;
   claiming = true;
-  $("nameGo").classList.add("busy");
+  $("nameGo").classList.add("btn--busy");
   $("nameGo").disabled = true;
-  $("reels").classList.add("disabled");
-  $("nameError").classList.remove("on");
-  $("nameSkip").classList.remove("on");
+  $("reels").classList.add("reels--disabled");
+  $("nameError").classList.remove("name-error--on");
+  $("nameSkip").classList.remove("skip-link--on");
 
   try {
     await Board.claim(reelA, reelB);
-    $("namePanel").classList.remove("on");
-    $("titlePanel").classList.add("on");
+    $("namePanel").classList.remove("panel--on");
+    $("titlePanel").classList.add("panel--on");
   } catch (e) {
     $("nameError").textContent = "Couldn't save your name — try again in a bit.";
-    $("nameError").classList.add("on");
-    $("nameSkip").classList.add("on");
+    $("nameError").classList.add("name-error--on");
+    $("nameSkip").classList.add("skip-link--on");
     // Escalation beyond the inline text — a player who looked away mid-"load"
     // should still catch the failure. Remove-then-reflow-then-add so back-to-
     // back failures restart the shake instead of the class already being on
     // being a no-op.
-    $("namePanel").classList.remove("shake");
+    $("namePanel").classList.remove("panel--shake");
     void $("namePanel").offsetWidth;
-    $("namePanel").classList.add("shake");
+    $("namePanel").classList.add("panel--shake");
     if (navigator.vibrate) navigator.vibrate(200);
   } finally {
     claiming = false;
-    $("nameGo").classList.remove("busy");
+    $("nameGo").classList.remove("btn--busy");
     $("nameGo").disabled = false;
-    $("reels").classList.remove("disabled");
+    $("reels").classList.remove("reels--disabled");
   }
 });
 $("namePanel").addEventListener("animationend", (e) => {
-  if (e.animationName === "nameShake") $("namePanel").classList.remove("shake");
+  if (e.animationName === "nameShake") $("namePanel").classList.remove("panel--shake");
 });
 /* Only reachable after a failed claim (see above) — a broken backend must
    never be a hard wall between the player and the game. Board.me() stays
@@ -8141,8 +8142,8 @@ $("namePanel").addEventListener("animationend", (e) => {
    back up if it ever runs again. */
 $("nameSkip").addEventListener("click", () => {
   skippedNaming = true;
-  $("namePanel").classList.remove("on");
-  $("titlePanel").classList.add("on");
+  $("namePanel").classList.remove("panel--on");
+  $("titlePanel").classList.add("panel--on");
 });
 
 /* Ride down to the player's own row rather than dumping them at the top of a
@@ -8156,7 +8157,7 @@ $("nameSkip").addEventListener("click", () => {
 const SCROLL_DUR = 1200;
 function scrollToMe(instant){
   const box = $("lbScroll");
-  const row = box.querySelector(".lbRow.me");
+  const row = box.querySelector(".lb-row.lb-row--me");
   if (!row) return;
   /* Rect maths, not offsetTop: offsetTop is relative to the nearest positioned
      ancestor, which #lbScroll is not, so it would measure against the page. */
@@ -8206,9 +8207,9 @@ async function renderBoard(){
       rows.splice(pos - 1, 0, { name: me.name, score: me.score, me: true });
     } else if (pos != null){
       const d = document.createElement("div");
-      d.className = "lbRow me";
-      d.innerHTML = '<span class="lbPos"></span><span class="lbName"></span>' +
-                    '<span class="lbScore"></span>';
+      d.className = "lb-row lb-row--me";
+      d.innerHTML = '<span class="lb-row__pos"></span><span class="lb-row__name"></span>' +
+                    '<span class="lb-row__score"></span>';
       d.children[0].textContent = pos;
       d.children[1].textContent = me.name;
       d.children[2].textContent = me.score.toLocaleString();
@@ -8220,15 +8221,15 @@ async function renderBoard(){
   list.innerHTML = "";
   rows.forEach((r, i) => {
     const d = document.createElement("div");
-    d.className = "lbRow" + (r.me ? " me" : "");
-    d.innerHTML = '<span class="lbPos"></span><span class="lbName"></span>' +
-                  '<span class="lbScore"></span>';
+    d.className = "lb-row" + (r.me ? " lb-row--me" : "");
+    d.innerHTML = '<span class="lb-row__pos"></span><span class="lb-row__name"></span>' +
+                  '<span class="lb-row__score"></span>';
     d.children[0].textContent = i + 1;
     d.children[1].textContent = r.name;
     d.children[2].textContent = r.score.toLocaleString();
     list.appendChild(d);
   });
-  $("lbEmpty").classList.toggle("on", rows.length === 0);
+  $("lbEmpty").classList.toggle("lb-empty--on", rows.length === 0);
 
   const meRowIndex = rows.findIndex(r => r.me);
   if (meRowIndex >= 0){
@@ -8241,22 +8242,22 @@ async function renderBoard(){
    to the player's row before ever revealing the board — see scrollToMe()'s
    `instant` param and #lbLoading's CSS comment for why. */
 function openBoard(scrollToRank){
-  $("titlePanel").classList.remove("on");
-  $("overPanel").classList.remove("on");
-  $("lbPanel").classList.add("on");
-  $("lbPanel").classList.add("loading");
+  $("titlePanel").classList.remove("panel--on");
+  $("overPanel").classList.remove("panel--on");
+  $("lbPanel").classList.add("panel--on");
+  $("lbPanel").classList.add("panel--loading");
   $("lbScroll").scrollTop = 0;
   pushModal();
   paintReels();
   return renderBoard().then(() => {
     if (scrollToRank && Board.me()) scrollToMe(true);
-    $("lbPanel").classList.remove("loading");
+    $("lbPanel").classList.remove("panel--loading");
   });
 }
 function closeBoard(){
-  $("lbPanel").classList.remove("on");
-  if (state === "title")     $("titlePanel").classList.add("on");
-  else if (state === "over") $("overPanel").classList.add("on");
+  $("lbPanel").classList.remove("panel--on");
+  if (state === "title")     $("titlePanel").classList.add("panel--on");
+  else if (state === "over") $("overPanel").classList.add("panel--on");
   popModal();
 }
 // Not `openBoard` directly — addEventListener would pass the click event
@@ -8282,7 +8283,7 @@ const RANK_CYCLE_MS = 70;   // fast enough to read as "still counting", not lagg
 async function setRankFigures(score){
   const requestId = ++rankRequestId;
   const el = $("fRank");
-  el.classList.add("calculating");
+  el.classList.add("f-rank--calculating");
   const reduceMotion = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   // The cycling IS the loading cue, so reduced motion just skips it and
   // leaves the previous run's figure sitting still until the real one lands.
@@ -8293,7 +8294,7 @@ async function setRankFigures(score){
   const rank = await Board.rankOf(score);
   if (cycle) clearInterval(cycle);
   if (requestId !== rankRequestId) return;
-  el.classList.remove("calculating");
+  el.classList.remove("f-rank--calculating");
   setFigure(el, rank != null ? ("#" + rank.toLocaleString()) : "—", 26);
 }
 function syncRankRow(){
