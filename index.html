@@ -172,7 +172,8 @@
      once the score had enough digits to widen the board. */
   @media (max-width:560px){ #letters{top:calc(env(safe-area-inset-top,0px) + 112px)}
 .board .board__val {font-size:20px} }
-  .word{display:flex;justify-content:center}
+  .word{display:flex;justify-content:center;background: -webkit-linear-gradient(var(--yellow), var(--green-lt)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  font-family:var(--display);-webkit-text-stroke: 1px var(--ink);}
   /* Each letter is a window onto its own artwork file rather than type: the
      word is a red-and-white candy-striped life-preserver ring per letter,
      roped and bevelled, and --display is a condensed sans, so no amount of
@@ -206,36 +207,48 @@
                  animation:letterLand .26s cubic-bezier(.16,1.4,.4,1)}
   @keyframes letterLand{from{transform:scale(1.55)} to{transform:scale(1)}}
 
-  /* Gathers itself, then bolts — the stagger is what makes it read as a herd
-     rather than one block sliding off.
-     Run slowly, to stay on screen for the whole stampede clip. Duration and
-     stagger are scaled together so the herd strings out exactly as it did at
-     the original speed; scaling only the duration would collapse the eight
-     letters into one moving block.
-     The end stop is 78vw, not the 104vw it used to be. A letter has left the
-     screen by roughly 60-74vw depending on viewport, so the old overshoot was
-     a third of the animation spent travelling where nobody could see it — the
-     word vanished at ~6.1s while the audio ran on. Trimming the overshoot buys
-     that time back on screen rather than making the letters crawl.
-     The pacing lives in the keyframe stops with linear timing rather than in an
-     ease-in curve: stretched over five seconds, an ease-in creeps for half the
-     animation and then snaps, which reads as a stall rather than a run. Here it
-     rears back, breaks away, and gains ground the whole way out. */
-  #letters.letters--run b{animation:stampede 5.8s linear forwards;
-                 animation-delay:calc(var(--i) * 336ms)}
-  @keyframes stampede{
-    0%  {transform:translateX(0) rotate(0deg)}
-    5%  {transform:translateX(-12px) rotate(-9deg)}
-    14% {transform:translateX(2vw) rotate(6deg)}
-    45% {transform:translateX(24vw) rotate(5deg)}
-    100%{transform:translateX(78vw) rotate(7deg)}}
+  /* Two separate animations, on two different elements, so the "each letter
+     rises once" beat and the "whole word exits together" phase can't bleed
+     into each other:
+     - letterBob runs on each b, staggered by --i (the inchworm ripple: letter
+       0 rises and settles, then letter 1 starts while 0 is mid-motion, and so
+       on down the row) — ONE cycle only, 0.5s, and a small rise (0.4 of the
+       letter's own --lh, so it scales with the letter rather than the
+       viewport) rather than carrying it any real distance up the screen.
+     - wordExit runs on #letters ITSELF once every letter has had time to
+       rise and settle back down — the last letter (i=8) starts at 2.0s and
+       is done at 2.5s, so wordExit's own animation-delay is 2.6s, a hair
+       after that. Being on the container rather than each b means every
+       letter moves right TOGETHER as one block, with no per-letter stagger
+       of its own — distinct from the rise, which is staggered on purpose,
+       and from the old stampede/early-surge run-offs, which peeled letters
+       off one at a time. translateX keeps the -50% the un-animated rule
+       centers #letters with (see above) as its 0% frame, so the animation
+       doesn't snap the row off centre the instant it starts.
+     2.6s rise + 6.6s exit = 9.2s total, just inside SURGE_DUR's 9.4s (JS) —
+     the exit is given the bulk of the time since the rise itself is quick
+     now; same ~0.2s margin as before, so the row is gone before the freeze
+     hands control back. */
+  #letters.letters--surge b{animation:letterBob .5s ease-in-out 1 both;
+                 animation-delay:calc(var(--i) * 250ms)}
+  @keyframes letterBob{
+    0%, 100%{transform:translateY(0) rotate(0deg)}
+    50%     {transform:translateY(calc(var(--lh) * -0.4)) rotate(4deg)}
+  }
+  #letters.letters--surge{animation:wordExit 6.6s linear forwards;
+                 animation-delay:2.6s}
+  @keyframes wordExit{
+    0%  {transform:translateX(-50%); opacity:1}
+    80% {transform:translateX(calc(-50% + 78vw)); opacity:1}
+    100%{transform:translateX(calc(-50% + 100vw)); opacity:0}}
 
   /* The game-over copy of the word is static — no pop, no run-off — and now
      lives inside #stats as a row rather than in a box of its own. Its styling
      is down there with the board. */
   @media (prefers-reduced-motion:reduce){
     #letters b.word__letter--got{animation:none}
-    #letters.letters--run b{animation:none;opacity:0}
+    #letters.letters--surge{animation:none;opacity:0}
+    #letters.letters--surge b{animation:none}
     /* The pill and the gold still carry the record; only the pop goes. */
     #overPanel.panel--text-in #stats .stat-row__cell--record::after{animation:none}
     /* The card's copy still WAITS for Typhoon — that is sequencing, not motion,
@@ -1346,7 +1359,7 @@
       <section class="how-sec">
         <h3>Complete the Word</h3>
         <div id="howWord" class="word"></div>
-        <h4 style="font-family: var(--display);">COWABUNGA</h4>
+        <h1 class="word">COWABUNGA</h1>
         <p>Grab all 9 COWABUNGA letters before your run ends!</p>
       </section>
 
@@ -1857,7 +1870,7 @@ const SFX = {
   dead:  "assets/sound-effects/player/typhoon-dead.mp3",
   slurp: "assets/sound-effects/player/typhoon-slurp.mp3",
   letter:"assets/sound-effects/letter-collect/Happy%20Game%20Notification.mp3",
-  stampede:"assets/sound-effects/special/stampede-sound.mp3",
+  surge:"assets/sound-effects/special/wave-sound.mp3",
   souvenir:"assets/sound-effects/power-ups/souvenir-bottle.mp3",
   extraLife:"assets/sound-effects/power-ups/extra-life.mp3",
   whirlpool:"assets/sound-effects/power-ups/whirlpool.mp3",
@@ -2466,12 +2479,12 @@ const Sound = (function(){
     // the way a coin line does and it needs to read as the rarer pickup.
     letter(){ if (!sample("letter", 0.7)){ tone(660, 1320, 0.16, "triangle", 0.15);
                                            tone(990, 1980, 0.13, "sine", 0.08); } },
-    /* The whole word, going out the door. The clip measures 7.97s, which is what
-       STAMPEDE_DUR and the CSS run-off are both sized against — the synth
-       fallback is a second long, so a failed decode ends early rather than
-       leaving the animation running over silence. */
-    stampede(){ if (!sample("stampede", 0.9)){ tone(300, 1400, 0.9, "sawtooth", 0.14);
-                                               hiss(0.85, 900, 0.13); } },
+    /* The whole word, carried out the door on the surge. The clip measures
+       9.195s, which is what SURGE_DUR and the CSS surge are both sized against — the synth
+       fallback is just over a second long, so a failed decode ends early
+       rather than leaving the animation running over silence. */
+    surge(){ if (!sample("surge", 0.9)){ tone(280, 900, 1.0, "sawtooth", 0.13);
+                                       hiss(1.0, 700, 0.15); } },
     reveal(){ tone(420, 900, 0.7, "triangle", 0.16); hiss(0.7, 1100, 0.1); },
     over(){ tone(300, 70, 0.8, "sawtooth", 0.16); },
     // A jackpot, not a single coin: layered rather than the coin() chime alone,
@@ -2771,7 +2784,7 @@ let revealed = false;
 let ents = [], spray = [], nextZ = 0, comboFree = 0;
 
 /* ------------------------------------------------------------------
-   STAMPEDE LETTERS
+   SURGE LETTERS
    Donkey Kong's K-O-N-G: one letter on offer at a time, banked to the
    HUD in word order, and the finished word bolts off the top of the
    screen.
@@ -2855,13 +2868,19 @@ const POWERUP_AHEAD = 20;   // same reasoning as LETTER_AHEAD
    offered once (see seasonPassSpawned) — the grand-finale power-up, so it
    only ever shows up once in a run. */
 const POWERUP_TYPES = [ENTITY_TYPE.BOOST, ENTITY_TYPE.SOUVENIR, ENTITY_TYPE.EXTRALIFE, ENTITY_TYPE.WHIRLPOOL, ENTITY_TYPE.SEASONPASS];
-/* Holds the row until the run-off is done. The last letter leaves the screen
-   somewhere between 7.0s (wide desktop) and 7.9s (phone) — the spread is real,
-   because the word is a bigger share of a narrow viewport and so has further to
-   travel in vw. Sized to the slowest of those, and to the clip. */
-const STAMPEDE_DUR = 8.1;
-// Slight, not the full ±8px a hit's shake=1 gives — a herd underfoot, not a crash.
-const STAMPEDE_SHAKE = 0.22;
+/* Holds the row until the surge is done. The last letter leaves the screen
+   somewhere around 6.9-7.4s (phone slower than wide desktop, same reasoning as
+   the old stampede timing this replaced), well inside wave-sound.mp3's 9.195s —
+   sized to the clip now, not the visual, since the sound is the longer of the
+   two: it's what was scaled up from STAMPEDE_DUR (8.1s, sized against the old
+   7.941s stampede clip) by the same 9.195/7.941 ratio the CSS timing uses, plus
+   the same ~0.2s margin the old constant carried over its clip. */
+const SURGE_DUR = 9.4;
+// Slight, not the full ±8px a hit's shake=1 gives — a swell underfoot, not a crash.
+const SURGE_SHAKE = 0.22;
+// How long the impact shake takes to settle — a jolt on the hit, not a
+// continuous rumble for the whole surge.
+const SURGE_SHAKE_DECAY = 0.5;
 
 /* Hat tilt on the reveal card. typhoon-hat-tilt.png is a 5x2 contact sheet with
    a numbered label under every frame, so these are not a plain grid: each box
@@ -2882,17 +2901,17 @@ const FLY_DUR  = 0.72;      // pickup -> its slot in the HUD word
 const FLY_LAND = 0.85;      // when the slot takes over from the badge
 /* Invulnerable from the last pickup until the flyer hands over to the HUD at
    FLY_LAND — the one stretch of the win that still plays out under normal,
-   collidable rules. The run-off itself no longer needs covering here: it
-   freezes the world (see freezeWorld()'s stampedeT block), so nothing can hit
+   collidable rules. The surge itself no longer needs covering here: it
+   freezes the world (see freezeWorld()'s surgeT block), so nothing can hit
    the rider while it plays regardless of this timer. Used to also carry
-   STAMPEDE_DUR, back when the run-off played out over live, uninterrupted
+   SURGE_DUR, back when the run-off played out over live, uninterrupted
    gameplay and dying mid-clip took the win away. */
 const WIN_INVULN = FLY_DUR * FLY_LAND + 0.25;
 /* gotLetters is the game's count and advances the instant you touch a letter,
    because it also picks which letter is offered next. shownLetters is what the
    HUD has actually received and only advances when a flyer lands, so the slot
    stays empty while its letter is still on the way up. */
-let gotLetters = 0, shownLetters = 0, letterZ = 0, stampedeT = -1;
+let gotLetters = 0, shownLetters = 0, letterZ = 0, surgeT = -1;
 let flyers = [];
 /* Breakers exploding out of the Souvenir Bottle at the moment it's grabbed
    (see flySouvenir()/burstCoins()) — a purely cosmetic one-shot burst kept
@@ -3068,7 +3087,7 @@ function reset(){
   byId("overPanel").classList.remove("panel--text-in", "panel--rider-in");
   revealed = false;
   ents = []; spray = []; nextZ = 8; comboFree = 0;
-  gotLetters = 0; shownLetters = 0; letterZ = LETTER_GAP * 0.55; stampedeT = -1;
+  gotLetters = 0; shownLetters = 0; letterZ = LETTER_GAP * 0.55; surgeT = -1;
   powerupZ = POWERUP_GAP * 0.7;
   runT = 0; spellT = -1; spellLives = 0;
   flyers = []; coinSpill = [];
@@ -3562,8 +3581,8 @@ function explodeExtraTube(){
 }
 
 /* Shared by the HUD row and the game-over recap. Rebuilt from scratch rather
-   than toggling classes on surviving nodes: the stampede is a CSS animation and
-   a node that has already run it keeps its end state (off-screen right), so a
+   than toggling classes on surviving nodes: the surge is a CSS animation and
+   a node that has already run it keeps its end state (off-screen, faded), so a
    reused node would start the next run invisible. Fresh elements have no
    animation history. */
 /* Flags the stat CELL a figure sits in, not the figure itself, so the label
@@ -3581,7 +3600,7 @@ function buildWord(box, upto){
     const b = document.createElement("b");
     b.textContent = WORD[i];            // kept for screen readers; hidden in CSS
     if (i < upto) b.className = "word__letter--got";
-    b.style.setProperty("--i", i);      // drives the stampede stagger
+    b.style.setProperty("--i", i);      // drives the surge stagger
     // All in units of the letter's OWN height (WORD_SRC.h[i], not a shared
     // scalar — see WORD_SRC's comment), so one --lh drives the size of the
     // box, the scale of the file behind it and the offset into it, and every
@@ -3597,7 +3616,7 @@ function buildWord(box, upto){
 }
 function paintLetters(){
   const box = byId("letters");
-  box.className = "";                   // clears letters--run/letters--gone left by the last run
+  box.className = "";                   // clears letters--surge/letters--gone left by the last run
   buildWord(box, shownLetters);
 }
 
@@ -3733,7 +3752,7 @@ function updateFlyers(dt){
       } else {
         shownLetters = Math.max(shownLetters, f.idx + 1);
         paintLetters();
-        if (shownLetters >= WORD.length){ stampedeT = STAMPEDE_DUR; runStampede(); }
+        if (shownLetters >= WORD.length){ surgeT = SURGE_DUR; runSurge(); }
         else Sound.letter();           // rings on arrival, in step with the HUD
       }
     }
@@ -3820,15 +3839,15 @@ function drawExtraLifeFlyer(x, y, h, alpha){
 }
 
 /* Sound plays here rather than at the collect site so the last letter gets the
-   stampede sting instead of a pickup blip stacked under it. Whatever music is
+   surge's sting instead of a pickup blip stacked under it. Whatever music is
    currently on the channel — ride, or Season Pass's if the two overlapped —
    cuts out with it: the sting is the only thing that should be heard while
-   the herd runs off, not competing with a track still playing underneath.
-   The freeze's own onEnd (see freezeWorld()'s stampedeT block) hands the
-   channel back once the run-off ends. */
-function runStampede(){
-  byId("letters").classList.add("letters--run");
-  Sound.stampede(); spawnSplash(22);
+   the surge carries the word off, not competing with a track still playing
+   underneath. The freeze's own onEnd (see freezeWorld()'s surgeT block) hands
+   the channel back once the surge ends. */
+function runSurge(){
+  byId("letters").classList.add("letters--surge");
+  Sound.surge(); spawnSplash(22);
   Sound.musicStop(0.15);
 }
 
@@ -4060,7 +4079,7 @@ function gameOver(){
   byId("pausePanel").classList.remove("panel--on");
   /* The HUD goes NOW, not when the results card appears. It used to come down
      in showOver(), a full DIE_DUR later, so the metre readout, the breaker
-     count, the spare tubes and the STAMPEDE word all sat over the wipeout for
+     count, the spare tubes and the collected-word row all sat over the wipeout for
      the whole 1.6s — and Typhoon tumbles up into that corner of the screen. */
   byId("hud").classList.remove("hud--on");
 }
@@ -4420,12 +4439,13 @@ function riderLift(){
 }
 
 /* Shared by every "action pauses" beat — Season Pass's reveal and its
-   frozen exit, the stampede letters' run-off. The extra-life chomp used to be
-   one of these too, but Adam's call was to drop the pause there — eatT still
-   ticks down and still picks the chomp frame (see update()'s own countdown),
-   it just no longer holds up travel/spawns/collisions while it does. Each of
-   the beats still using this already owns a timer that means something else
-   too (stampedeT also drives the CSS run-off) — this only ticks THAT timer
+   frozen exit, the collected word's surge off the top of the screen. The
+   extra-life chomp used to be one of these too, but Adam's call was to drop
+   the pause there — eatT still ticks down and still picks the chomp frame
+   (see update()'s own countdown), it just no longer holds up
+   travel/spawns/collisions while it does. Each of the beats still using this
+   already owns a timer that means something else too (surgeT also drives
+   the CSS surge) — this only ticks THAT timer
    down and does the boilerplate every frozen beat shares: hold the
    camera at the current travelled position so the world doesn't drift, keep
    cosmetic spray decaying so a puff mid-freeze still fades naturally instead
@@ -4457,7 +4477,7 @@ function freezeWorld(timer, dt, { shakeAmt, onEnd } = {}){
 function worldFrozen(){
   return seasonPassIntroT > 0
       || (seasonPassT > 0 && seasonPassT <= SEASONPASS_OUTRO_DUR)
-      || stampedeT > 0;
+      || surgeT > 0;
 }
 
 function update(dt){
@@ -4566,10 +4586,14 @@ function update(dt){
     return;
   }
 
-  /* The stampede letters' run-off is the pause, with a slight shake for the
-     herd underfoot — Adam's call, once the "collect all 8" clip's own noise
-     starts. stampedeT already times the CSS run-off (#letters.run's
-     keyframes), so it doubles as the freeze's own timer too.
+  /* The collected word's surge is the pause, with a brief shake right as
+     the wave hits — Adam's call, a jolt on impact rather than a shake for the
+     whole clip, since this reads as a wave crashing through and settling
+     rather than a herd underfoot. surgeT already times the CSS surge
+     (#letters.letters--surge's keyframes), so it doubles as the freeze's own
+     timer too; the shake amount is derived from how much of SURGE_DUR has
+     elapsed rather than a flat constant, so it decays to 0 over
+     SURGE_SHAKE_DECAY instead of holding at SURGE_SHAKE for the full 9.4s.
      Unlike the other freezes, this one keeps calling updateFlyers() — the
      final letter's own flyer (and any other pickup's, if one happened to still be
      mid-flight) is already most of the way through its flight the instant
@@ -4578,19 +4602,21 @@ function update(dt){
      oversized next to its real HUD slot. Skipping updateFlyers() the way the
      other freezes do would leave that gap frozen on screen — a visible ghost
      badge sitting slightly off the letter it just became — for the whole
-     8.1s run-off. Letting it finish its last beat settles it into the slot
+     9.4s surge. Letting it finish its last beat settles it into the slot
      within a couple of frames instead. Nothing NEW can start mid-freeze
      (the collision loop that spawns flyers doesn't run), so this only ever
      finishes flight already committed before the freeze began. */
-  if (stampedeT > 0){
+  if (surgeT > 0){
     updateFlyers(dt);
-    stampedeT = freezeWorld(stampedeT, dt, { shakeAmt: STAMPEDE_SHAKE, onEnd: () => {
+    const surgeElapsed = SURGE_DUR - surgeT;
+    const surgeShakeNow = SURGE_SHAKE * Math.max(0, 1 - surgeElapsed / SURGE_SHAKE_DECAY);
+    surgeT = freezeWorld(surgeT, dt, { shakeAmt: surgeShakeNow, onEnd: () => {
       /* The card used to fire here, the instant the word finished. It is a
          curtain call now, not an interruption: the player keeps riding until
          the last life is gone and the reveal waits for them at the end. */
       byId("letters").classList.add("letters--gone");
-      // Hands the channel back to whichever track runStampede() cut off.
-      // seasonPassT is frozen (unchanged) for the whole run-off, so
+      // Hands the channel back to whichever track runSurge() cut off.
+      // seasonPassT is frozen (unchanged) for the whole surge, so
       // seasonPassMusicPlaying still reflects whether Season Pass was the
       // one playing — its own effect resumes right where it left off next
       // frame, so the music should pick back up alongside it rather than

@@ -1,0 +1,7 @@
+- Perform a sprite size audit using the sprite-size-audit.js file in the tools folder.
+- Change loading bar colors to match the new color scheme
+- Replace the COWABUNGA letters with the new green yellow linear gradient version 
+- Change the wave animation that plays when user collects all letters. Rethink it to some other more simple options.
+- Get Railway database set up and ready to go
+- Connect game leaderboard functionality with the railway database
+- Build landing page for the game

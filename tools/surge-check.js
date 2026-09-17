@@ -1,20 +1,23 @@
 #!/usr/bin/env node
-// Verifies the STAMPEDE letters' run-off freeze over the real DevTools
-// protocol: landing the 8th letter should pause the world (travel, spawns,
-// collisions, every other power-up's own clock hold still) for STAMPEDE_DUR
-// while #letters.run plays and the stampede sting sounds, with a slight
-// screen shake, then resume cleanly once stampedeT runs out. Shares the same
+// Verifies the collected word's surge (the wave that carries the letters off
+// screen once all of COWABUNGA is collected) over the real DevTools protocol:
+// landing the last letter should pause the world (travel, spawns, collisions,
+// every other power-up's own clock hold still) for SURGE_DUR while
+// #letters.letters--surge plays and the surge sting sounds, with a brief
+// impact shake that decays over SURGE_SHAKE_DECAY (not a shake held for the
+// whole clip), then resume cleanly once surgeT runs out. Shares the same
 // freezeWorld()/worldFrozen() machinery as Season Pass's reveal/outro and the
 // extra-life chomp (see index.html's update()) -- this only checks the
-// stampede-specific call site, not the shared helper's other callers.
+// surge-specific call site, not the shared helper's other callers.
 //
-// Also verifies runStampede() cuts whatever music is on the channel (Adam's
-// report: Season Pass's music kept playing under the stampede sting when the
-// last letter landed while it was active) and that the freeze's own onEnd
-// hands the channel back to the right track -- "seasonPass" if that's what
-// was playing, "ride" otherwise -- once the run-off ends.
+// Also verifies runSurge() cuts whatever music is on the channel (Adam's
+// report, from the old stampede version of this effect: Season Pass's music
+// kept playing under the sting when the last letter landed while it was
+// active) and that the freeze's own onEnd hands the channel back to the right
+// track -- "seasonPass" if that's what was playing, "ride" otherwise -- once
+// the surge ends.
 //
-// node tools/stampede-freeze-check.js
+// node tools/surge-check.js
 
 const { launchChrome, stopChrome, openPage, evaluate, VIEWPORTS } = require("./cdp");
 
@@ -46,70 +49,81 @@ async function main() {
       ${SKIP_LOADER}
       start();
       lane = 0; laneA = 0;
-      // Fast-forward through the first 7 letters -- only the 8th's landing
-      // is under test here.
+      // Fast-forward through every letter but the last -- only the final
+      // letter's landing is under test here.
       gotLetters = WORD.length - 1;
       shownLetters = WORD.length - 1;
     `);
 
-    // --- Grab the 8th letter: gotLetters advances, but the freeze (stampedeT)
+    // --- Grab the last letter: gotLetters advances, but the freeze (surgeT)
     // doesn't start yet -- it only begins once the flyer LANDS in the HUD. ---
     const grabbed = await evaluate(session, `
       (() => {
         const e = spawnEntity(ENTITY_TYPE.LETTER, travelled + 0.05, 0);
         e.gi = gotLetters;
         update(0.016);
-        return { gotLetters, shownLetters, stampedeT, flyersLen: flyers.length, invuln };
+        return { gotLetters, shownLetters, surgeT, flyersLen: flyers.length, invuln, wordLength: WORD.length };
       })()
     `);
-    allPass &= ok("grabbing the 8th letter advances gotLetters, not yet the freeze", grabbed.gotLetters === 8 && grabbed.stampedeT === -1 && grabbed.flyersLen === 1, grabbed);
+    allPass &= ok("grabbing the last letter advances gotLetters, not yet the freeze", grabbed.gotLetters === grabbed.wordLength && grabbed.surgeT === -1 && grabbed.flyersLen === 1, grabbed);
 
-    // --- Run the flight out to FLY_LAND: freeze starts, run-off sound/class fire ---
+    // --- Run the flight out to FLY_LAND: freeze starts, surge sound/class fire ---
     const landed = await evaluate(session, `
       (() => {
-        window.__stampedeSounds = 0;
-        const orig = Sound.stampede.bind(Sound);
-        Sound.stampede = function(){ window.__stampedeSounds++; return orig(); };
+        window.__surgeSounds = 0;
+        const orig = Sound.surge.bind(Sound);
+        Sound.surge = function(){ window.__surgeSounds++; return orig(); };
         const stopsBefore = window.__musicStops.length;
-        for (let i = 0; i < 60 && stampedeT < 0; i++) update(0.016);
+        for (let i = 0; i < 60 && surgeT < 0; i++) update(0.016);
+        // The landing frame itself sets surgeT but runs BEFORE the freeze block
+        // gets a turn that same update() call (updateFlyers(), where the flyer
+        // lands and surgeT is set, is called later in update() than the freeze
+        // check) -- so the impact shake only shows up starting the NEXT frame.
+        update(0.016);
         return {
-          shownLetters, stampedeT, STAMPEDE_DUR,
-          hasRunClass: byId("letters").classList.contains("letters--run"),
-          stampedeSounds: window.__stampedeSounds,
+          shownLetters, surgeT, SURGE_DUR, wordLength: WORD.length,
+          hasSurgeClass: byId("letters").classList.contains("letters--surge"),
+          shakeRightAfterLanding: shake,
+          surgeSounds: window.__surgeSounds,
           musicStoppedOnLanding: window.__musicStops.length > stopsBefore,
         };
       })()
     `);
-    allPass &= ok("landing the flyer starts the freeze at STAMPEDE_DUR and the run-off", landed.shownLetters === 8 && landed.stampedeT > landed.STAMPEDE_DUR - 0.1 && landed.hasRunClass && landed.stampedeSounds === 1, landed);
-    allPass &= ok("the ride music playing underneath is cut when the run-off starts", landed.musicStoppedOnLanding, landed);
+    allPass &= ok("landing the flyer starts the freeze at SURGE_DUR and the surge", landed.shownLetters === landed.wordLength && landed.surgeT > landed.SURGE_DUR - 0.1 && landed.hasSurgeClass && landed.surgeSounds === 1, landed);
+    allPass &= ok("shake is set for the impact the instant the surge starts", landed.shakeRightAfterLanding > 0, landed);
+    allPass &= ok("the ride music playing underneath is cut when the surge starts", landed.musicStoppedOnLanding, landed);
 
-    // --- The 8th letter's own flyer is mid-flight (~t=0.85-0.9) right when the
+    // --- The last letter's own flyer is mid-flight (~t=0.85-0.9) right when the
     // freeze starts, not freshly spawned -- it must be let finish settling into
     // its HUD slot within a handful of frames rather than hanging there for the
-    // whole run-off (Adam's report: the floating "E" stuck around). ---
+    // whole surge (Adam's report, from the stampede version: the floating "E"
+    // stuck around). ---
     const flyerSettles = await evaluate(session, `
       (() => {
         const flyersRightAfterLanding = flyers.length;
-        for (let i = 0; i < 20; i++) update(0.016);   // ~0.32s, still frozen (stampedeT is huge)
-        return { flyersRightAfterLanding, flyersAfterSettling: flyers.length, stampedeT };
+        for (let i = 0; i < 20; i++) update(0.016);   // ~0.32s, still frozen (surgeT is huge)
+        return { flyersRightAfterLanding, flyersAfterSettling: flyers.length, surgeT };
       })()
     `);
     allPass &= ok("the landed letter's flyer settles into its HUD slot and disappears instead of hanging as a ghost", flyerSettles.flyersRightAfterLanding === 1 && flyerSettles.flyersAfterSettling === 0, flyerSettles);
 
-    // --- World is frozen: travelled/speed hold, shake is set, no collisions ---
-    const frozen = await evaluate(session, `
+    // --- The impact shake decays quickly (SURGE_SHAKE_DECAY = 0.5s) rather than
+    // holding at SURGE_SHAKE for the whole 9.4s clip -- Adam's call for the wave
+    // to read as a jolt-then-settle rather than a continuous rumble. World stays
+    // frozen (no collisions, travelled holds) throughout regardless of shake. ---
+    const shakeDecayed = await evaluate(session, `
       (() => {
         const before = travelled;
         const livesBefore = lives;
         spawnEntity(ENTITY_TYPE.COW, travelled + 0.05, 0);   // would be in the hit window if collisions ran
-        for (let i = 0; i < 60; i++) update(0.016);   // ~0.96s, well inside the 8.1s run-off
-        return { before, after: travelled, livesBefore, livesAfter: lives, stampedeT, shake, state };
+        for (let i = 0; i < 60; i++) update(0.016);   // ~0.96s, past SURGE_SHAKE_DECAY but well inside the 9.4s surge
+        return { before, after: travelled, livesBefore, livesAfter: lives, surgeT, shake, state };
       })()
     `);
-    allPass &= ok("travelled does not advance during the run-off freeze", frozen.after === frozen.before, frozen);
-    allPass &= ok("no life lost during the freeze (collision loop doesn't run)", frozen.livesAfter === frozen.livesBefore, frozen);
-    allPass &= ok("shake is set for the herd-underfoot effect", frozen.shake > 0 && frozen.shake < 1, frozen);
-    allPass &= ok("still mid-freeze after ~1s of an 8.1s run-off", frozen.stampedeT > 6.5, frozen);
+    allPass &= ok("travelled does not advance during the surge freeze", shakeDecayed.after === shakeDecayed.before, shakeDecayed);
+    allPass &= ok("no life lost during the freeze (collision loop doesn't run)", shakeDecayed.livesAfter === shakeDecayed.livesBefore, shakeDecayed);
+    allPass &= ok("shake has settled back to 0 once past SURGE_SHAKE_DECAY", shakeDecayed.shake === 0, shakeDecayed);
+    allPass &= ok("still mid-freeze after ~1s of a 9.4s surge", shakeDecayed.surgeT > 8, shakeDecayed);
 
     // --- Rider flash isn't stuck: drawRider() draws every sampled frame despite invuln>0 ---
     const flashDuringFreeze = await evaluate(session, `
@@ -126,21 +140,22 @@ async function main() {
     // --- Run the freeze out: #letters gets "gone", world resumes, no bonus invuln ---
     const resumed = await evaluate(session, `
       (() => {
-        while (stampedeT > 0.02) update(0.016);
+        while (surgeT > 0.02) update(0.016);
         update(0.05);   // cross the 0 boundary
         return {
-          stampedeT, hasGoneClass: byId("letters").classList.contains("letters--gone"), invuln, WIN_INVULN,
+          surgeT, hasGoneClass: byId("letters").classList.contains("letters--gone"),
+          invuln, WIN_INVULN,
           lastMusicStart: window.__musicStarts[window.__musicStarts.length - 1],
         };
       })()
     `);
-    allPass &= ok("stampedeT reaches exactly 0 and #letters gets the gone class", resumed.stampedeT === 0 && resumed.hasGoneClass, resumed);
-    allPass &= ok("the channel hands back to ride music once the run-off ends", resumed.lastMusicStart === "ride", resumed);
-    // invuln is frozen (not decaying) for the whole run-off, same as every other
+    allPass &= ok("surgeT reaches exactly 0 and #letters gets the gone class", resumed.surgeT === 0 && resumed.hasGoneClass, resumed);
+    allPass &= ok("the channel hands back to ride music once the surge ends", resumed.lastMusicStart === "ride", resumed);
+    // invuln is frozen (not decaying) for the whole surge, same as every other
     // timer -- so up to its pre-freeze remainder (bounded by WIN_INVULN, the
     // flight-to-landing grace) can still be sitting on it the instant the freeze
     // ends. That's expected and small; it must NOT still be anywhere near
-    // WIN_INVULN's full amount, which would mean STAMPEDE_DUR itself leaked back
+    // WIN_INVULN's full amount, which would mean SURGE_DUR itself leaked back
     // into the grant (the regression WIN_INVULN was shrunk to avoid -- see its
     // comment in index.html). Real decay is checked below via live collisions.
     allPass &= ok("no bonus invincibility re-inflated by the freeze", resumed.invuln < resumed.WIN_INVULN, resumed);
@@ -156,14 +171,14 @@ async function main() {
         return { before, after: travelled, livesBefore, livesAfter: lives };
       })()
     `);
-    allPass &= ok("travelled advances once the run-off ends", afterResume.after > afterResume.before, afterResume);
-    allPass &= ok("collisions are live again once the run-off ends", afterResume.livesAfter < afterResume.livesBefore, afterResume);
+    allPass &= ok("travelled advances once the surge ends", afterResume.after > afterResume.before, afterResume);
+    allPass &= ok("collisions are live again once the surge ends", afterResume.livesAfter < afterResume.livesBefore, afterResume);
 
-    // --- Repro of Adam's report: the 8th letter lands while Season Pass's
-    // own music is playing (mid-effect, not the intro/outro freeze). The
-    // stampede sting must cut it, and the freeze must hand the channel back
-    // to "seasonPass" (its own effect resumes right where it left off, same
-    // frozen seasonPassT), not to "ride". ---
+    // --- Repro of Adam's report (from the old stampede version of this effect):
+    // the last letter lands while Season Pass's own music is playing
+    // (mid-effect, not the intro/outro freeze). The surge sting must cut it,
+    // and the freeze must hand the channel back to "seasonPass" (its own effect
+    // resumes right where it left off, same frozen seasonPassT), not "ride". ---
     const seasonPassOverlap = await evaluate(session, `
       (() => {
         reset(); state = "play"; lane = 0; laneA = 0;
@@ -173,9 +188,9 @@ async function main() {
         e.gi = gotLetters;
         const stopsBefore = window.__musicStops.length;
         update(0.016);   // grab -- plays out under normal rules, Season Pass is mid-effect, not frozen
-        for (let i = 0; i < 60 && stampedeT < 0; i++) update(0.016);   // flight to landing
+        for (let i = 0; i < 60 && surgeT < 0; i++) update(0.016);   // flight to landing
         const stoppedOnLanding = window.__musicStops.length > stopsBefore;
-        while (stampedeT > 0.02) update(0.016);
+        while (surgeT > 0.02) update(0.016);
         update(0.05);
         return {
           stoppedOnLanding,
@@ -184,8 +199,8 @@ async function main() {
         };
       })()
     `);
-    allPass &= ok("Season Pass's music is cut when the stampede sting starts", seasonPassOverlap.stoppedOnLanding, seasonPassOverlap);
-    allPass &= ok("the channel hands back to Season Pass's music, not ride, once the run-off ends", seasonPassOverlap.lastMusicStart === "seasonPass" && seasonPassOverlap.seasonPassTStillActive, seasonPassOverlap);
+    allPass &= ok("Season Pass's music is cut when the surge sting starts", seasonPassOverlap.stoppedOnLanding, seasonPassOverlap);
+    allPass &= ok("the channel hands back to Season Pass's music, not ride, once the surge ends", seasonPassOverlap.lastMusicStart === "seasonPass" && seasonPassOverlap.seasonPassTStillActive, seasonPassOverlap);
 
     const exceptions = await evaluate(session, `window.__caughtExceptions || []`);
     allPass &= ok("no page exceptions", exceptions.length === 0, exceptions);
