@@ -11,26 +11,21 @@
 # but the Board API constant is now cross-origin by design. This script
 # never edits the repo's index.html itself, only a generated copy under
 # waterpark-leaderboard/game/ (gitignored, rebuilt every run):
-#   - "assets/...                        -> "/wp-content/plugins/waterpark-leaderboard/game-assets/...
-#   - REPLACE-WITH-RAILWAY-URL placeholder -> the real deployed Railway service URL
+#   - "assets/...  -> "/wp-content/plugins/waterpark-leaderboard/game-assets/...
 # The repo's own index.html keeps working unmodified against
 # `python3 server.py` for local dev.
 #
-# STAMPEDE_LEADERBOARD_API must be set to the deployed leaderboard-service
-# URL (e.g. https://stampede-leaderboard-production.up.railway.app) —
-# Railway assigns/manages this, so it can't be hardcoded here the way the
-# old Kinsta dev URL was.
+# Unlike the original Stampede setup, index.html's Board.API is now a
+# hardcoded real URL (cowabunga-leaderboard-service, see DATABASE.md's
+# "Two games, one Redis" section) rather than a placeholder this script
+# swaps out — there's exactly one leaderboard service for this game, no
+# separate staging backend to rewrite to, so the WP-shipped copy just
+# carries the same URL through unchanged.
 #
 # No --delete on the rsync of the plugin folder itself — this only ever adds
 # forward; run a manual cleanup if a file needs to go away.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-
-if [ -z "${STAMPEDE_LEADERBOARD_API:-}" ]; then
-  echo "ERROR: STAMPEDE_LEADERBOARD_API is not set — export the deployed" >&2
-  echo "leaderboard-service URL (no trailing slash) before running this script." >&2
-  exit 1
-fi
 
 TARGET="${1:-staging}"
 case "$TARGET" in
@@ -52,7 +47,6 @@ esac
 
 REMOTE_PLUGIN_PATH="${REMOTE_WP_PATH}/wp-content/plugins/waterpark-leaderboard"
 ASSET_URL_BASE="/wp-content/plugins/waterpark-leaderboard/game-assets/"
-LOCAL_API_PLACEHOLDER="https://REPLACE-WITH-RAILWAY-URL.up.railway.app"
 
 echo "== Target: ${TARGET} (${REMOTE_ALIAS}) =="
 
@@ -79,7 +73,6 @@ mkdir -p waterpark-leaderboard/game
 # risk), so match the bare substring instead of requiring a quote before it.
 sed \
   -e "s#assets/#${ASSET_URL_BASE}#g" \
-  -e "s#${LOCAL_API_PLACEHOLDER}#${STAMPEDE_LEADERBOARD_API}#g" \
   index.html > waterpark-leaderboard/game/index.html
 
 echo "== Sanity-checking the rewrite =="
@@ -91,10 +84,6 @@ ASSETS_COUNT=$(grep -o 'assets/' waterpark-leaderboard/game/index.html | wc -l |
 GAME_ASSETS_COUNT=$(grep -o 'game-assets/' waterpark-leaderboard/game/index.html | wc -l | tr -d ' ')
 if [ "$ASSETS_COUNT" -ne "$GAME_ASSETS_COUNT" ]; then
   echo "ERROR: a bare (unrewritten) assets/ reference survived the sed pass" >&2
-  exit 1
-fi
-if grep -q 'REPLACE-WITH-RAILWAY-URL' waterpark-leaderboard/game/index.html; then
-  echo "ERROR: placeholder leaderboard API URL survived the sed pass" >&2
   exit 1
 fi
 

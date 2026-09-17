@@ -173,8 +173,9 @@ writing a new one.
 - [`invuln-flash-check.js`](tools/invuln-flash-check.js) — verifies the
   rider's invulnerability flash fires in every window a hit can't land, and
   never otherwise.
-- [`stampede-freeze-check.js`](tools/stampede-freeze-check.js) — verifies
-  the STAMPEDE-letters run-off freeze pauses and resumes the world cleanly.
+- [`collect-fade-check.js`](tools/collect-fade-check.js) — verifies the
+  STAMPEDE-letters collect fade plays out over LIVE gameplay (no freeze),
+  with WIN_INVULN covering the rider through it.
 - [`powerup-score-bonus-check.js`](tools/powerup-score-bonus-check.js) —
   verifies every power-up pickup adds the shared score bonus on top of its
   own effect.

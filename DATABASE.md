@@ -179,6 +179,39 @@ service, same numbers, same reasoning:
   hosting's implicit protection now that the service lives on its own
   Railway domain.
 
+## Two games, one Redis: `cowabunga` vs `waterpark`
+
+**This repo (Cowabunga: Wild Rush) has its own dedicated leaderboard
+service and dataset, separate from the original Stampede/Texas one.**
+Added 2026-09-17: this game is launching into a new market and Adam wanted
+that launch to start from a clean leaderboard, without touching or mixing
+in the existing Texas park's real player data.
+
+Rather than stand up a second Redis (unnecessary — see below), a second
+service was deployed into the *same* Railway project
+(`stampede-wild-rush-leaderboard`), reusing the *same* Redis instance:
+
+| | Stampede (Texas, original) | Cowabunga (this repo) |
+|---|---|---|
+| Railway service | `leaderboard-service` | `cowabunga-leaderboard-service` |
+| `GAME_KEY` | `waterpark` (code default, unset) | `cowabunga` |
+| Redis | `stampede-wild-rush-leaderboard` project's `Redis` service | *same instance* (`REDIS_URL=${{Redis.REDIS_URL}}`) |
+| Data keys | `wplb:waterpark:*` | `wplb:cowabunga:*` |
+| URL | `leaderboard-service-production-81e3.up.railway.app` | `cowabunga-leaderboard-service-production.up.railway.app` |
+
+This works cleanly because of the namespacing already described above
+(`wplb:{game_key}:...`) — the two services are just two Node processes
+each fixed to their own `game_key`, pointed at the same physical Redis.
+Nothing about `/claim`, `/submit`, `/leaderboard`, `/rank`, or `/names`
+changed; each service only ever sees its own key prefix. **Never point
+this repo's `Board.API` at the Stampede URL, or vice versa** — there is no
+code-level guard against that, only this convention.
+
+If a THIRD game ever needs its own board, repeat this pattern (new
+service in the same project, new `GAME_KEY`, same `REDIS_URL` reference)
+rather than provisioning another Redis, unless a real operational reason
+(capacity, blast-radius isolation) shows up to justify one.
+
 ## Front-end integration (`Board`, in `index.html`)
 
 `Board.me()` is local/synchronous (reads the device's own cached rider);
@@ -200,16 +233,17 @@ not same-origin WP REST as before.
   loading) so the naming screen never shows blank reels — see
   [ARCHITECTURE.md](ARCHITECTURE.md#loading-screen).
 
-**`Board`'s `API` constant** (`index.html`, `const API = ...`) is a
-placeholder (`https://REPLACE-WITH-RAILWAY-URL.up.railway.app`) in the
-repo's own copy, used for local testing against `python3 server.py`.
-`tools/deploy.sh` rewrites it to the real deployed Railway service URL for
-the copy that actually ships to WordPress (`STAMPEDE_LEADERBOARD_API` env
-var). Because the service is cross-origin by design now, nothing needs
-reverting to a relative path before going live — confirm instead that the
-Railway service's CORS allowlist covers the real production domain
-(`typhoontexas.com`), not just the Kinsta staging origin. Tracked in
-[TODOLIST.md](TODOLIST.md#wordpress-hosting--go-live).
+**`Board`'s `API` constant** (`index.html`, `const API = ...`) is now the
+real, live `cowabunga-leaderboard-service` URL — hardcoded directly, not a
+placeholder, since (unlike the old Stampede setup) this game has exactly
+one leaderboard service and no separate staging backend to swap between.
+Verified end-to-end 2026-09-17 via a real claim+submit+read smoke test
+against production (test row deleted immediately after via `railway
+connect Redis --tunnel-only` + `redis-cli`, not left sitting in the fresh
+namespace). Confirm the Railway service's CORS allowlist covers the real
+production domain once one exists, same as the original service needed —
+CORS here is `origin: true` (reflects any origin) so this is more a
+"nothing to configure" note than an open item.
 
 ## Word pool
 

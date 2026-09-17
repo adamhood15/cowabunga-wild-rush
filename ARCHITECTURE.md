@@ -410,44 +410,54 @@ Season Pass's outro, then two more —
   freeze starts on the very next frame, same one-frame lag as Season Pass's
   intro; the badge's flight to the HUD (and `extraLife` flipping true) plays
   out entirely after the chomp ends rather than overlapping it.
-- **The STAMPEDE letters' run-off.** `stampedeT` (already driving the CSS
-  run-off via `#letters.run`'s keyframes, `STAMPEDE_DUR` = 8.1s) doubles as
-  the freeze's own timer too, with a slight shake (`STAMPEDE_SHAKE` = 0.22,
-  well under a hit's `shake = 1`) for the herd underfoot. `stampedeT` is set
-  once the 8th letter's flyer *lands* in the HUD (`updateFlyers()`, when
-  `shownLetters` reaches `WORD.length`), not on the grab itself — grabbing the
-  8th letter still plays out under normal, collidable rules for the ~0.6s
-  flight to the HUD (`WIN_INVULN = FLY_DUR * FLY_LAND + 0.25` covers exactly
-  that window). `WIN_INVULN` used to also carry `STAMPEDE_DUR`, back when the
-  run-off played out over live gameplay and dying mid-clip could take the win
-  away; now that the run-off itself is frozen (no collision loop runs, so
-  nothing can hit the rider regardless of `invuln`), that term was dropped —
-  leaving it in would have granted several extra seconds of bonus
-  invincibility the instant the freeze ends, for no reason.
+- **The collected word's fade.** Unlike every other beat in this list, this
+  one does NOT freeze the world (Adam's call, 2026-09-17 — replaced the old
+  frozen run-off, which used to peel the word offscreen over ~9s while
+  travel/spawns/collisions all held). Two stages:
+  - A per-letter shine (Adam's call, 2026-09-17 — replaced a uniform
+    brightness flash on the container with something that reads as gold and
+    metallic rather than just "bright"): each `#letters.letters--fade b`
+    gets a `::after` — a diagonal gold/white gradient band, `mask-image`d to
+    `--art` (a custom property set alongside `background-image` in
+    `buildWord`, since CSS can't read a `background-image` value back out to
+    reuse as a mask) so the gleam is clipped to that letter's own opaque
+    pixels rather than washing over the transparent gaps between letters.
+    `letterShine` sweeps the gradient across on a 1.1s loop,
+    `animation-delay:calc(var(--i) * 70ms)` staggering it letter-by-letter
+    (the same `--i` the old per-letter rise used) so the shine visibly
+    travels left to right across the word each pass. Runs for `COLLECT_SHINE_DUR`
+    (JS) = 4s before the next stage takes over — nothing turns it off early,
+    it's just moot once the row fades out.
+  - `lettersExit` (`EXIT_DUR` = 1.3s, `animation-delay` = `COLLECT_SHINE_DUR`) then
+    slides the whole word off to the right and fades it out — the same
+    rightward run-off the old frozen version used, just compressed since
+    nothing needs to hold the screen for it anymore.
 
-  Unlike Extra Life's chomp, this freeze block *does* keep calling
-  `updateFlyers()` every frame — the 8th letter's own flyer (`flyLetter()`
-  fires at the grab, same as every other letter) is already ~85% through its
-  flight the instant the freeze starts, not freshly spawned the same frame,
-  because the freeze only begins once THAT flyer lands. Skipping
-  `updateFlyers()` the way the other freezes do left it stuck mid-flight for
-  the whole 8.1s — measured at a few px off and a few px oversized next to its
-  real HUD slot — which read as the last letter (Adam's report: "the E")
-  never actually disappearing. Nothing NEW can start mid-freeze (the
-  collision loop that spawns flyers doesn't run), so this only ever finishes
-  flight already committed before the freeze began — the letter's own, or any
-  other pickup's flyer that happened to still be catching up.
+  `fadeT` (`COLLECT_FADE_DUR` = `COLLECT_SHINE_DUR + EXIT_DUR`) is purely cosmetic:
+  it isn't passed through `freezeWorld()`, doesn't hold the camera, and
+  doesn't gate `update()` with an early return — it just ticks down
+  alongside `invuln`/`hurtT`/`moveT` and adds `letters--gone` once it hits
+  0, so `#letters` stays out of the way for the rest of the run. It's kept
+  in step with the CSS by hand — there's no single source of truth between
+  the two (the CSS's own `4s`/`1.3s` literals and JS's `COLLECT_SHINE_DUR`/`EXIT_DUR`
+  are two separate places), so a change to either stage's length needs the
+  other updated too. `fadeT` is set once the 8th letter's flyer *lands* in
+  the HUD (`updateFlyers()`, when `shownLetters` reaches `WORD.length`), not
+  on the grab itself — grabbing the 8th letter plays out under normal,
+  collidable rules for the ~0.6s flight to the HUD.
 
-  `runStampede()` (fires once, the instant `stampedeT` is set) also calls
-  `Sound.musicStop(0.15)` — Adam's report: grabbing Season Pass and the 8th
-  letter close together left Season Pass's music playing under the stampede
-  sting for the whole run-off, since nothing told the channel to stop. The
-  freeze's own `onEnd` hands it back once the run-off ends:
-  `Sound.music(seasonPassMusicPlaying ? "seasonPass" : "ride", null, 0.5)` —
-  `seasonPassMusicPlaying` still reflects the truth because `seasonPassT` is
-  frozen (unchanged) for the whole run-off, so Season Pass's own effect (if it
-  was running) resumes in lockstep with its music rather than the channel
-  handing to "ride" and then immediately being cut again.
+  Because nothing freezes, hazards stay live for the whole celebration, so
+  `WIN_INVULN = FLY_DUR * FLY_LAND + COLLECT_FADE_DUR + 0.25` now covers the
+  grab-to-landing flight AND the fade itself (plus a small margin) — without
+  that, a cow or wave could kill the rider mid-fade and take the win away
+  right as it's being shown, the exact regression the old frozen version was
+  built to avoid a different way.
+
+  `runCollectFade()` (fires once, the instant `fadeT` is set) plays
+  `Sound.collect()` as a one-shot layered over whatever's already on the
+  music channel, same as any other pickup sound — it does NOT call
+  `Sound.musicStop()` the way the old frozen version did, since there's no
+  longer a multi-second hold to protect from a competing track underneath.
 
 Every mechanical effect starts together the instant `seasonPassT` takes over:
 - **Invincibility.** `hitRider()`'s very first line is

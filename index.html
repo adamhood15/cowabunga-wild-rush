@@ -207,48 +207,61 @@
                  animation:letterLand .26s cubic-bezier(.16,1.4,.4,1)}
   @keyframes letterLand{from{transform:scale(1.55)} to{transform:scale(1)}}
 
-  /* Two separate animations, on two different elements, so the "each letter
-     rises once" beat and the "whole word exits together" phase can't bleed
-     into each other:
-     - letterBob runs on each b, staggered by --i (the inchworm ripple: letter
-       0 rises and settles, then letter 1 starts while 0 is mid-motion, and so
-       on down the row) — ONE cycle only, 0.5s, and a small rise (0.4 of the
-       letter's own --lh, so it scales with the letter rather than the
-       viewport) rather than carrying it any real distance up the screen.
-     - wordExit runs on #letters ITSELF once every letter has had time to
-       rise and settle back down — the last letter (i=8) starts at 2.0s and
-       is done at 2.5s, so wordExit's own animation-delay is 2.6s, a hair
-       after that. Being on the container rather than each b means every
-       letter moves right TOGETHER as one block, with no per-letter stagger
-       of its own — distinct from the rise, which is staggered on purpose,
-       and from the old stampede/early-surge run-offs, which peeled letters
-       off one at a time. translateX keeps the -50% the un-animated rule
-       centers #letters with (see above) as its 0% frame, so the animation
-       doesn't snap the row off centre the instant it starts.
-     2.6s rise + 6.6s exit = 9.2s total, just inside SURGE_DUR's 9.4s (JS) —
-     the exit is given the bulk of the time since the rise itself is quick
-     now; same ~0.2s margin as before, so the row is gone before the freeze
-     hands control back. */
-  #letters.letters--surge b{animation:letterBob .5s ease-in-out 1 both;
-                 animation-delay:calc(var(--i) * 250ms)}
-  @keyframes letterBob{
-    0%, 100%{transform:translateY(0) rotate(0deg)}
-    50%     {transform:translateY(calc(var(--lh) * -0.4)) rotate(4deg)}
+  /* Two stages (Adam's call: gleam gold for a few seconds, THEN run off):
+     - A per-letter shine, on each b's own ::after rather than a container-
+       wide flash — a diagonal light band sweeps across each letter on a
+       loop, masked to that letter's own artwork (--art, set alongside
+       background-image in buildWord) so the gleam hugs the actual ink
+       instead of washing over the transparent gaps between letters too.
+       Staggered by --i (same property the old per-letter rise used) so the
+       shine visibly travels left to right across the word each pass,
+       reading as light catching shiny gold letters rather than a uniform
+       flash. Left running for the letter's own display:none check to hide
+       it — nothing turns it off early, it just stops mattering once
+       lettersExit fades the whole row out.
+     - lettersExit, on #letters itself: the same rightward slide-off the old
+       frozen run-off used (translateX to +100vw, fading out over its last
+       stretch), compressed to EXIT_DUR (JS) since nothing needs to hold the
+       screen for it. Its animation-delay below (4s) is COLLECT_SHINE_DUR
+       (JS) — the two aren't linked, so a change to one needs the other
+       updated by hand — and gives the shine its few seconds before the
+       run-off starts. transform stays at the -50% the un-animated rule
+       centers #letters with (see above) until then. */
+  #letters b{position:relative}
+  #letters.letters--fade b::after{
+    content:"";
+    position:absolute; inset:0;
+    -webkit-mask-image:var(--art); mask-image:var(--art);
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-size:calc(var(--lh) * var(--bw)) auto; mask-size:calc(var(--lh) * var(--bw)) auto;
+    -webkit-mask-position:calc(var(--lh) * var(--ox) * -1) calc(var(--lh) * var(--oy) * -1);
+    mask-position:calc(var(--lh) * var(--ox) * -1) calc(var(--lh) * var(--oy) * -1);
+    background:linear-gradient(115deg,
+      rgba(255,255,255,0) 35%, rgba(255,241,181,.95) 48%,
+      rgba(255,214,64,1) 50%, rgba(255,241,181,.95) 52%, rgba(255,255,255,0) 65%);
+    background-size:400% 400%;
+    mix-blend-mode:screen;
+    animation:letterShine 1.1s linear infinite;
+    animation-delay:calc(var(--i) * 70ms);
   }
-  #letters.letters--surge{animation:wordExit 6.6s linear forwards;
-                 animation-delay:2.6s}
-  @keyframes wordExit{
+  @keyframes letterShine{
+    0%  {background-position:140% 50%}
+    100%{background-position:-140% 50%}
+  }
+  #letters.letters--fade{animation:lettersExit 1.3s ease-in forwards; animation-delay:4s}
+  @keyframes lettersExit{
     0%  {transform:translateX(-50%); opacity:1}
     80% {transform:translateX(calc(-50% + 78vw)); opacity:1}
-    100%{transform:translateX(calc(-50% + 100vw)); opacity:0}}
+    100%{transform:translateX(calc(-50% + 100vw)); opacity:0}
+  }
 
   /* The game-over copy of the word is static — no pop, no run-off — and now
      lives inside #stats as a row rather than in a box of its own. Its styling
      is down there with the board. */
   @media (prefers-reduced-motion:reduce){
     #letters b.word__letter--got{animation:none}
-    #letters.letters--surge{animation:none;opacity:0}
-    #letters.letters--surge b{animation:none}
+    #letters.letters--fade{animation:none;opacity:0}
+    #letters.letters--fade b::after{animation:none}
     /* The pill and the gold still carry the record; only the pop goes. */
     #overPanel.panel--text-in #stats .stat-row__cell--record::after{animation:none}
     /* The card's copy still WAITS for Typhoon — that is sequencing, not motion,
@@ -378,7 +391,7 @@
   #ctaBtn    {--d:450}
 
   .eyebrow{font-size:15px;letter-spacing:.4em;text-transform:uppercase;
-           color:var(--orange);margin-bottom:10px}
+           color:var(--orange);margin-bottom:20px}
   /* 12.5vw, not 15: eight condensed caps plus a 7px stroke and a skew ran wider
      than the viewport on a phone, so the S and the final E were cut off by the
      screen edges. Desktop is unaffected — it sits on the 118px ceiling. */
@@ -434,7 +447,7 @@
      side under the primary: see .ghost-row below. */
   .btn.btn--ghost,.btn.btn--tertiary{color:var(--white);font-size:14px;
              padding:10px 18px 11px;margin-top:12px;box-shadow:0 4px 0 rgba(10,10,10,.35);text-shadow:2px 2px 0 var(--ink)}
-  .btn.btn--ghost{background:var(--turquoise)}
+  .btn.btn--ghost{background:var(--green-lt)}
   /* Night-surf navy, not another shade of the ghost turquoise: the third action
      in a trio needs its own colour to read as a distinct choice rather than
      as two ghosts of different sizes, and navy keeps it in palette and clear
@@ -572,11 +585,11 @@
      word rather than sitting across it. */
   .reel::after{content:"";position:absolute;left:50%;bottom:0;z-index:2;
         width:42px;height:42px;margin-left:-21px;transform:translateY(62%);
-        background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Ccircle cx='22' cy='22' r='18.4' fill='%23fcf6f0' stroke='%230a0a0a' stroke-width='3.4'/%3E%3Cg fill='none' stroke='%231fb8b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 18.5V17.5A2.5 2.5 0 0 1 16.5 15H27'/%3E%3Cpath d='M24 11.8L27.4 15L24 18.2'/%3E%3Cpath d='M30 25.5v1a2.5 2.5 0 0 1-2.5 2.5H17'/%3E%3Cpath d='M20 25.8L16.6 29L20 32.2'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}
+        background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Ccircle cx='22' cy='22' r='18.4' fill='%23fcf6f0' stroke='%230a0a0a' stroke-width='3.4'/%3E%3Cg fill='none' stroke='%236ee06e' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 18.5V17.5A2.5 2.5 0 0 1 16.5 15H27'/%3E%3Cpath d='M24 11.8L27.4 15L24 18.2'/%3E%3Cpath d='M30 25.5v1a2.5 2.5 0 0 1-2.5 2.5H17'/%3E%3Cpath d='M20 25.8L16.6 29L20 32.2'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat}
   .reel::before{content:"";position:absolute;left:50%;bottom:0;z-index:1;
         width:82px;height:82px;margin-left:-41px;
         transform:translateY(62%) scale(.92);
-        background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cg stroke='%231fb8b8' stroke-width='4.4' stroke-linecap='round'%3E%3Cpath d='M20.0 55.0L13.2 60.2M28.8 62.4L25.1 70.0M40.0 65.0L40.0 73.5M51.2 62.4L54.9 70.0M60.0 55.0L66.8 60.2'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+        background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Cg stroke='%236ee06e' stroke-width='4.4' stroke-linecap='round'%3E%3Cpath d='M20.0 55.0L13.2 60.2M28.8 62.4L25.1 70.0M40.0 65.0L40.0 73.5M51.2 62.4L54.9 70.0M60.0 55.0L66.8 60.2'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
         animation:rayPulse 1.7s ease-in-out infinite}
   /* translateY has to be repeated in every keyframe or the animation drops it
      and the burst jumps up to sit inside the button. */
@@ -814,10 +827,19 @@
   /* The real .board's figure is sized for a HUD corner with nothing beside
      it; squeezed to a third of this card it needs to give up some size to
      keep from overflowing or forcing the row to scroll. */
-  .hud-guide__row3 .board{height:auto;padding:7px 8px 8px}
+  .hud-guide__row3 .board{height:auto;min-height:56px;padding:7px 8px 8px}
   .hud-guide__row3 .board .board__val{font-size:17px}
   .hud-guide__row3 .hud-guide__coin-row img{width:18px;height:18px}
   .hud-guide__row3 .hud-guide__coin-row{gap:4px}
+  /* Score and Breakers each sit in a tall bordered .board box (~56px, label
+     + figure stacked); Tubes had no box at all, just three 17px-tall icons —
+     so its card's "b" title sat ~38px higher than the other two (measured
+     live, 2026-09-17), reading as a misaligned row rather than three peers.
+     min-height matches .board's own so all three cards give their
+     collectible art the same vertical slot regardless of what fills it;
+     centering the short row of tubes in that slot (rather than boxing them
+     to match) keeps Tubes' own "no card chrome" look intact. */
+  .hud-guide__row3 .hud-guide__tubes{min-height:56px;align-items:center;justify-content:center}
   /* A static double of .hudbtn's chrome — same box, same icon sizing — but in
      normal flow rather than pinned to a screen corner, since this is an
      illustration sitting in a card, not a real button. */
@@ -1209,7 +1231,7 @@
   /* inset:0 then right:auto — the fill is pinned left and grows rightward */
   #loadFill{position:absolute;inset:0;right:auto;width:calc(var(--p,0) * 100%);
             border-radius:6px;overflow:hidden;transition:width .35s ease;
-            background:linear-gradient(180deg,var(--sky-low),var(--blue) 55%,var(--blue-dp))}
+            background:linear-gradient(180deg,var(--yellow),var(--green-lt) 55%,var(--green))}
   #loadFill::after{content:"";position:absolute;inset:0;
         background:repeating-linear-gradient(115deg,rgba(252,246,240,.34) 0 6px,
                                              rgba(252,246,240,0) 6px 16px);
@@ -1359,7 +1381,6 @@
       <section class="how-sec">
         <h3>Complete the Word</h3>
         <div id="howWord" class="word"></div>
-        <h1 class="word">COWABUNGA</h1>
         <p>Grab all 9 COWABUNGA letters before your run ends!</p>
       </section>
 
@@ -1376,20 +1397,17 @@
           <div class="ctl">
             <div class="cap">&larr;&nbsp;&rarr;</div>
             <b>Slide</b>
-            <span class="ctl__kb">Hold &larr; or &rarr; to steer.</span>
-            <span class="ctl__tc">Hold and move left or right.</span>
+            <span class="ctl__kb">Hold &larr; or &rarr;, or swipe left or right to steer.</span>
           </div>
           <div class="ctl">
             <div class="cap">&uarr;</div>
             <b>Jump</b>
-            <span class="ctl__kb">Press &uarr;, W, or Space.</span>
-            <span class="ctl__tc">Tap or flick up.</span>
+            <span class="ctl__kb">Press &uarr;, W, Space, Tap or flick up.</span>
           </div>
           <div class="ctl">
             <div class="cap">&darr;</div>
             <b>Duck</b>
-            <span class="ctl__kb">Press &darr; or S.</span>
-            <span class="ctl__tc">Flick down and hold.</span>
+            <span class="ctl__kb">Press &darr;, S, flick down or hold down.</span>
           </div>
         </div>
       </section>
@@ -1399,7 +1417,7 @@
         <p class="how-sec__lead">Dodge the hazards and hang on to your 3 lives!</p>
         <div id="hazards">
           <div class="haz"><img id="hazCow" alt=""><b>Typhoon</b><span>Slide around him!</span></div>
-          <div class="haz"><img id="hazYeti" alt=""><b>Snowman Tube</b><span>Slide around it!</span></div>
+          <div class="haz"><img id="hazYeti" alt=""><b>Sunny</b><span>Slide around him!</span></div>
           <div class="haz"><img id="hazWave" alt=""><b>Wave</b><span>Jump over it!</span></div>
           <div class="haz"><img id="hazPig" alt=""><b>Pig Jet</b><span>Duck under it!</span></div>
           <div class="haz">
@@ -1437,9 +1455,9 @@
         <div id="powerups">
           <div class="haz"><img id="hazSpeedBoost" alt=""><b>Speed Boost</b><span>Blast past top speed!</span></div>
           <div class="haz"><img id="hazSouvenir" alt=""><b>Souvenir Bottle</b><span>Score 100 Breakers!</span></div>
-          <div class="haz"><img id="hazExtraLife" alt=""><b>Extra Life</b><span>Grab one extra life!</span></div>
-          <div class="haz"><img id="hazWhirlpool" alt=""><b>Whirlpool</b><span>Pull nearby pickups to you!</span></div>
-          <div class="haz"><img id="hazSeasonPass" alt=""><b>Season Pass</b><span>Go faster and become invincible!</span></div>
+          <div class="haz"><img id="hazExtraLife" alt=""><b>Pink's Hot Dog</b><span>Fill your belly to withstand more damage!</span></div>
+          <div class="haz"><img id="hazWhirlpool" alt=""><b>Whirlpool</b><span>Pull all available nearby pickups to you!</span></div>
+          <div class="haz"><img id="hazSeasonPass" alt=""><b>Season Pass</b><span>Blast away at top speed, become invincible, and pull all the goodies to you!</span></div>
         </div>
       </section>
 
@@ -1730,17 +1748,18 @@ const CONFIG = {
    made the page self-contained but meant swapping the art on disk silently did
    nothing — and cost a 33% encoding penalty the browser could never cache
    separately from the code. Filenames match the keys below one-for-one.
-   NOTE: the rider, flip, duck, hurt, die, and speed frames are registered
+   NOTE: the rider, flip, duck, hurt, die, and move frames are registered
    against measured constants (see RIDER_CX / RIDER_TUBE_* / FLIP_REG /
-   DUCK_REG / HURT_REG / DIE_REG / SPEED_REG). Re-exporting any of those
+   DUCK_REG / HURT_REG / DIE_REG / MOVE_REG). Re-exporting any of those
    needs those numbers re-measured — and re-exporting the RIDER invalidates
-   every other set, since they are all registered relative to it (SPEED_REG
-   is measured off its own art's "waist" width rather than a flood-filled
-   ring — see SPEED BOOST's own comment above drawRider for why). Idle, eat,
-   and move are a separate cow-in-a-tube art style sized off their own
-   aspect ratio instead (see IDLE's comment above drawRider) — re-exporting
-   those just needs a tight, 0%-padded crop to their own opaque bbox, not
-   new registration constants. */
+   every other set, since they are all registered relative to it. Idle and
+   eat are own-aspect, sized off their own aspect ratio instead (see IDLE's
+   comment above drawRider) — re-exporting those just needs a tight,
+   0%-padded crop to their own opaque bbox, not new registration constants.
+   Speed is a third own-aspect variant (SPEED_BBOX, see SPEED BOOST's own
+   comment above drawRider) — cropped to its own real opaque bbox rather
+   than assuming 0% padding, since this art's canvas isn't tightly cropped
+   the way idle/eat's is. */
 const ART = {
   sun:      "assets/sprites/backdrop/sun.png",
   cloud:    "assets/sprites/backdrop/cloud.png",
@@ -1870,7 +1889,7 @@ const SFX = {
   dead:  "assets/sound-effects/player/typhoon-dead.mp3",
   slurp: "assets/sound-effects/player/typhoon-slurp.mp3",
   letter:"assets/sound-effects/letter-collect/Happy%20Game%20Notification.mp3",
-  surge:"assets/sound-effects/special/wave-sound.mp3",
+  collect:"assets/sound-effects/special/Shine%20Sparkle.mp3",
   souvenir:"assets/sound-effects/power-ups/souvenir-bottle.mp3",
   extraLife:"assets/sound-effects/power-ups/extra-life.mp3",
   whirlpool:"assets/sound-effects/power-ups/whirlpool.mp3",
@@ -2479,11 +2498,18 @@ const Sound = (function(){
     // the way a coin line does and it needs to read as the rarer pickup.
     letter(){ if (!sample("letter", 0.7)){ tone(660, 1320, 0.16, "triangle", 0.15);
                                            tone(990, 1980, 0.13, "sine", 0.08); } },
-    /* The whole word, carried out the door on the surge. The clip measures
-       9.195s, which is what SURGE_DUR and the CSS surge are both sized against — the synth
-       fallback is just over a second long, so a failed decode ends early
-       rather than leaving the animation running over silence. */
-    surge(){ if (!sample("surge", 0.9)){ tone(280, 900, 1.0, "sawtooth", 0.13);
+    /* The finale fanfare, layered over the ride track like any other pickup
+       sound rather than cutting it. Unlike the old wave-sound.mp3 clip this
+       replaced, this one (~3s) is SHORTER than COLLECT_FADE_DUR (5.3s, the
+       shine + the run-off together) — it finishes partway through the
+       shine, well before the run-off even starts, rather than ringing out
+       past the whole animation. That's fine: nothing times the visual off
+       the sound (COLLECT_SHINE_DUR/EXIT_DUR are independent CSS/JS
+       constants), it just means the celebration goes quiet a beat before
+       the word slides off. The synth fallback is just over a second long,
+       so a failed decode ends early into the shine rather than running
+       silent for the rest. */
+    collect(){ if (!sample("collect", 0.9)){ tone(280, 900, 1.0, "sawtooth", 0.13);
                                        hiss(1.0, 700, 0.15); } },
     reveal(){ tone(420, 900, 0.7, "triangle", 0.16); hiss(0.7, 1100, 0.1); },
     over(){ tone(300, 70, 0.8, "sawtooth", 0.16); },
@@ -2809,12 +2835,18 @@ const WORD = "COWABUNGA";
    padding baked into each file is not reliable inter-letter spacing, so CSS
    `gap` handles that uniformly instead. cw is each file's full canvas
    width, which is what the background has to be scaled by. */
+/* Re-measured 2026-09-17 (Adam re-exported all 9 files at a smaller, tighter
+   canvas — the old registration's aspect ratios were then wrong for every
+   letter, worst on B/U/N (positions 5-7), which is what actually showed as
+   visible left/right clipping: the box width comes from w/h, and the stale
+   h (each old file's much taller canvas) understated it most on the three
+   files whose new ink width grew the most relative to height. */
 const WORD_SRC = {
-  y:  [   0,   2,   0,   1,   1,   1,   4,   0,   1],
-  h:  [ 257, 252, 255, 256, 263, 256, 257, 258, 256],
-  x:  [  13,   7,   2,   1,  22,  20,  18,   3,   1],
-  w:  [ 186, 204, 214, 213, 180, 173, 181, 210, 213],
-  cw: [ 215, 215, 218, 215, 220, 215, 219, 215, 215],
+  y:  [   4,   2,   0,   1,   0,   2,   0,   0,   0],
+  h:  [ 210, 210, 210, 209, 210, 209, 210, 210, 208],
+  x:  [   5,   1,   2,   1,   0,   0,   5,   4,   2],
+  w:  [ 189, 196, 202, 194, 197, 196, 194, 192, 203],
+  cw: [ 196, 197, 204, 196, 197, 196, 199, 197, 205],
 };
 const LETTER_GAP   = 180 / CONFIG.metresPerUnit;  // ~180m between offers
 const LETTER_AHEAD = 20;    // spawn distance; inside DRAW_FAR (26) so it fades
@@ -2868,19 +2900,18 @@ const POWERUP_AHEAD = 20;   // same reasoning as LETTER_AHEAD
    offered once (see seasonPassSpawned) — the grand-finale power-up, so it
    only ever shows up once in a run. */
 const POWERUP_TYPES = [ENTITY_TYPE.BOOST, ENTITY_TYPE.SOUVENIR, ENTITY_TYPE.EXTRALIFE, ENTITY_TYPE.WHIRLPOOL, ENTITY_TYPE.SEASONPASS];
-/* Holds the row until the surge is done. The last letter leaves the screen
-   somewhere around 6.9-7.4s (phone slower than wide desktop, same reasoning as
-   the old stampede timing this replaced), well inside wave-sound.mp3's 9.195s —
-   sized to the clip now, not the visual, since the sound is the longer of the
-   two: it's what was scaled up from STAMPEDE_DUR (8.1s, sized against the old
-   7.941s stampede clip) by the same 9.195/7.941 ratio the CSS timing uses, plus
-   the same ~0.2s margin the old constant carried over its clip. */
-const SURGE_DUR = 9.4;
-// Slight, not the full ±8px a hit's shake=1 gives — a swell underfoot, not a crash.
-const SURGE_SHAKE = 0.22;
-// How long the impact shake takes to settle — a jolt on the hit, not a
-// continuous rumble for the whole surge.
-const SURGE_SHAKE_DECAY = 0.5;
+// Matches the CSS #letters.letters--fade animation's own two stages (the
+// per-letter shine + lettersExit) added together — COLLECT_SHINE_DUR is
+// also lettersExit's own animation-delay, so it has to line up with how
+// long the shine gets to run before the run-off starts. Named distinctly
+// from the track letters' own SHINE_DUR/SHINE_MIN_H (the ground-glint
+// legibility cue, an unrelated mechanic) even though both are "letters
+// shining" in spirit. Only used here to time the "gone" cleanup (see
+// update()'s fadeT tick) — the visual itself is entirely CSS-driven, so
+// this has to be kept in step with the CSS by hand.
+const COLLECT_SHINE_DUR = 4;
+const EXIT_DUR = 1.3;
+const COLLECT_FADE_DUR = COLLECT_SHINE_DUR + EXIT_DUR;
 
 /* Hat tilt on the reveal card. typhoon-hat-tilt.png is a 5x2 contact sheet with
    a numbered label under every frame, so these are not a plain grid: each box
@@ -2899,19 +2930,18 @@ let revealOpen = false, hatT = 0, hatI = -1;
 let overWon = false;
 const FLY_DUR  = 0.72;      // pickup -> its slot in the HUD word
 const FLY_LAND = 0.85;      // when the slot takes over from the badge
-/* Invulnerable from the last pickup until the flyer hands over to the HUD at
-   FLY_LAND — the one stretch of the win that still plays out under normal,
-   collidable rules. The surge itself no longer needs covering here: it
-   freezes the world (see freezeWorld()'s surgeT block), so nothing can hit
-   the rider while it plays regardless of this timer. Used to also carry
-   SURGE_DUR, back when the run-off played out over live, uninterrupted
-   gameplay and dying mid-clip took the win away. */
-const WIN_INVULN = FLY_DUR * FLY_LAND + 0.25;
+/* Invulnerable from the last pickup all the way through the collect-fade —
+   Adam's call to never freeze the world for the celebration, so unlike most
+   of the win it plays out over LIVE, uninterrupted gameplay: a hazard could
+   otherwise kill the rider mid-fade and take the win away right as it's
+   being shown. Covers the flyer's flight to FLY_LAND, then COLLECT_FADE_DUR
+   for the fade itself, plus a small margin. */
+const WIN_INVULN = FLY_DUR * FLY_LAND + COLLECT_FADE_DUR + 0.25;
 /* gotLetters is the game's count and advances the instant you touch a letter,
    because it also picks which letter is offered next. shownLetters is what the
    HUD has actually received and only advances when a flyer lands, so the slot
    stays empty while its letter is still on the way up. */
-let gotLetters = 0, shownLetters = 0, letterZ = 0, surgeT = -1;
+let gotLetters = 0, shownLetters = 0, letterZ = 0, fadeT = -1;
 let flyers = [];
 /* Breakers exploding out of the Souvenir Bottle at the moment it's grabbed
    (see flySouvenir()/burstCoins()) — a purely cosmetic one-shot burst kept
@@ -3087,7 +3117,7 @@ function reset(){
   byId("overPanel").classList.remove("panel--text-in", "panel--rider-in");
   revealed = false;
   ents = []; spray = []; nextZ = 8; comboFree = 0;
-  gotLetters = 0; shownLetters = 0; letterZ = LETTER_GAP * 0.55; surgeT = -1;
+  gotLetters = 0; shownLetters = 0; letterZ = LETTER_GAP * 0.55; fadeT = -1;
   powerupZ = POWERUP_GAP * 0.7;
   runT = 0; spellT = -1; spellLives = 0;
   flyers = []; coinSpill = [];
@@ -3600,7 +3630,7 @@ function buildWord(box, upto){
     const b = document.createElement("b");
     b.textContent = WORD[i];            // kept for screen readers; hidden in CSS
     if (i < upto) b.className = "word__letter--got";
-    b.style.setProperty("--i", i);      // drives the surge stagger
+    b.style.setProperty("--i", i);      // drives the collect-fade shine's stagger
     // All in units of the letter's OWN height (WORD_SRC.h[i], not a shared
     // scalar — see WORD_SRC's comment), so one --lh drives the size of the
     // box, the scale of the file behind it and the offset into it, and every
@@ -3610,13 +3640,19 @@ function buildWord(box, upto){
     b.style.setProperty("--ox", (WORD_SRC.x[i]  / WORD_SRC.h[i]).toFixed(4));
     b.style.setProperty("--oy", (WORD_SRC.y[i]  / WORD_SRC.h[i]).toFixed(4));
     b.style.setProperty("--bw", (WORD_SRC.cw[i] / WORD_SRC.h[i]).toFixed(4));
-    b.style.backgroundImage = "url(" + ART["lt" + (i + 1)] + ")";
+    const art = "url(" + ART["lt" + (i + 1)] + ")";
+    b.style.backgroundImage = art;
+    // Reused by the collect-fade shine's ::after (see its CSS) as a mask, so
+    // the sweep is clipped to this letter's own opaque pixels instead of
+    // its whole rectangular box — background-image itself isn't readable
+    // from CSS the way a custom property is.
+    b.style.setProperty("--art", art);
     box.appendChild(b);
   }
 }
 function paintLetters(){
   const box = byId("letters");
-  box.className = "";                   // clears letters--surge/letters--gone left by the last run
+  box.className = "";                   // clears letters--fade/letters--gone left by the last run
   buildWord(box, shownLetters);
 }
 
@@ -3752,7 +3788,7 @@ function updateFlyers(dt){
       } else {
         shownLetters = Math.max(shownLetters, f.idx + 1);
         paintLetters();
-        if (shownLetters >= WORD.length){ surgeT = SURGE_DUR; runSurge(); }
+        if (shownLetters >= WORD.length){ fadeT = COLLECT_FADE_DUR; runCollectFade(); }
         else Sound.letter();           // rings on arrival, in step with the HUD
       }
     }
@@ -3838,17 +3874,14 @@ function drawExtraLifeFlyer(x, y, h, alpha){
   if (alpha < 1) ctx.globalAlpha = 1;
 }
 
-/* Sound plays here rather than at the collect site so the last letter gets the
-   surge's sting instead of a pickup blip stacked under it. Whatever music is
-   currently on the channel — ride, or Season Pass's if the two overlapped —
-   cuts out with it: the sting is the only thing that should be heard while
-   the surge carries the word off, not competing with a track still playing
-   underneath. The freeze's own onEnd (see freezeWorld()'s surgeT block) hands
-   the channel back once the surge ends. */
-function runSurge(){
-  byId("letters").classList.add("letters--surge");
-  Sound.surge(); spawnSplash(22);
-  Sound.musicStop(0.15);
+/* Sound plays here rather than at the collect site so the last letter gets
+   the fanfare instead of a pickup blip stacked under it. Music is left
+   running — Adam's call to never pause gameplay for this, so there's no
+   freeze left to hand the channel back afterward; the fanfare just layers
+   over whatever's already playing, same as every other pickup sound. */
+function runCollectFade(){
+  byId("letters").classList.add("letters--fade");
+  Sound.collect(); spawnSplash(22);
 }
 
 /* The results card is now the only screen a run ends on, win or lose —
@@ -4439,14 +4472,13 @@ function riderLift(){
 }
 
 /* Shared by every "action pauses" beat — Season Pass's reveal and its
-   frozen exit, the collected word's surge off the top of the screen. The
-   extra-life chomp used to be one of these too, but Adam's call was to drop
-   the pause there — eatT still ticks down and still picks the chomp frame
-   (see update()'s own countdown), it just no longer holds up
-   travel/spawns/collisions while it does. Each of the beats still using this
-   already owns a timer that means something else too (surgeT also drives
-   the CSS surge) — this only ticks THAT timer
-   down and does the boilerplate every frozen beat shares: hold the
+   frozen exit. The collected word's fade and the extra-life chomp used to
+   be one of these too, but Adam's call was to drop the pause for both —
+   each still ticks its own timer down and still drives its own visual (see
+   update()'s fadeT/eatT countdowns), it just no longer holds up
+   travel/spawns/collisions while it does. Each beat still using this
+   already owns a timer that means something else too — this only ticks THAT
+   timer down and does the boilerplate every frozen beat shares: hold the
    camera at the current travelled position so the world doesn't drift, keep
    cosmetic spray decaying so a puff mid-freeze still fades naturally instead
    of hanging, and fire `onEnd` once, the instant the timer runs out. Returns
@@ -4476,8 +4508,7 @@ function freezeWorld(timer, dt, { shakeAmt, onEnd } = {}){
    on whichever flash phase it entered instead of reading as a clean hold. */
 function worldFrozen(){
   return seasonPassIntroT > 0
-      || (seasonPassT > 0 && seasonPassT <= SEASONPASS_OUTRO_DUR)
-      || surgeT > 0;
+      || (seasonPassT > 0 && seasonPassT <= SEASONPASS_OUTRO_DUR);
 }
 
 function update(dt){
@@ -4586,46 +4617,6 @@ function update(dt){
     return;
   }
 
-  /* The collected word's surge is the pause, with a brief shake right as
-     the wave hits — Adam's call, a jolt on impact rather than a shake for the
-     whole clip, since this reads as a wave crashing through and settling
-     rather than a herd underfoot. surgeT already times the CSS surge
-     (#letters.letters--surge's keyframes), so it doubles as the freeze's own
-     timer too; the shake amount is derived from how much of SURGE_DUR has
-     elapsed rather than a flat constant, so it decays to 0 over
-     SURGE_SHAKE_DECAY instead of holding at SURGE_SHAKE for the full 9.4s.
-     Unlike the other freezes, this one keeps calling updateFlyers() — the
-     final letter's own flyer (and any other pickup's, if one happened to still be
-     mid-flight) is already most of the way through its flight the instant
-     this freeze starts, not freshly spawned the same frame the way
-     flyExtraLife() would be: measured at t~0.87 here, a few px off and a few px
-     oversized next to its real HUD slot. Skipping updateFlyers() the way the
-     other freezes do would leave that gap frozen on screen — a visible ghost
-     badge sitting slightly off the letter it just became — for the whole
-     9.4s surge. Letting it finish its last beat settles it into the slot
-     within a couple of frames instead. Nothing NEW can start mid-freeze
-     (the collision loop that spawns flyers doesn't run), so this only ever
-     finishes flight already committed before the freeze began. */
-  if (surgeT > 0){
-    updateFlyers(dt);
-    const surgeElapsed = SURGE_DUR - surgeT;
-    const surgeShakeNow = SURGE_SHAKE * Math.max(0, 1 - surgeElapsed / SURGE_SHAKE_DECAY);
-    surgeT = freezeWorld(surgeT, dt, { shakeAmt: surgeShakeNow, onEnd: () => {
-      /* The card used to fire here, the instant the word finished. It is a
-         curtain call now, not an interruption: the player keeps riding until
-         the last life is gone and the reveal waits for them at the end. */
-      byId("letters").classList.add("letters--gone");
-      // Hands the channel back to whichever track runSurge() cut off.
-      // seasonPassT is frozen (unchanged) for the whole surge, so
-      // seasonPassMusicPlaying still reflects whether Season Pass was the
-      // one playing — its own effect resumes right where it left off next
-      // frame, so the music should pick back up alongside it rather than
-      // handing to "ride" and then immediately being cut again.
-      Sound.music(seasonPassMusicPlaying ? "seasonPass" : "ride", null, 0.5);
-    }});
-    return;
-  }
-
   /* Riding time, for the score's speed term. Counted here — after the early
      return — so it is time spent PLAYING: the pause panel, the reveal card and
      the wipeout animation all sit in other states and none of them charge you. */
@@ -4650,6 +4641,10 @@ function update(dt){
   if (hurtT  > 0) hurtT  -= dt;
   if (moveT  > 0) moveT  -= dt;
   if (boostT > 0) boostT -= dt;
+  // Purely cosmetic now that the fade plays over live gameplay — nothing
+  // reads fadeT for collisions or camera hold, it only times the CSS class
+  // swap once #letters has finished fading out.
+  if (fadeT > 0){ fadeT -= dt; if (fadeT <= 0){ fadeT = 0; byId("letters").classList.add("letters--gone"); } }
   // No freeze anymore — eatT only picks the chomp frame (drawRider's quadIdx
   // read) while the world keeps moving. flyExtraLife() fires the instant it
   // runs out, same as it did at the old freeze's onEnd.
@@ -5415,9 +5410,19 @@ function tubeSprite(px, py, h, tube, body){
    typhoon-waving art) — only yeti2 has been re-exported to the new
    daytona-snowman cowabunga art so far; this pass only fixes yeti-tube's
    SIZE to match, not its brand. Re-measure and re-solve if any of these
-   four PNGs are re-exported. */
-const COW_H   = 0.52;
-const COW2_H  = 0.5303;
+   four PNGs are re-exported.
+   COW_H/COW2_H bumped +12% (2026-09-17, Adam: "typhoon-waving_01 and 02 are
+   a bit too small") on top of the height-matching above — still holding
+   the same ~1.02x COW2_H/COW_H ratio, since tools/rider-visual-size-check.js
+   confirmed cow/cow2 already read within ~2% of each other by FOOTPRINT
+   area (height x width), not just height — the two frames' own bbox width
+   fractions (cow 97.6%, cow2 98.9% of native width) turned out close enough
+   that height-only matching was already good enough here; unlike Season
+   Pass/Speed Boost this pair didn't need a different target metric, just an
+   overall size increase. Re-run that check (its footprint-area section) if
+   this pair is ever re-exported. */
+const COW_H   = 0.582;
+const COW2_H  = 0.594;
 const YETI_H  = 0.52;
 const YETI2_H = 0.5238;
 
@@ -5767,17 +5772,25 @@ function souvenirGlow(x, y, h){
    rather than ending in a flat-capped ribbon, the way a real wisp thins out
    as it rises and disperses.
    ------------------------------------------------------------------ */
-/* extra-life.png was re-exported 2026-09-11 as a hot dog (300x188, a wide
-   3:2-ish canvas whose art fills most of the frame — bbox 286x173, barely
-   padded) instead of the old tray art. At LETTER_H it measured ~36% over
-   every other pickup's footprintArea (tools/sprite-size-audit.js) because
-   width scales off nativeW/nativeH and this shape is much wider than
-   speedBoostPickup/whirlpool/souvenir's own bboxes — the same reason SEASONPASS_H
-   below isn't LETTER_H either. 0.434 is solved from that audit's own
-   footprintArea formula (k = H/nativeH, footprintArea = k^2 * bboxW *
-   bboxH) to land back on the other icons' mean; re-run the audit and
-   re-solve if this art is re-exported again. */
-const EXTRALIFE_H     = 0.434;
+/* extra-life.png is a hot dog (native 300x200, not the 300x188 this comment
+   used to claim — that was stale relative to a later re-export and never
+   corrected). A wide 3:2-ish canvas whose art fills most of the frame (bbox
+   286x173, barely padded). At LETTER_H it measured ~36% over every other
+   pickup's footprintArea (tools/sprite-size-audit.js) because width scales
+   off nativeW/nativeH and this shape is much wider than
+   speedBoostPickup/whirlpool/souvenir's own bboxes — the same reason
+   SEASONPASS_H below isn't LETTER_H either. 0.434 was solved from that
+   audit's own footprintArea formula to land on the other icons' mean, and
+   still measures as exactly on that mean today — but Adam's visual read
+   (2026-09-17) is that it still reads too large next to the others: a
+   solid, densely-filled shape reads "bigger" than a sparser icon
+   (whirlpool's ring, say) even at equal bounding-box area, which
+   footprintArea parity doesn't account for. Shrunk ~10% below the
+   footprintArea-matched value at his request — a deliberate, one-off
+   departure from the shared-footprint-parity rule for this icon only; if
+   this art is re-exported, re-solve the footprintArea-parity baseline first
+   (per the audit), then re-apply the same ~10% reduction on top. */
+const EXTRALIFE_H     = 0.391;
 const EXTRALIFE_LIFT  = 0.44;
 const EXTRALIFE_COLOR = "250,60,50";        // measured off extra-life.png's tray
                                             // edge — used for the HUD tube only
@@ -6696,16 +6709,21 @@ const spinFrame = (t) => Math.floor(t / SPIN_FRAME_DUR) % SPIN_REG.length;
    Replaced 2026-09-11 with a split of Adam's cowabunga-lean.png sheet
    (the sheet's left half is the move-right pose, its right half is
    move-left) into cowabunga-move-left.png/cowabunga-move-right.png,
-   the same self-contained cow-in-a-tube badge art as IDLE/EAT, not
-   Typhoon's body leaning atop a separately-pinned tube — so like
-   those two, it draws off its OWN aspect ratio sized directly to `h`
-   (idleImg/eatImg's branch below), not a tube fit against
-   RIDER_TUBE_W. Each half is cropped tight to its own opaque bbox (0%
-   padding, like cowIdle/eat) so the same own-aspect sizing lands at a
-   consistent height next to idle instead of drifting with however
-   much the sheet padded each pose.
-   ------------------------------------------------------------------ */
+   the same self-contained cow-in-a-tube badge art as IDLE/EAT.
+   Originally drawn off its own aspect ratio like IDLE/EAT (own-aspect
+   only equalizes overall CHARACTER bbox height, not tube size) — moved
+   onto a tube fit instead (2026-09-17) after tools/rider-visual-size-
+   check.js's cowabunga-idle_01 baseline check flagged the tube itself
+   rendering +11.7%/+14.9% larger than every other cowabunga animation's,
+   the same gap that already forced DUCK/HURT/DIE off own-aspect. tw/cx/by
+   measured off the real alpha via tools/move-frame-measure.js (same teal
+   ring detection as duck/hurt), registered against IDLE_TUBE_W/CX/BY
+   exactly like DUCK_REG. Re-measure if this art is re-exported. */
 const MOVE_KEY = { "-1": "mvL", "1": "mvR" };
+const MOVE_REG = {
+  "-1": { tw: 0.8548, cx: 0.5349, by: 0.9986 },   // mvL, cowabunga-move-left.png
+  "1":  { tw: 0.8911, cx: 0.4545, by: 0.9986 },   // mvR, cowabunga-move-right.png
+};
 
 /* The resting sprite's own tube, which every tube-registered set is matched to.
    Measured off typhoon-rider.png's alpha. */
@@ -6759,7 +6777,19 @@ const DUCK_REG = [
 const duckIdx = (a) => a < 0.34 ? 0 : a < 0.68 ? 1 : 2;
 /* This art's own resting tube (cowabunga-idle_02.png's ring, same probe as
    DUCK_REG above) — what DUCK_REG's tw is pinned against, in place of the
-   old typhoon-rider.png-derived RIDER_TUBE_W/CX/BY. */
+   old typhoon-rider.png-derived RIDER_TUBE_W/CX/BY.
+   Measured off idle_02, not idle_01 — tools/rider-visual-size-check.js's
+   idle_01 baseline check (Adam, 2026-09-17: every cowabunga animation's
+   tube should read the same size as idle_01's) found idle_02's own tube is
+   ~0.7% smaller than idle_01's, which is why every tube-pinned set below
+   (DUCK/HURT/DIE/SPEED/MOVE) still shows that same small, uniform, whole-
+   SET offset against the idle_01 baseline even once each set's own tw is
+   correctly measured — that's this constant's reference frame differing
+   from the check's baseline frame, not a per-frame registration bug.
+   Re-deriving this off idle_01 instead would need IDLE_TUBE_CX/BY
+   re-measured too and would shift where every tube-pinned pose's tube
+   anchors on screen (not just its size) for all five sets at once — out of
+   scope unless Adam asks for literal zero-offset matching. */
 const IDLE_TUBE_W  = 0.8944;
 const IDLE_TUBE_CX = 0.5176;
 const IDLE_TUBE_BY = 0.9908;
@@ -6887,27 +6917,34 @@ const SEASONPASS_REG = [
   { tw: 0.9808, cx: 0.5041, by: 0.9912 },   // 01, reveals the card
   { tw: 0.9811, cx: 0.5068, by: 0.9941 },   // 02, waves it
   { tw: 0.9015, cx: 0.5468, by: 0.9971 },   // 03, big celebration
-  /* 04, 06, and 11's tw are corrected, not measured directly (0.8945/0.9888/
-     0.9845 were the genuine tube-pixel-width measurements, from tools/
-     season-pass-measure.js) — tools/sprite-size-audit.js flagged all three
-     past its default 8% threshold (+18.0%/-12.7%/-14.7% apparent-area
-     deviation respectively). 04's peak-celebration sparkle burst and 11's
-     motion-line-free calm pose both pad/crop their canvas differently than
-     most other frames without him actually changing size; 06 is worth
-     getting right in particular since it's the HOLD frame, on screen for
-     the bulk of the effect's run. Re-solved from the audit's own
-     opaque-pixel apparent-area metric against the other 8 frames' (01-03,
-     05, 07-10) own average, holding cx/by as measured so he stays planted
-     on the tube. Re-measure and re-run the audit if any of this art is
-     re-exported. */
-  { tw: 0.9660, cx: 0.4925, by: 0.9968 },   // 04, peak celebration
+  /* 04, 06, and 11 previously had tw hand-curve-fit to force
+     tools/sprite-size-audit.js's opaque-pixel apparent-area metric to match
+     the other 8 frames' average, discarding the real measured tube-ring
+     width from tools/season-pass-measure.js in the process. That was
+     backwards: the tw-pinned draw formula (dw = w*RIDER_TUBE_W/R.tw) already
+     makes the RING's own rendered size immune to how much a frame's canvas
+     is padded by decoration — replacing the real ring measurement with a
+     value reverse-solved from apparent area (which DOES include decoration:
+     04's sparkle burst, 11's motion-line-free canvas) doesn't fix a real
+     inconsistency, it introduces a genuine scale error on exactly the three
+     frames it touches. 06 is the HOLD frame, on screen for the bulk of the
+     effect's run, so this was the most visible source of Adam's "the player
+     shrinks and grows" report (2026-09-17) — confirmed with a new tool,
+     tools/rider-visual-size-check.js, which measures apparent CHARACTER
+     height (head-top to tube-base, via a narrow vertical strip scan
+     centered on cx) rather than raw opaque area, precisely because area
+     conflates decoration with character size. Restored to the real
+     measured tw/cx/by below (re-run tools/season-pass-measure.js and
+     re-verify with rider-visual-size-check.js if this art is re-exported —
+     do not re-derive tw from apparent area again). */
+  { tw: 0.8945, cx: 0.4925, by: 0.9968 },   // 04, peak celebration
   { tw: 0.9856, cx: 0.4986, by: 0.9968 },   // 05, thumbs up
-  { tw: 0.9188, cx: 0.4944, by: 0.9968 },   // 06, blissed out — the hold frame
+  { tw: 0.9860, cx: 0.4958, by: 0.9968 },   // 06, blissed out — the hold frame
   { tw: 0.8886, cx: 0.4496, by: 0.9934 },   // 07, still settled
   { tw: 0.9861, cx: 0.4958, by: 0.9968 },   // 08, raises the card again
   { tw: 0.9510, cx: 0.5116, by: 0.9969 },   // 09, raises it further
   { tw: 0.8376, cx: 0.5749, by: 0.9871 },   // 10, winds up and throws
-  { tw: 0.9040, cx: 0.4948, by: 0.9967 },   // 11, empty-handed, calm
+  { tw: 0.9845, cx: 0.4948, by: 0.9935 },   // 11, empty-handed, calm
 ];
 const SEASONPASS_INTRO_FRAMES    = 6;   // 01-06, played out over the freeze
 const SEASONPASS_INTRO_FRAME_DUR = SEASONPASS_INTRO_DUR / SEASONPASS_INTRO_FRAMES;
@@ -6946,67 +6983,42 @@ function seasonPassFrame(){
    boost runs out. Both ramps are timed off SPEED_RAMP, a fixed slice of
    BOOST_DUR, not a fixed wall-clock length independent of it, so a future
    change to BOOST_DUR keeps the ramps proportionate automatically.
-   Getting this registration right took four tries:
-   1. sqrt(opaque AREA) (FLIP_REG/SPIN_REG's rotation-invariant scheme) —
-      technically consistent (total on-screen footprint held flat across
-      frames) but wrong for this art: holding TOTAL area flat while the
-      splash balloons forces the cow+tube portion to shrink to compensate —
-      Adam reported this in-game (2026-09-11: "it appears like the size of
-      the tube and the cow are shrinking between frames").
-   2. Height-pinned against each frame's own opaque-bbox HEIGHT (a since-
-      removed SPEED_REG, mirroring DUCK_REG's width pin onto the other
-      axis) — reasoned as "the cow+tube's own opaque-bbox height barely
-      moves frame to frame (403px up to 438px, ~9%)," but that bbox height
-      ISN'T cow+tube-only, it's the WHOLE opaque region including the
-      splash, which reaches further down as it grows (minY held at
-      179-181px every frame — the cow's own head-top never moves — while
-      maxY climbed 582->618px purely from splash reaching lower). Pinning
-      dh to hold that (cow+splash) height constant still shrank the cow
-      ~8% to compensate, so Adam reported the same complaint again.
-   3. Own-aspect off native canvas height (also 2026-09-14) — every canvas
-      IS a constant 768px tall, so this gave perfect frame-to-frame
-      consistency, but was wrong in a different way: these canvases are NOT
-      tightly cropped to their opaque content the way idle/eat/move are
-      (403-438px of actual content inside a 768px-tall canvas, ~45%
-      padding), so sizing the whole 768px canvas to `h` rendered the cow at
-      roughly half the height it should be — confirmed by screenshot, tiny
-      next to a same-depth obstacle.
-   4. A "waist" scan (also 2026-09-14, same day) — the narrowest
-      center-connected opaque span at y=250-360, reasoned as a splash-free
-      stable feature (183/182/186/186px, a ~2% spread) and fed into the SAME
-      tube-width formula duck/hurt use, on the claim that this art's splash
-      is "fused by color to the ring" so flood-fill can't isolate the ring
-      itself. That claim was never actually checked against the art, and
-      it's false — Adam reported the REAL bug this produced (2026-09-14:
-      "speed-boost animation on the cow is so much larger than the normal
-      rider"): the waist is a real, stable feature, but it's the cow's own
-      crossed-arm pinch point (~1/3 of frame width), not the tube ring
-      (~85-92% of frame width, same order as DUCK_REG/IDLE_TUBE_W). Feeding
-      a ~0.35 value into a formula that expects a ~0.85-0.92 one
-      (`dw = imW * IDLE_TUBE_W / R.tw`) inflated dw — and dh, which derives
-      from it — by roughly that same ~2.5x ratio.
-   The actual fix (2026-09-14, fourth attempt): the ring IS isolatable by
-   color after all, same teal COWABUNGA-tube mask duck/hurt/idle already use
-   (tools/speed-frame-measure.js) — per-row opaque-width vs teal-width
-   checks in the ring's own band match almost exactly (the splash there is
-   white/foam, which fails the teal test), so a plain color-masked bbox
-   recovers the ring cleanly with no flood-fill component filtering needed
-   (duck's own >35%-width component filter actively hurt this art: the
-   ring's teal mask splits into arcs each under that threshold on some
-   frames, silently dropping real ring pixels). The one real contamination
-   source is spray picking up a teal tint well above the ring on the
-   biggest-splash frames (observed up to y=251 on speed_04) — restricting
-   the scan to the y-band where the ring actually sits on every frame
-   (0.45h-0.85h) avoids it. Registered against IDLE_TUBE_W/CX/BY exactly
-   like DUCK_REG (same tube-width-pin shape), tw spread 9.1% across the four
-   frames — in line with DUCK_REG's own ~7%. Re-measure if this art is
-   re-exported — and if a future export moves the ring outside 0.45h-0.85h,
-   re-verify the band itself rather than assuming it still applies. */
-const SPEED_REG = [
-  { tw: 0.8439, cx: 0.4785, by: 0.7578 },   // speed_01
-  { tw: 0.8500, cx: 0.5096, by: 0.7643 },   // speed_02
-  { tw: 0.8981, cx: 0.5132, by: 0.7799 },   // speed_03
-  { tw: 0.9209, cx: 0.4964, by: 0.8047 },   // speed_04, biggest splash bloom
+   Six tube/character-registration schemes were tried and abandoned across
+   2026-09-11 through 2026-09-17 — sqrt(area) (shrank the cow as the splash
+   grew), an opaque-bbox height pin (same shrink, different cause: the bbox
+   includes the splash, not just the cow), plain own-aspect off the native
+   768px-tall canvas (canvas is ~45% transparent padding, so this undersized
+   the cow by half), a "waist" scan (accidentally measured the crossed-arm
+   pinch point, not the tube, inflating everything ~2.5x), a real teal-ring
+   color-mask measurement (correct for tube WIDTH specifically, but the
+   canvas's own width balloons with the splash faster than the ring does, so
+   the cow still visibly shrank), and a character-height back-solve off that
+   ring measurement (fixed the cow's height but broke tube-size parity with
+   every other cowabunga animation, which by then was the actual priority).
+   Every one of these was chasing "make some ONE measured feature (area,
+   bbox, ring) match across frames or against idle_01" — Adam's final call
+   (2026-09-17: "pull the speed boost frames in at their extracted sizes and
+   not standardize the sizes at all") was to stop doing that entirely: no
+   registration constant, no cross-frame target, no per-frame hand-tuned
+   scale factor. SPEED_BBOX below is just each frame's own real opaque
+   bounding box in native pixels (measured directly off the alpha channel —
+   minY sits at a near-constant 179-181px across all four frames, the cow's
+   own head-top never moving; maxY climbs 582px->618px as the splash reaches
+   lower; bboxW climbs 374px->513px alongside it) — the crop rectangle
+   drawImage reads from, with no scale math applied beyond mapping THAT
+   crop's own height to the shared world-unit `h`, same as idle/eat/move's
+   own-aspect draw (see their own comment) but cropped to content first
+   instead of assuming 0% padding. Whatever size each frame's own extracted
+   content implies relative to the others is what renders — no attempt to
+   equalize the cow, the tube, or anything else across frames. If this art
+   is re-exported, re-measure with the bbox scan in
+   tools/speed-frame-measure.js's history (or any of the other measure
+   tools' identical alpha-bbox loop) rather than reusing these numbers. */
+const SPEED_BBOX = [
+  { x: 25, y: 179, w: 374, h: 404 },   // speed_01
+  { x: 44, y: 179, w: 443, h: 409 },   // speed_02
+  { x: 34, y: 181, w: 477, h: 419 },   // speed_03
+  { x: 20, y: 180, w: 513, h: 439 },   // speed_04, biggest splash bloom
 ];
 const SPEED_RAMP = 0.4;         // seconds to climb 1->4, and separately to
                                 // fall back 4->1 at the end
@@ -7218,7 +7230,23 @@ function drawRider(){
     const ccx = (RIDER_CX - 0.5) * w;
     const ccy = (RIDER_CY - 0.88) * h;
     ctx.drawImage(spinImg, ccx - R.cx * dw, ccy - R.cy * dh, dw, dh);
-  } else if (idleImg || eatImg || moveImg){
+  } else if (speedImg){
+    // Cropped own-aspect: draws only SPEED_BBOX's own rectangle out of the
+    // canvas (drawImage's 9-arg source-rect form), mapping THAT crop's own
+    // height to `h` — same idea as idle/eat's own-aspect draw just below,
+    // but cropped to real content first instead of assuming 0% padding
+    // (this canvas is ~45% transparent padding — see SPEED BOOST's own
+    // comment above for why treating the whole canvas as idle/eat do
+    // undersized the cow by half). No registration constant, no shared
+    // target against idle_01 or against speed-boost's own other frames —
+    // each frame's own extracted content renders at whatever size it
+    // implies, full stop (Adam's explicit call, 2026-09-17: "pull the speed
+    // boost frames in at their extracted sizes and not standardize the
+    // sizes at all").
+    const B  = SPEED_BBOX[speedFrameIdx];
+    const bw = B.w * (h / B.h), bh = h;
+    ctx.drawImage(speedImg, B.x, B.y, B.w, B.h, -bw*sx/2, -bh*sy*0.9, bw*sx, bh*sy);
+  } else if (idleImg || eatImg){
     // Own width off its own aspect ratio — NOT `w` (that's IMG.rider's, the
     // old horse, which every other branch above/below pins itself to). See
     // IDLE's comment for why sharing it broke every other pose the one time
@@ -7227,41 +7255,44 @@ function drawRider(){
     // cow-in-a-tube badge like cowIdle, not Typhoon's body pinned to a
     // separate tube, so it wants the same own-aspect treatment, not
     // RIDER_TUBE_W/EAT_REG (see EAT_REG's old comment for why that shrank it).
-    // moveImg joined the same day for the same reason (see LANE MOVE above).
-    // hurt and speed do NOT belong here despite being the same badge art —
-    // both need a tube-width fit instead (see HURT and DIE's, and SPEED
-    // BOOST's, own comments above for why a plain own-aspect draw shrank or
-    // undersized each of them) — see the duckImg/dieImg/hurtImg/speedImg
-    // branch below for the fix.
-    const im  = idleImg || eatImg || moveImg;
+    // moveImg used to join this branch too, but own-aspect only equalizes
+    // overall CHARACTER height, not tube size — moved onto a tube fit
+    // (2026-09-17, see LANE MOVE above) once that gap showed up as a real
+    // size mismatch against the other cowabunga animations' tubes. speedImg
+    // used to live here too, then moved to a tube fit, then moved to its
+    // own cropped-own-aspect branch above — see SPEED BOOST's own comment
+    // for the full history.
+    // hurt and die do NOT belong here despite being the same badge art —
+    // both need a tube-width fit instead (see HURT and DIE's own comments
+    // above for why a plain own-aspect draw shrank or undersized them) —
+    // see the duckImg/dieImg/hurtImg/moveImg branch below for the fix.
+    const im  = idleImg || eatImg;
     const imW = h * (im.width / im.height);
     ctx.drawImage(im, -imW*sx/2, -h*sy*0.9, imW*sx, h*sy);
-  } else if (duckImg || dieImg || hurtImg || speedImg){
+  } else if (duckImg || dieImg || hurtImg || moveImg){
     // Tube-pinned so the ring stays planted while the pose moves inside it
     // — pinned against THIS art's own tube (IDLE_TUBE_W/CX/BY,
     // cowabunga-idle_02.png's ring), not RIDER_TUBE_W (the old
     // typhoon-rider.png tube, unrelated to this badge art's tube size —
     // see DUCK_REG's own comment). idleImg's own on-screen width (imW,
-    // same formula the idle/eat/move branch above uses) stands in for `w`
-    // for the same reason: it's the reference every other own-aspect
-    // cowabunga badge already sizes against.
+    // same formula the idle/eat branch above uses) stands in for `w` for
+    // the same reason: it's the reference every other own-aspect cowabunga
+    // badge already sizes against.
     // dieImg joined 2026-09-14, same reasoning as duck — see DIE_REG's own
     // comment above for why it keeps a tube fit. hurtImg joined the same
     // day for the same reason, after a plain own-aspect draw was shown to
     // make the cow visibly change size frame to frame — see HURT and DIE's
     // own comment above for the measured apparent-area numbers that caught
-    // it. speedImg joined last, after TWO other registration schemes (see
-    // SPEED BOOST's own comment above) still got it wrong — R.tw here is a
-    // "waist" width (narrowest point of the silhouette, not a flood-filled
-    // ring, since this art's splash is fused by color to the ring in a way
-    // duck's separate droplets aren't), not the ring itself, but the same
-    // formula shape applies since it's still a stable width feature at a
-    // comparable position.
+    // it. moveImg joined 2026-09-17, after the same own-aspect gap that hit
+    // hurt/die showed up here too — see LANE MOVE's own comment above.
+    // speedImg used to join this branch too but no longer does — see SPEED
+    // BOOST's own comment above for why it now gets its own cropped
+    // own-aspect draw instead.
     // No sy squash here either: this art already flattens/widens him frame
     // to frame (dh falls out of R.tw fixing dw, then dh = dw * the frame's
     // own aspect ratio), so squashing on top would double it.
-    const im  = duckImg || dieImg || hurtImg || speedImg;
-    const R   = duckImg ? DUCK_REG[duckFrameIdx] : dieImg ? DIE_REG[dieFrameIdx] : hurtImg ? HURT_REG[hurtFrameIdx] : SPEED_REG[speedFrameIdx];
+    const im  = duckImg || dieImg || hurtImg || moveImg;
+    const R   = duckImg ? DUCK_REG[duckFrameIdx] : dieImg ? DIE_REG[dieFrameIdx] : hurtImg ? HURT_REG[hurtFrameIdx] : MOVE_REG[moveDir];
     const imW = h * (IMG.cowIdle2.width / IMG.cowIdle2.height);
     const dw  = (imW * IDLE_TUBE_W) / R.tw;
     const dh  = dw * (im.height / im.width);
@@ -7871,12 +7902,17 @@ function rankLog(...args){ if (RANK_DEBUG) console.log("[rank]", ...args); }
    (BAD_NUM etc.) lives server-side; see
    leaderboard-service/src/namePool.js. This is a separate origin from
    the WP site by design (leaderboard-service isn't edge-routed through
-   the same domain) — see leaderboard-service's CORS setup. */
+   the same domain) — see leaderboard-service's CORS setup.
+
+   This is cowabunga-leaderboard-service, NOT the original Stampede/Texas
+   leaderboard-service — same Redis instance, separate GAME_KEY
+   ("cowabunga" vs "waterpark"), so this game's board is a completely
+   distinct dataset (own wplb:cowabunga:* keys) that never mixes with
+   Stampede's real players. Deployed 2026-09-17 alongside the existing
+   service, not by replacing it — see the Railway project
+   stampede-wild-rush-leaderboard, which now hosts both. */
 const Board = (() => {
-  // REPLACE with the deployed Railway service URL once it exists (staging
-  // during local dev, production once tools/deploy.sh rewrites this for
-  // the copy that ships to WordPress — see that script's own comment).
-  const API = "https://REPLACE-WITH-RAILWAY-URL.up.railway.app";
+  const API = "https://cowabunga-leaderboard-service-production.up.railway.app";
   const ME  = "stampede.rider.v1";
   const RANK_RETRY_ATTEMPTS = 2;    // rankOf(): one retry beyond the first try
   const RANK_RETRY_DELAY_MS = 400;  // short enough to stay inside the "calculating" cycle
