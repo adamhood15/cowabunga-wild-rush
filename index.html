@@ -28,6 +28,7 @@
     --red:      #e8432b;   
     --turquoise:#1fb8b8;  
     --purple:   #6a2f9f;  
+    --hud:      #6a2f9f9c;
     /* Bright counterpart to --green, for chips that carry ink text. --green is
        a fill for large dark areas; at 1.5:1 against --ink it cannot hold type. */
     --green-lt: #6ee06e;
@@ -35,34 +36,29 @@
     --ink:      #0a0a0a;
 
     /* Raw r/g/b components (not full color functions) of the two stops every
-       panel-family gradient below is built from, so .panel, the --hud-glow-*
-       chips, AND deathWash()'s canvas gradient (render, JS — read once off
-       these at load rather than hand-copying the numbers) all draw from the
-       SAME two values. --panel-shade-rgb is --navy's own components, spelled
-       out separately because a hex color can't be fed into rgb()'s space
-       syntax.
+       panel-family gradient below is built from, so .panel AND deathWash()'s
+       canvas gradient (render, JS — read once off these at load rather than
+       hand-copying the numbers) both draw from the SAME two values.
+       --panel-shade-rgb is --navy's own components, spelled out separately
+       because a hex color can't be fed into rgb()'s space syntax.
        --panel-glow-a/--panel-shade-a are .panel's OWN peak alphas at each
-       stop — separate from --hud-glow-*'s per-chip alphas below, which are
-       already their own thing at 55/80/90%. deathWash() reads these two as
-       well: it is #overPanel's entire background (see the comment on that
-       rule below), so if it uses any alpha but these, the results card is a
-       visibly different — Adam's report, 2026-09-15: "not as transparent as
-       the others" — shade of the same gradient every OTHER panel shows. */
+       stop. deathWash() reads these two as well: it is #overPanel's entire
+       background (see the comment on that rule below), so if it uses any
+       alpha but these, the results card is a visibly different — Adam's
+       report, 2026-09-15: "not as transparent as the others" — shade of the
+       same gradient every OTHER panel shows.
+       Every HUD chip/card/button (the boards, the mute/pause pair, the
+       how-to-play and title-screen cards, leaderboard rows, the load bar...)
+       used to each pick their own radial-gradient variant of this same pair
+       of stops at a hand-picked opacity (--hud-glow-55/-8/-9, one shared
+       formula at three different alphas) — collapsed 2026-09-17 (Adam) onto
+       the single flat --hud color above instead, transparency already
+       baked into its own alpha channel, since no chip actually needed its
+       own distinct opacity once seen next to the others. */
     --panel-glow-rgb:  73 85 255;
     --panel-shade-rgb: 30 48 72;
     --panel-glow-a:  .99;
     --panel-shade-a: .7;
-
-    /* Every HUD chip/card/button (the boards, the mute/pause pair, the how-to-play
-       and title-screen cards, leaderboard rows, the load bar...) used a flat
-       rgba(30,48,72,X) — the same navy as .panel's own radial-gradient dark stop,
-       but without that gradient's rgb(73 85 255) top-of-frame highlight. Same
-       formula, reused at each spot's existing opacity, so every one of those flat
-       chips now reads as a little window onto the same lit gradient as the panels
-       behind them, rather than a plain dark box sitting on top of it. */
-    --hud-glow-55: radial-gradient(130% 100% at 50% 15%, rgb(var(--panel-glow-rgb) / 55%), rgb(var(--panel-shade-rgb) / 55%));
-    --hud-glow-8:  radial-gradient(130% 100% at 50% 15%, rgb(var(--panel-glow-rgb) / 80%), rgb(var(--panel-shade-rgb) / 80%));
-    --hud-glow-9:  radial-gradient(130% 100% at 50% 15%, rgb(var(--panel-glow-rgb) / 90%), rgb(var(--panel-shade-rgb) / 90%));
 
     /* "Board Wax" button trio — cherry red / turquoise / deep navy — scoped to
        .btn only. Kept separate from --yellow/--orange/--blue-dp rather than
@@ -101,7 +97,7 @@
      screen edge as the figures grow — there is nothing to detect and nothing to
      shrink against. See setFigure(). */
   #hud > *{min-width:0}
-  .board{background:var(--hud-glow-8);border:3px solid var(--ink);border-radius:6px;max-width:100%;height:61px;
+  .board{background:var(--hud);border:3px solid var(--ink);border-radius:6px;max-width:100%;height:61px;
          padding:7px 12px 9px;box-shadow:4px 4px 0 var(--ink)}
   .board .board__lbl{display:block;font-size:9px;letter-spacing:.2em;color:var(--sky-low);margin-bottom:3px}
   /* 25px is the starting point setFigure()/applyFit() shrinks from, same as
@@ -282,7 +278,7 @@
             height:48px;
             transform:translateX(-50%);
             display:flex;align-items:center;gap:4px;
-            padding:6px 10px;background:var(--hud-glow-8);
+            padding:6px 10px;background:var(--hud);
             border:3px solid var(--ink);border-radius:6px;
             box-shadow:3px 3px 0 var(--ink);
             width:min(320px,calc(100% - (env(safe-area-inset-left,0px) +
@@ -487,7 +483,7 @@
             width:100%;max-width:560px}
   .ctl{flex:1 1 0;min-width:0;max-width:180px;display:flex;flex-direction:column;
        align-items:center;gap:6px;padding:14px 8px 12px;border-radius:8px;
-       background:var(--hud-glow-55);border:3px solid var(--ink);
+       background:var(--hud);border:3px solid var(--ink);
        box-shadow:4px 4px 0 var(--ink)}
   .ctl .cap{display:flex;align-items:center;justify-content:center;
             min-width:52px;height:40px;padding:0 10px;border-radius:6px;
@@ -668,7 +664,7 @@
   #lbHead{font-size:9px;letter-spacing:.2em;text-transform:uppercase;font-family:var(--display-card);
           color:var(--yellow);opacity:.8;padding:0 12px 6px;-webkit-text-stroke:1px var(--ink);paint-order:stroke fill}
   #lbHead span:last-child,.lb-row .lb-row__score{text-align:right}
-  .lb-row{background:var(--hud-glow-9);border:3px solid var(--ink);border-radius:5px;
+  .lb-row{background:var(--hud);border:3px solid var(--ink);border-radius:5px;
          padding:9px 12px 10px;margin-bottom:7px;box-shadow:3px 3px 0 var(--ink)}
   .lb-row .lb-row__pos{font-family:var(--display);font-size:17px;color:var(--sky-low)}
   .lb-row .lb-row__name{font-size:14px;letter-spacing:.04em;color:var(--white);
@@ -786,7 +782,7 @@
   #hazards,#powerups{margin-top:16px;display:grid;gap:12px;
            grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
   .haz{display:flex;flex-direction:column;align-items:center;gap:6px;
-       padding:14px 8px 12px;border-radius:8px;background:var(--hud-glow-55);
+       padding:14px 8px 12px;border-radius:8px;background:var(--hud);
        border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
   .haz img,.haz svg{width:100%;max-width:88px;height:62px;object-fit:contain;
                     filter:drop-shadow(0 3px 0 rgba(10,10,10,.28))}
@@ -811,7 +807,7 @@
   .hud-guide{margin-top:16px;display:grid;gap:12px;
             grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
   .hud-guide__item{display:flex;flex-direction:column;align-items:center;gap:6px;
-          padding:14px 8px 12px;border-radius:8px;background:var(--hud-glow-55);
+          padding:14px 8px 12px;border-radius:8px;background:var(--hud);
           border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
   .hud-guide__item b{font-family:var(--copy);transform:skewX(-7deg);
             font-size:17px;letter-spacing:.04em;color:var(--white)}
@@ -844,7 +840,7 @@
      normal flow rather than pinned to a screen corner, since this is an
      illustration sitting in a card, not a real button. */
   .hud-guide__icon{width:48px;height:48px;flex:none;display:flex;align-items:center;
-          justify-content:center;background:var(--hud-glow-8);
+          justify-content:center;background:var(--hud);
           border:3px solid var(--ink);border-radius:5px;color:var(--sky-low);
           box-shadow:3px 3px 0 var(--ink)}
   .hud-guide__icon svg{width:23px;height:23px;display:block;fill:currentColor}
@@ -859,7 +855,7 @@
      canvas — same sprites, same lit/boosted rule, just not position:absolute
      about it. */
   .hud-guide__speedbar{display:flex;align-items:center;gap:4px;width:100%;max-width:280px;
-              box-sizing:border-box;padding:6px 10px;background:var(--hud-glow-8);
+              box-sizing:border-box;padding:6px 10px;background:var(--hud);
               border:3px solid var(--ink);border-radius:6px;box-shadow:3px 3px 0 var(--ink)}
   .hud-guide__speedbar i{flex:1 1 0;min-width:0;aspect-ratio:185/161;
                 background:no-repeat center/contain url("assets/sprites/hud/speed-indicator/speed-indicator_02.png")}
@@ -914,7 +910,7 @@
      left only 60px of content — less than "Breakers" needs at 9px/.2em, let
      alone the New best pill. It relaxes back to the roomier 20px by tablet. */
   .stat-row > div{padding:12px clamp(10px,3.4vw,20px) 13px;
-                 background:var(--hud-glow-9);flex:1 1 0;min-width:0}
+                 background:var(--hud);flex:1 1 0;min-width:0}
   /* min-width:0 is load-bearing. A flex item defaults to min-width:auto, which
      refuses to shrink below its content, so a long figure does not compress the
      cell — it bursts the whole row out past both screen edges. Measured before
@@ -1167,7 +1163,7 @@
           bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
           width:48px;height:48px;padding:0;
           align-items:center;justify-content:center;
-          background:var(--hud-glow-8);border:3px solid var(--ink);color:var(--sky-low);
+          background:var(--hud);border:3px solid var(--ink);color:var(--sky-low);
           border-radius:5px;box-shadow:3px 3px 0 var(--ink)}
   .hudbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
   .hudbtn svg{width:23px;height:23px;display:block;fill:currentColor}
@@ -1226,7 +1222,7 @@
   #load.load--off{opacity:0}
   #load.load--gone{display:none}
   #loadTrack{position:relative;width:min(64vw,300px);height:18px;border-radius:9px;
-             background:var(--hud-glow-55);border:3px solid var(--ink);
+             background:var(--hud);border:3px solid var(--ink);
              box-shadow:4px 4px 0 var(--ink)}
   /* inset:0 then right:auto — the fill is pinned left and grows rightward */
   #loadFill{position:absolute;inset:0;right:auto;width:calc(var(--p,0) * 100%);
