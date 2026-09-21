@@ -136,22 +136,14 @@ const SETS = [
       { key: "die_03", src: "assets/sprites/cowabunga-sprites/die/die_03.png" },
     ],
   },
-  // SPEED_BOOST deliberately excluded (2026-09-17): Adam's explicit call
-  // was to pull these frames in at their own extracted opaque-bbox sizes
-  // and NOT standardize them against idle_01 or against each other (see
-  // SPEED_BBOX's own comment in index.html) -- there is no "SPEED_REG"
-  // tw/cx/by anymore for this check's idlePinned formula to read, and
-  // baselining this set would just flag success as failure by design.
-  {
-    name: "SEASON_PASS",
-    kind: "seasonPass",
-    mask: "blue",
-    regName: "SEASONPASS_REG",
-    frames: Array.from({ length: 11 }, (_, i) => {
-      const n = String(i + 1).padStart(2, "0");
-      return { key: "season-pass_" + n, src: "assets/sprites/cowabunga-sprites/season-pass/season-pass_" + n + ".png" };
-    }),
-  },
+  // SPEED_BOOST and SEASON_PASS deliberately excluded (2026-09-17 and
+  // 2026-09-21 respectively): Adam's explicit call for both was to pull
+  // these frames in at their own extracted opaque-bbox sizes and NOT
+  // standardize them against idle_01 or against each other (see
+  // SPEED_BBOX's and SEASONPASS_BBOX's own comments in index.html) --
+  // there is no "SPEED_REG"/"SEASONPASS_REG" tw/cx/by anymore for this
+  // check's idlePinned/seasonPass formulas to read, and baselining either
+  // set would just flag success as failure by design.
 ];
 
 // In-page helper: loads an image by URL, applies the named mask strategy,

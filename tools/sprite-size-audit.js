@@ -17,25 +17,33 @@
 // character's/icon's actual size.
 //
 //   RIDER ANIMATION FRAMES (drawRider()):
-//     Tube-registered sets, old typhoon tube (SEASONPASS_REG):
-//     dw = (w * RIDER_TUBE_W) / R.tw; k = dw / img.width.
-//     Tube-registered, cowabunga tube (DUCK_REG/DIE_REG/HURT_REG/SPEED_REG):
-//     same shape, but pinned to IDLE's own tube instead of the old typhoon
-//     one -- dw = (imW_idle * IDLE_TUBE_W) / R.tw, imW_idle = h *
+//     Tube-registered, cowabunga tube (DUCK_REG/DIE_REG/HURT_REG):
+//     dw = (imW_idle * IDLE_TUBE_W) / R.tw, imW_idle = h *
 //     (cowIdle2.width / cowIdle2.height); k = dw / img.width. See DUCK_REG's
 //     own comment in index.html for why (RIDER_TUBE_W belongs to a
 //     different, unrelated tube design). DIE_REG and HURT_REG joined
 //     2026-09-14, same reasoning -- HURT_REG replaced an initial own-aspect
 //     attempt that this very audit caught making the cow change apparent
 //     size frame to frame (see HURT and DIE's own comment in index.html for
-//     the numbers). SPEED_REG joined the same day, on its FOURTH attempt --
-//     see its own comment in index.html for why sqrt(area), a bbox-height
-//     pin, own-aspect, and a "waist" scan (fed into this same tube-width
+//     the numbers).
+//     Cropped-own-aspect sets (SPEED_BBOX/SEASONPASS_BBOX): k = h / B.h,
+//     dw = B.w * k, applied to just that frame's own real opaque bbox
+//     (native pixels, off the alpha channel) rather than any shared
+//     registration constant -- Adam's explicit call (2026-09-17 for
+//     speed-boost, 2026-09-21 for season-pass): "pull the frames in at their
+//     extracted sizes and not standardize the sizes at all". SPEED_BBOX
+//     joined first, on its FOURTH registration attempt -- see its own
+//     comment in index.html for why sqrt(area), a bbox-height pin,
+//     own-aspect, and a "waist" scan (fed into the cowabunga tube-width
 //     formula, which is what actually caused the "cow is huge" bug Adam
-//     reported) all got it wrong first. The ring here IS isolatable by the
-//     same teal-color mask duck/hurt/idle already use -- a plain
-//     color-masked bbox restricted to the y-band it sits in on every frame
-//     (0.45h-0.85h) recovers it cleanly.
+//     reported) all got it wrong first. SEASONPASS_BBOX replaced
+//     SEASONPASS_REG (the old typhoon-tube-pinned scheme) the same way, once
+//     the same symptom -- the cow visibly shrinking and growing through the
+//     animation -- turned up there too. Because there's no shared target,
+//     apparentArea below is EXPECTED to vary across each set's own frames
+//     (a splash/card bloom growing the frame, not the cow) -- see
+//     idlePinnedSets below for the deviation-flag caveat that applies to
+//     both.
 //     Area-registered sets (FLIP_REG/SPIN_REG): k = (h / IMG.rider.height) *
 //     R.s, chosen by construction so apparent area should already come out
 //     flat -- this audit is what proves that, rather than assuming the
@@ -111,11 +119,8 @@ async function auditRiderFrames(session) {
   const result = await evaluate(session, `
     (async () => {
       ${MEASURE_HELPER}
-      const h = 1, w = h * (IMG.rider.width / IMG.rider.height);
+      const h = 1;
 
-      const tubeSets = {
-        SEASONPASS_REG: { reg: SEASONPASS_REG, keys: ["sp0","sp1","sp2","sp3","sp4","sp5","sp6","sp7","sp8","sp9","sp10"] },
-      };
       const areaSets = {
         FLIP_REG:  { reg: FLIP_REG,  keys: ["flip0","flip1","flip2","flip3"] },
         SPIN_REG:  { reg: SPIN_REG,  keys: ["spin0","spin1","spin2","spin3"] },
@@ -125,16 +130,6 @@ async function auditRiderFrames(session) {
       const OWN_ASPECT_KEYS = ["cowIdle1","cowIdle2","eat0","eat1","eat2","eat3","mvL","mvR"];
 
       const out = {};
-      for (const [name, { reg, keys }] of Object.entries(tubeSets)){
-        out[name] = keys.map((key, i) => {
-          const img = IMG[key], R = reg[i];
-          const dw = (w * RIDER_TUBE_W) / R.tw;
-          const k = dw / img.width;
-          const m = measure(img, 0, 0, img.width, img.height);
-          return { key, nativeW: img.width, nativeH: img.height, nativeOpaquePx: m.opaquePx,
-                    k, apparentArea: k * k * m.opaquePx, tw: R.tw };
-        });
-      }
       for (const [name, { reg, keys }] of Object.entries(areaSets)){
         out[name] = keys.map((key, i) => {
           const img = IMG[key], R = reg[i];
@@ -155,28 +150,16 @@ async function auditRiderFrames(session) {
       // own comment) -- so an internal duck0-vs-duck1-vs-duck2 deviation
       // flag below is expected, not a bug. The number worth checking here is
       // duck0 (barely tucked) against OWN_ASPECT's cowIdle rows just below
-      // -- those two SHOULD read as close to the same size. die0/1/2,
-      // hurt0/1/2, and speed0-3, by contrast, SHOULD read flat across each
-      // set's own frames (same reaction-not-resize case as seasonPass) --
-      // hurt0/1/2 moved here 2026-09-14 after this exact audit, run against
-      // the original own-aspect draw, flagged a ~20% apparent-area spread
-      // between them (see HURT and DIE's own comment in index.html);
-      // speed0-3 landed here the same day on its THIRD attempt, after both
-      // sqrt(area) and a bbox-height pin (each normalizing against a
-      // splash-contaminated measurement) still let the cow shrink as the
-      // splash grew (see SPEED BOOST's own comment in index.html). Unlike
-      // hurt/die, expect speed0-3 to get flagged below too, same as duck --
-      // not a bug: k stays flat (tw barely moves, ~2%) but the RAW
-      // opaque-pixel count this metric multiplies by k^2 keeps growing with
-      // the splash bloom by design, so apparentArea rises even though the
-      // cow itself doesn't. The number that actually matters for this set
-      // is tw (reported per-row below) staying tight across speed0-3, which
-      // tools/speed-frame-measure.js already checks directly.
+      // -- those two SHOULD read as close to the same size. die0/1/2 and
+      // hurt0/1/2, by contrast, SHOULD read flat across each set's own
+      // frames -- hurt0/1/2 moved here 2026-09-14 after this exact audit,
+      // run against the original own-aspect draw, flagged a ~20%
+      // apparent-area spread between them (see HURT and DIE's own comment
+      // in index.html).
       const idlePinnedSets = {
         DUCK_REG:  { reg: DUCK_REG,  keys: ["duck0","duck1","duck2"] },
         DIE_REG:   { reg: DIE_REG,   keys: ["die0","die1","die2"] },
         HURT_REG:  { reg: HURT_REG,  keys: ["hurt0","hurt1","hurt2"] },
-        SPEED_REG: { reg: SPEED_REG, keys: ["speed0","speed1","speed2","speed3"] },
       };
       for (const [name, { reg, keys }] of Object.entries(idlePinnedSets)){
         out[name] = keys.map((key, i) => {
@@ -187,6 +170,27 @@ async function auditRiderFrames(session) {
           const m = measure(img, 0, 0, img.width, img.height);
           return { key, nativeW: img.width, nativeH: img.height, nativeOpaquePx: m.opaquePx,
                     k, apparentArea: k * k * m.opaquePx, tw: R.tw };
+        });
+      }
+      // Cropped-own-aspect sets (see this file's header comment): each
+      // frame's own real opaque bbox drawn at k = h / B.h, no shared
+      // registration constant -- so, same as duck above, a real
+      // frame-to-frame apparentArea spread here is EXPECTED (a splash/card
+      // bloom growing the crop region, not the cow) and not itself a bug.
+      // What matters is that this reads roughly flat against OWN_ASPECT's
+      // cowIdle rows -- the character's own on-screen height, not the crop's.
+      const croppedBboxSets = {
+        SPEED_BBOX:      { bbox: SPEED_BBOX,      keys: ["speed0","speed1","speed2","speed3"] },
+        SEASONPASS_BBOX: { bbox: SEASONPASS_BBOX, keys: ["sp0","sp1","sp2","sp3","sp4","sp5","sp6","sp7","sp8","sp9","sp10"] },
+      };
+      for (const [name, { bbox, keys }] of Object.entries(croppedBboxSets)){
+        out[name] = keys.map((key, i) => {
+          const img = IMG[key], B = bbox[i];
+          const k = h / B.h;
+          const m = measure(img, B.x, B.y, B.w, B.h);
+          return { key, nativeW: img.width, nativeH: img.height, nativeOpaquePx: m.opaquePx,
+                    bboxW: B.w, bboxH: B.h,
+                    k, apparentArea: k * k * m.opaquePx };
         });
       }
       out.OWN_ASPECT = OWN_ASPECT_KEYS.map((key) => {

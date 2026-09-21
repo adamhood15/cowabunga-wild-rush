@@ -3,15 +3,16 @@
 // DevTools protocol:
 // - grabbing it freezes the world (seasonPassIntroT) rather than starting the
 //   mechanical effect immediately -- travelled/speed/collisions all hold
-//   still while the reveal animation (sp0-sp5) steps through
+//   still while the reveal animation (sp0-sp4) steps through
 // - the freeze ends and the world resumes exactly when seasonPassIntroT hits
 //   0, at which point seasonPassT (the real effect) starts, its music takes
-//   the channel, and the rider holds on sp5 (season-pass_06)
+//   the channel, and the rider holds on sp6 (season-pass_07) -- sp5
+//   (season-pass_06) is deliberately never shown (Adam's call, 2026-09-21)
 // - only NOW is the player actually invincible / faster / magnetic -- a hit
 //   during the frozen reveal would be a bug (nothing should be able to touch
 //   the rider while the world is frozen anyway, but the guard is checked)
 // - it only ever spawns once per run
-// - the outro (sp6-sp10) plays in the last SEASONPASS_OUTRO_DUR of seasonPassT
+// - the outro (sp7-sp10) plays in the last SEASONPASS_OUTRO_DUR of seasonPassT
 //   and the whole effect + its music end together
 // - the outro is ALSO frozen, same as the intro reveal -- travelled/collisions
 //   hold still through it, but seasonPassT keeps ticking down inside the
@@ -80,7 +81,7 @@ async function main() {
 
     // --- Reveal animation steps through frames during the freeze ---
     const introFrame = await evaluate(session, `seasonPassFrame()`);
-    allPass &= ok("reveal animation is mid-way through 01-06 partway into the intro", introFrame >= 1 && introFrame <= 4, introFrame);
+    allPass &= ok("reveal animation is mid-way through 01-05 partway into the intro", introFrame >= 1 && introFrame <= 4, introFrame);
 
     // --- A hazard during the freeze can't touch the rider (nothing collides -- collision loop doesn't run) ---
     const duringFreeze = await evaluate(session, `
@@ -93,7 +94,7 @@ async function main() {
     `);
     allPass &= ok("no life lost during the frozen reveal (collision loop doesn't run)", duringFreeze.livesAfter === duringFreeze.livesBefore, duringFreeze);
 
-    // --- Run the intro out: world resumes, effect + music start, frame holds on index 5 ---
+    // --- Run the intro out: world resumes, effect + music start, frame holds on index 6 ---
     const resumed = await evaluate(session, `
       (() => {
         while (seasonPassIntroT > 0.02) update(0.016);
@@ -102,7 +103,7 @@ async function main() {
       })()
     `);
     allPass &= ok("world resumes into the effect once the intro ends", resumed.seasonPassIntroT === 0 && resumed.seasonPassT > 8.9, resumed);
-    allPass &= ok("rider holds on frame index 5 (season-pass_06) right after resuming", resumed.frame === 5, resumed);
+    allPass &= ok("rider holds on frame index 6 (season-pass_07) right after resuming", resumed.frame === 6, resumed);
 
     // --- Now travelled DOES advance, and speed climbs toward SEASONPASS_SPEED_MULT x maxSpeed ---
     const speedState = await evaluate(session, `

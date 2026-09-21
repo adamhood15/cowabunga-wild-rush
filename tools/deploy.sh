@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Deploys the plugin + a WordPress-ready copy of the game to Kinsta, over
-# the `typhoontexasnew-staging` or `typhoontexasnew-production` SSH alias
-# (see AGENTS.md / ~/.ssh/config on this machine). Target defaults to
-# staging — pass "production" as the first argument to deploy live.
+# the `cowabungavegasnew-staging` SSH alias (see AGENTS.md / ~/.ssh/config
+# on this machine). Target defaults to staging; "production" isn't wired up
+# yet — see the case block below.
 #
 # The leaderboard API now lives on Railway (leaderboard-service/), not
 # WordPress — see /Users/Adam.Hood/.claude/plans/lazy-rolling-matsumoto.md
@@ -30,14 +30,13 @@ cd "$(dirname "$0")/.."
 TARGET="${1:-staging}"
 case "$TARGET" in
   staging)
-    REMOTE_ALIAS="typhoontexasnew-staging"
-    REMOTE_WP_PATH="/www/typhoontexasnew_475/public"
-    GAME_URL="https://env-typhoontexasnew-dev.kinsta.cloud/stampede-wild-rush/play/"
+    REMOTE_ALIAS="cowabungavegasnew-staging"
+    REMOTE_WP_PATH="/www/cowabungavegasnew_914/public"
+    GAME_URL="https://env-cowabungavegasnew-cbvdev.kinsta.cloud/cowabunga-wild-rush/play/"
     ;;
   production)
-    REMOTE_ALIAS="typhoontexasnew-production"
-    REMOTE_WP_PATH="/www/typhoontexasnew_475/public"
-    GAME_URL="https://typhoontexas.com/stampede-wild-rush/play/"
+    echo "ERROR: production target isn't configured yet — staging needs to be confirmed working first. Add the production SSH alias/path/URL here once that's ready." >&2
+    exit 1
     ;;
   *)
     echo "ERROR: unknown target '${TARGET}' — expected 'staging' or 'production'." >&2

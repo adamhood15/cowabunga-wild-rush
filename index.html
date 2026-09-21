@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Cowabunga: Wild Rush | Typhoon Texas</title>
-<link rel="icon" href="https://typhoontexas.com/wp-content/uploads/2023/02/cropped-typhoon-texas-logo-white-gradient-bg-32x32.jpg" sizes="32x32" />
-<link rel="icon" href="https://typhoontexas.com/wp-content/uploads/2023/02/cropped-typhoon-texas-logo-white-gradient-bg-192x192.jpg" sizes="192x192" />
-<link rel="apple-touch-icon" href="https://typhoontexas.com/wp-content/uploads/2023/02/cropped-typhoon-texas-logo-white-gradient-bg-180x180.jpg" />
+<link rel="icon" href="https://cowabungavegas.com/wp-content/uploads/2023/02/cropped-cowabunga-vegas-logo-square-fill-32x32.jpg" sizes="32x32" />
+<link rel="icon" href="https://cowabungavegas.com/wp-content/uploads/2023/02/cropped-cowabunga-vegas-logo-square-fill-192x192.jpg" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://cowabungavegas.com/wp-content/uploads/2023/02/cropped-cowabunga-vegas-logo-square-fill-180x180.jpg" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Grandstander:wght@700;800&family=Quicksand:wght@500;600&display=swap">
 <style>
@@ -1843,9 +1843,9 @@ const ART = {
   whirlpool: "assets/sprites/power-ups/whirlpool.png",
   seasonPass: "assets/sprites/power-ups/season-pass.png",
 
-  /* Season Pass's own rider pose, tube-registered against RIDER_TUBE_W like
-     die (see SEASONPASS_REG) — eleven frames, the cowabunga-sprites cow
-     re-export (2026-09-15, replacing the old typhoon-sprites set): hyping up
+  /* Season Pass's own rider pose, cropped own-aspect off each frame's real
+     opaque bbox (see SEASONPASS_BBOX) — eleven frames, the cowabunga-sprites
+     cow re-export (2026-09-15, replacing the old typhoon-sprites set): hyping up
      over the pass (01-03), settling into the tube with it (04-06), blissed
      out (06, where the effect HOLDS for the bulk of its run), then winding
      up and tossing the card away (07-11) as the effect runs out. */
@@ -6888,68 +6888,66 @@ const quadIdx = (t) => t < 0.25 ? 0 : t < 0.5 ? 1 : t < 0.75 ? 2 : 3;
    SEASON PASS
    Eleven frames (the cowabunga-sprites cow, re-exported 2026-09-15,
    replacing the old typhoon-sprites rider set — same 9-frame slot count
-   until then), tube-registered against RIDER_TUBE_W like die (measured off
-   the alpha — tools/season-pass-measure.js — same as every other set here;
-   re-measure if this art is re-exported). The new art's tube ring is BLUE,
-   not the old set's orange, and several frames hold the rewards card up
-   near the top of the canvas — its own little logo is blue too, so the
-   measure tool keeps only the LARGEST connected blue blob (the ring) rather
-   than a naive color bbox, which the held card would otherwise blow out.
-   See the tool's own comment for the full reasoning.
+   until then).
    Reads seasonPassIntroT/seasonPassT directly rather than its own timer,
    same reasoning as the speed-boost frames reading boostT — the two phase
    clocks already drive the whole reveal/effect, so the animation just rides
    them instead of needing a third clock to stay in sync with either.
 
    The arc: hyping up over the pass (01-03) and settling into the tube with
-   it (04-06) during the FROZEN reveal (seasonPassIntroT, paced to
+   it (04-05) during the FROZEN reveal (seasonPassIntroT, paced to
    SEASONPASS_INTRO_DUR — see its own comment for why that's tied to the
-   stinger's real length) — held on 06, blissed out, once the world resumes
+   stinger's real length) — held on 07, still settled, once the world resumes
    and for the bulk of the resumed effect (seasonPassT) — then raising the
-   card again, winding up, and tossing it away, ending empty-handed (07-11)
+   card again, winding up, and tossing it away, ending empty-handed (08-11)
    as seasonPassT runs out, landing on the last frame at the exact instant
-   it hits 0. */
-const SEASONPASS_REG = [
-  { tw: 0.9808, cx: 0.5041, by: 0.9912 },   // 01, reveals the card
-  { tw: 0.9811, cx: 0.5068, by: 0.9941 },   // 02, waves it
-  { tw: 0.9015, cx: 0.5468, by: 0.9971 },   // 03, big celebration
-  /* 04, 06, and 11 previously had tw hand-curve-fit to force
-     tools/sprite-size-audit.js's opaque-pixel apparent-area metric to match
-     the other 8 frames' average, discarding the real measured tube-ring
-     width from tools/season-pass-measure.js in the process. That was
-     backwards: the tw-pinned draw formula (dw = w*RIDER_TUBE_W/R.tw) already
-     makes the RING's own rendered size immune to how much a frame's canvas
-     is padded by decoration — replacing the real ring measurement with a
-     value reverse-solved from apparent area (which DOES include decoration:
-     04's sparkle burst, 11's motion-line-free canvas) doesn't fix a real
-     inconsistency, it introduces a genuine scale error on exactly the three
-     frames it touches. 06 is the HOLD frame, on screen for the bulk of the
-     effect's run, so this was the most visible source of Adam's "the player
-     shrinks and grows" report (2026-09-17) — confirmed with a new tool,
-     tools/rider-visual-size-check.js, which measures apparent CHARACTER
-     height (head-top to tube-base, via a narrow vertical strip scan
-     centered on cx) rather than raw opaque area, precisely because area
-     conflates decoration with character size. Restored to the real
-     measured tw/cx/by below (re-run tools/season-pass-measure.js and
-     re-verify with rider-visual-size-check.js if this art is re-exported —
-     do not re-derive tw from apparent area again). */
-  { tw: 0.8945, cx: 0.4925, by: 0.9968 },   // 04, peak celebration
-  { tw: 0.9856, cx: 0.4986, by: 0.9968 },   // 05, thumbs up
-  { tw: 0.9860, cx: 0.4958, by: 0.9968 },   // 06, blissed out — the hold frame
-  { tw: 0.8886, cx: 0.4496, by: 0.9934 },   // 07, still settled
-  { tw: 0.9861, cx: 0.4958, by: 0.9968 },   // 08, raises the card again
-  { tw: 0.9510, cx: 0.5116, by: 0.9969 },   // 09, raises it further
-  { tw: 0.8376, cx: 0.5749, by: 0.9871 },   // 10, winds up and throws
-  { tw: 0.9845, cx: 0.4948, by: 0.9935 },   // 11, empty-handed, calm
+   it hits 0. 06 is deliberately never shown (Adam's call, 2026-09-21) — see
+   its own line in SEASONPASS_BBOX below.
+
+   Used to be tube-registered against RIDER_TUBE_W (SEASONPASS_REG, tw/cx/by
+   measured off the tube ring via tools/season-pass-measure.js), the same
+   shape as DIE_REG/DUCK_REG. That pinned the RING to a fixed size across
+   frames — but this art's canvas padding (sparkle bursts, motion lines,
+   how high the card is held) isn't uniform frame to frame, so pinning the
+   ring left the CHARACTER itself scaling to compensate. Adam reported the
+   cow visibly shrinking and growing through the animation (2026-09-21),
+   worst on the HOLD frame (on screen for the bulk of the effect's run) —
+   the same failure shape SPEED_BBOX below was built to fix for speed-boost,
+   on the same "the player shrinks and grows" complaint. Adam's fix there
+   ("pull the frames in at their extracted sizes and not standardize the
+   sizes at all") applies the same way here: SEASONPASS_BBOX is just each
+   frame's own real opaque bounding box in native pixels (measured directly
+   off the alpha channel, tools/season-pass-frame-measure.js), drawn
+   cropped-own-aspect — no registration constant, no cross-frame target, no
+   per-frame hand-tuned scale factor. Whatever size each frame's own
+   extracted content implies relative to the others is what renders.
+   Re-measure with that tool if this art is re-exported. */
+const SEASONPASS_BBOX = [
+  { x: 5, y: 7, w: 358, h: 331 },    // 01, reveals the card
+  { x: 0, y: 7, w: 370, h: 332 },    // 02, waves it
+  { x: 5, y: 5, w: 401, h: 335 },    // 03, big celebration
+  { x: 4, y: 1, w: 393, h: 314 },    // 04, peak celebration
+  { x: 2, y: 8, w: 342, h: 303 },    // 05, thumbs up
+  { x: 1, y: 38, w: 353, h: 273 },   // 06, blissed out — never shown, per
+                                     // Adam (2026-09-21); kept in this array
+                                     // so every index still lines up with
+                                     // its own season-pass_0N.png file
+  { x: 2, y: 1, w: 372, h: 303 },    // 07, still settled — the hold frame
+  { x: 1, y: 0, w: 356, h: 310 },    // 08, raises the card again
+  { x: 6, y: 1, w: 378, h: 317 },    // 09, raises it further
+  { x: 7, y: 1, w: 465, h: 307 },    // 10, winds up and throws
+  { x: 1, y: 28, w: 383, h: 278 },   // 11, empty-handed, calm
 ];
-const SEASONPASS_INTRO_FRAMES    = 6;   // 01-06, played out over the freeze
+const SEASONPASS_INTRO_FRAMES    = 5;   // 01-05, played out over the freeze —
+                                        // stops short of 06 so the hold-frame
+                                        // handoff below never touches it
 const SEASONPASS_INTRO_FRAME_DUR = SEASONPASS_INTRO_DUR / SEASONPASS_INTRO_FRAMES;
 const SEASONPASS_OUTRO_DUR       = 1.8;   // the last slice of SEASONPASS_DUR
-                                          // spent on 07-11, five frames —
+                                          // spent on 08-11, four frames —
                                           // slower per frame than the intro
-                                          // (0.36s vs 0.3s), a deliberate,
+                                          // (0.45s vs 0.36s), a deliberate,
                                           // readable send-off, not a snap cut
-const SEASONPASS_OUTRO_FRAME_DUR = SEASONPASS_OUTRO_DUR / 5;
+const SEASONPASS_OUTRO_FRAME_DUR = SEASONPASS_OUTRO_DUR / 4;
 function seasonPassFrame(){
   if (seasonPassIntroT > 0){
     const introElapsed = SEASONPASS_INTRO_DUR - seasonPassIntroT;
@@ -6959,8 +6957,8 @@ function seasonPassFrame(){
   const elapsed = SEASONPASS_DUR - seasonPassT;
   const outroStart = SEASONPASS_DUR - SEASONPASS_OUTRO_DUR;
   if (elapsed > outroStart)
-    return Math.min(10, 6 + Math.floor((elapsed - outroStart) / SEASONPASS_OUTRO_FRAME_DUR));
-  return 5;   // held on season-pass_06 for the whole middle stretch
+    return Math.min(10, 7 + Math.floor((elapsed - outroStart) / SEASONPASS_OUTRO_FRAME_DUR));
+  return 6;   // held on season-pass_07 for the whole middle stretch
 }
 
 /* ------------------------------------------------------------------
@@ -7296,16 +7294,18 @@ function drawRider(){
     const tby = (IDLE_TUBE_BY - 0.9) * h;          // and base, in local coords
     ctx.drawImage(im, tcx - R.cx * dw, tby - R.by * dh, dw, dh);
   } else if (seasonPassImg){
-    // Still tube-pinned against the old typhoon-rider.png tube — Season
-    // Pass hasn't been re-exported to the cowabunga badge art yet (unlike
-    // duck/hurt/die above), so RIDER_TUBE_W/CX/BY is still the right
-    // reference for it.
-    const R   = SEASONPASS_REG[seasonPassFrameIdx];
-    const dw  = (w * RIDER_TUBE_W) / R.tw;
-    const dh  = dw * (seasonPassImg.height / seasonPassImg.width);
-    const tcx = (RIDER_TUBE_CX - 0.5) * w;         // resting tube's centre and
-    const tby = (RIDER_TUBE_BY - 0.88) * h;        // base, in local coords
-    ctx.drawImage(seasonPassImg, tcx - R.cx * dw, tby - R.by * dh, dw, dh);
+    // Cropped own-aspect, same as speedImg above: draws only
+    // SEASONPASS_BBOX's own rectangle out of the canvas (drawImage's 9-arg
+    // source-rect form), mapping THAT crop's own height to `h` — no
+    // registration constant, no cross-frame target, no per-frame
+    // hand-tuned scale factor. See SEASONPASS_BBOX's own comment for why
+    // this replaced the old tube-pinned draw. Anchored at the same 0.9
+    // baseline as speedImg/the cowabunga tube family (this art is the same
+    // cowabunga-sprites cow), not the old typhoon-rider 0.88 the tube-pinned
+    // version inherited.
+    const B  = SEASONPASS_BBOX[seasonPassFrameIdx];
+    const bw = B.w * (h / B.h), bh = h;
+    ctx.drawImage(seasonPassImg, B.x, B.y, B.w, B.h, -bw*sx/2, -bh*sy*0.9, bw*sx, bh*sy);
   } else {
     ctx.drawImage(img, -w*sx/2, -h*sy*0.88, w*sx, h*sy);
   }

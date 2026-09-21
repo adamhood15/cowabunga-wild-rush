@@ -132,7 +132,7 @@ ranked below the whirlpool spin and eat, and any future *auto-triggered,
 interruptible* power-up animation belongs in that same low cluster — it's the
 most frequent of the effects (every tunnel plus every Speed Boost grab), so
 it's the one that steps aside, same logic as the spin stepping aside for
-jump/duck. Season Pass (`seasonPassT`/`SEASONPASS_REG`/`seasonPassFrame`) is
+jump/duck. Season Pass (`seasonPassT`/`SEASONPASS_BBOX`/`seasonPassFrame`) is
 the one exception, ranked just below hurt instead: Adam's spec was for it to
 play "throughout the entirety of the power-up," not step aside for a jump or
 duck — and since `hitRider()` fully no-ops while it's active, it can never
@@ -141,7 +141,7 @@ statement of intent.
 
 **Sprite registration constants were measured off the PNG alpha channels**,
 not guessed — `RIDER_CX/CY`, `RIDER_TUBE_*`, `FLIP_REG`, `MOVE_REG`,
-`DUCK_REG`, `DIE_REG`, `HURT_REG`, `SPEED_REG`, `SPIN_REG`, `SEASONPASS_REG`,
+`DUCK_REG`, `DIE_REG`, `HURT_REG`, `SPEED_REG`, `SPIN_REG`,
 `PIG_RING_*`, `PIG_REG`. Idle, eat, and move are cow-in-a-tube own-aspect
 art instead — no registration constant, just a tight 0%-padded crop to each
 PNG's own opaque bbox. `SPEED_REG` took three tries to land on a
@@ -152,14 +152,20 @@ in a way that rules out `DUCK_REG`'s own flood-fill approach) — see its own
 entry below for the two earlier, wrong attempts (sqrt-area, then a
 bbox-height pin, then briefly own-aspect off native canvas height, each of
 which either let the cow shrink as the splash grew or rendered it at the
-wrong absolute size). **If a sprite is replaced or
-re-encoded, re-measure them** — `tools/season-pass-measure.js` is the
-headless-canvas probe used for `SEASONPASS_REG` specifically (locates the
-tube by its orange color within each frame's own alpha bbox, same tw/cx/by
-shape as every other tube-registered set); adapt it rather than re-deriving
-the approach from scratch for the next animated power-up. `FLIP_REG.s` and `MOVE_REG.tw` are `sqrt(area)` ratios against the
-*resting* sprite, so re-exporting `typhoon-rider.png` alone invalidates the
-whole set.
+wrong absolute size). That chase ended with Adam's call to stop normalizing
+this set entirely: `SPEED_BBOX` (index.html) draws each frame cropped to its
+own real opaque bbox, at whatever size that implies, no shared target at all
+— `SEASONPASS_REG` was later replaced the same way (`SEASONPASS_BBOX`,
+2026-09-21) once the same "shrinks and grows" symptom showed up there too,
+measured via `tools/season-pass-frame-measure.js`. **If a sprite is replaced
+or re-encoded, re-measure them** — `tools/season-pass-measure.js` remains
+the probe for anything still tube-registered against this art's ring (locates
+the tube by color within each frame's own alpha bbox, same tw/cx/by shape as
+every other tube-registered set); adapt it, or the bbox-only
+`season-pass-frame-measure.js`, rather than re-deriving either approach from
+scratch for the next animated power-up. `FLIP_REG.s` and `MOVE_REG.tw` are
+`sqrt(area)` ratios against the *resting* sprite, so re-exporting
+`typhoon-rider.png` alone invalidates the whole set.
 
 Pick the handle to match the motion: √area + centroid for in-plane rotation
 (rotation-invariant), tube-based for yaw/squash (area is **not** invariant
@@ -499,20 +505,23 @@ Every mechanical effect starts together the instant `seasonPassT` takes over:
   never pullable, invincible or not. Coins still get Whirlpool's cosmetic
   `.swirl` orbit wobble under Season Pass too (that gate now also checks
   `seasonPassT > 0`) — nothing else has an equivalent wobble wired up.
-- **The rider animation.** Nine frames
-  (`assets/sprites/typhoon-sprites/season-pass/`, `SEASONPASS_REG`,
-  tube-registered like duck/hurt/eat — measured via
-  `tools/season-pass-measure.js`, a headless-canvas alpha/color probe rather
-  than a guess, per the measure-before-coding rule) read `seasonPassIntroT`/
-  `seasonPassT` directly via `seasonPassFrame()` (no args, no independent
+- **The rider animation.** Eleven frames
+  (`assets/sprites/cowabunga-sprites/season-pass/`, `SEASONPASS_BBOX`,
+  cropped-own-aspect like speed-boost — each frame drawn at its own real
+  opaque bbox, measured via `tools/season-pass-frame-measure.js`, a
+  headless-canvas alpha probe rather than a guess, per the measure-before-
+  coding rule; no shared registration constant, per Adam's "pull the frames
+  in at their extracted sizes" call, same as `SPEED_BBOX`) read
+  `seasonPassIntroT`/`seasonPassT` directly via `seasonPassFrame()` (no args, no independent
   timer — same reasoning as the speed-boost frames reading `boostT`): frames
-  01-06 (`SEASONPASS_INTRO_FRAMES`) step through across the 3s frozen reveal
-  itself, paced by `SEASONPASS_INTRO_FRAME_DUR`, landing on `season-pass_06`
-  (index 5) right as the world resumes; the effect then **holds on that same
-  frame 6** for the whole middle stretch of `seasonPassT`, per Adam's spec;
-  the last `SEASONPASS_OUTRO_DUR` (1.8s) of `seasonPassT` ramps 07→09 as the
-  effect winds down, landing on the final frame at the exact instant
-  `seasonPassT` reaches 0. Ranked in `drawRider()`'s priority chain right
+  01-05 (`SEASONPASS_INTRO_FRAMES`) step through across the frozen reveal
+  itself, paced by `SEASONPASS_INTRO_FRAME_DUR`; the effect then **holds on
+  `season-pass_07`** (index 6) for the whole middle stretch of `seasonPassT`,
+  once the world resumes, per Adam's spec — `season-pass_06` is deliberately
+  never shown (Adam's call, 2026-09-21); the last `SEASONPASS_OUTRO_DUR`
+  (1.8s) of `seasonPassT` steps 08→11 as the effect winds down, landing on
+  the final frame at the exact instant `seasonPassT` reaches 0. Ranked in
+  `drawRider()`'s priority chain right
   below hurt and above duck/eat/jump/spin/boost/lean — deliberately
   outranking everything voluntary, per Adam's "throughout the entirety of the
   power-up" spec, rather than stepping aside for a jump or duck the way the
