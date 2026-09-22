@@ -14,7 +14,7 @@ define('WATERPARK_LEADERBOARD_PATH', plugin_dir_path(__FILE__));
 // file update doesn't re-fire the activation hook, so rules are re-flushed
 // via maybe_flush() on plugins_loaded instead, mirroring the DB version
 // drift check below.
-define('WATERPARK_LEADERBOARD_ROUTES_VERSION', '1.2');
+define('WATERPARK_LEADERBOARD_ROUTES_VERSION', '1.3');
 define('WATERPARK_LEADERBOARD_ROUTES_VERSION_OPTION', 'waterpark_leaderboard_routes_version');
 
 require_once WATERPARK_LEADERBOARD_PATH . 'includes/class-gate.php';

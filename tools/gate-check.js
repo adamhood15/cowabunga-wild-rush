@@ -3,8 +3,15 @@
 // tools/deploy.sh (see ARCHITECTURE.md#tooling for the CDP conventions
 // this follows).
 //
-//   STAMPEDE_STAGING_URL=https://env-typhoontexasnew-dev.kinsta.cloud \
+//   STAGING_URL=https://env-typhoontexasnew-dev.kinsta.cloud \
+//   GAME_PATH=/stampede-wild-rush/play/ \
 //     node tools/gate-check.js [viewport]
+//
+// Both env vars default to the Typhoon Texas site; override both for any
+// other property deployed by deploy.sh (e.g. Cowabunga Vegas:
+// STAGING_URL=https://env-cowabungavegasnew-cbvdev.kinsta.cloud
+// GAME_PATH=/cowabunga-wild-rush/play/). STAMPEDE_STAGING_URL is kept as a
+// fallback for STAGING_URL so existing invocations still work.
 //
 // Checks:
 //   1. GAME_PATH with no token redirects away (doesn't serve the game).
@@ -17,9 +24,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { launchChrome, stopChrome, openPage, evaluate, VIEWPORTS } = require("./cdp");
 
-const BASE = process.env.STAMPEDE_STAGING_URL || "https://env-typhoontexasnew-dev.kinsta.cloud";
-// Must match Waterpark_Leaderboard_Game_Router's rewrite rule.
-const GAME_PATH = "/stampede-wild-rush/play/";
+const BASE = process.env.STAGING_URL || process.env.STAMPEDE_STAGING_URL || "https://env-typhoontexasnew-dev.kinsta.cloud";
+// Must match the deployed site's *_Game_Router rewrite rule.
+const GAME_PATH = process.env.GAME_PATH || "/stampede-wild-rush/play/";
 
 async function main() {
   const viewportName = process.argv[2] && VIEWPORTS[process.argv[2]] ? process.argv[2] : "phone412";

@@ -6,11 +6,11 @@
 // function per scenario so each is easy to find and reports its own
 // pass/fail, combined into one overall pass/fail at the end:
 //
-//   1. runFieldValidationChecks — each of the four required inputs (email,
-//      SMS phone, park, consent checkbox) shows its OWN error message next
-//      to itself when missing/invalid, independent of the others, and none
-//      of them let the form actually submit (no JSONP request fires). Also
-//      verifies the happy path: all four filled in correctly submits
+//   1. runFieldValidationChecks — each of the three required inputs (email,
+//      SMS phone, consent checkbox) shows its OWN error message next to
+//      itself when missing/invalid, independent of the others, and none of
+//      them let the form actually submit (no JSONP request fires). Also
+//      verifies the happy path: all three filled in correctly submits
 //      (exactly one JSONP request observed) with no field errors left
 //      showing.
 //   2. runLoadingStateChecks — the signup button's loading-spinner state.
@@ -104,15 +104,6 @@ const FIELD_VALIDATION_CASES = [
     expectMessage: "Please enter a valid 10-digit phone number.",
   },
   {
-    name: "no park selected",
-    breakField: `
-      document.getElementById('mce-MMERGE130').checked = false;
-      document.getElementById('mce-MMERGE131').checked = false;
-    `,
-    expectVisibleIn: "mce-MMERGE130",
-    expectMessage: "Please select a park.",
-  },
-  {
     name: "consent checkbox unchecked",
     breakField: `document.getElementById('mc-SMSPHONE-ack').checked = false;`,
     expectVisibleIn: "mc-SMSPHONE-ack",
@@ -126,14 +117,12 @@ function fieldValidationCaseScript(c) {
       window.__mcScriptCalls.length = 0;
       const email = document.getElementById('mce-EMAIL');
       const phone = document.getElementById('mce-SMSPHONE');
-      const park = document.getElementById('mce-MMERGE130');
       const ack = document.getElementById('mc-SMSPHONE-ack');
 
       // Start fully valid.
       email.value = 'wyatt@example.com';
       phone.value = '5551234567';
       phone.dispatchEvent(new Event('input', { bubbles: true }));
-      park.checked = true;
       ack.checked = true;
 
       ${c.breakField}
@@ -189,8 +178,8 @@ async function runFieldValidationChecks(session) {
     console.log(`  PASS: exactly one error shown (${c.expectVisibleIn}), no submit attempted.`);
   }
 
-  // Happy path: all four valid — submits (JSONP attempted), no field errors
-  // left showing.
+  // Happy path: all three valid — submits (JSONP attempted), no field
+  // errors left showing.
   const happy = await evaluate(session, `
     (function () {
       window.__mcScriptCalls.length = 0;
@@ -198,7 +187,6 @@ async function runFieldValidationChecks(session) {
       const phone = document.getElementById('mce-SMSPHONE');
       phone.value = '5551234567';
       phone.dispatchEvent(new Event('input', { bubbles: true }));
-      document.getElementById('mce-MMERGE130').checked = true;
       document.getElementById('mc-SMSPHONE-ack').checked = true;
 
       document.getElementById('mc-embedded-subscribe-form')
@@ -315,13 +303,11 @@ function smsFillAndSubmitScript(response) {
       const form = document.getElementById('mc-embedded-subscribe-form');
       const phone = document.getElementById('mce-SMSPHONE');
       const email = document.getElementById('mce-EMAIL');
-      const park = document.getElementById('mce-MMERGE130');
       const ack = document.getElementById('mc-SMSPHONE-ack');
       const errorEl = document.getElementById('mce-error-response');
       const successEl = document.getElementById('mce-success-response');
 
       email.value = 'wyatt@example.com';
-      park.checked = true;
       ack.checked = true;
       phone.value = '5551234567';
       phone.dispatchEvent(new Event('input', { bubbles: true }));

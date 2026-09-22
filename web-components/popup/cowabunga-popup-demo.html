@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Cowabunga Popup — Demo Host Page</title>
+<style>
+  body{font-family:sans-serif;max-width:640px;margin:60px auto;padding:0 20px;line-height:1.6}
+  button{font:inherit;padding:10px 16px;cursor:pointer}
+</style>
+</head>
+<body>
+<h1>Demo host page</h1>
+<p>Stands in for an arbitrary cowabungavegas.com page. The popup fires on a
+timer (default 6s) and loads its own CSS (cowabunga-popup.css) and its own
+fonts (Luckiest Guy / Grandstander / Quicksand) rather than assuming the
+host page already has either — see cowabunga-popup.js's
+ensurePopupCssLoaded()/ensureFontsLoaded(). This page doesn't link
+cowabunga-popup.css itself; that's the point being demonstrated.</p>
+<button type="button" onclick="window.CowabungaPopup &amp;&amp; window.CowabungaPopup.open()">
+  Re-open popup now
+</button>
+<p><small>Uses <code>window.COWABUNGA_POPUP_CONFIG.delayMs = 2000</code> below
+so it fires quickly for testing without feeling instant; production embeds
+should leave the default (6000ms) or set their own.</small></p>
+
+<script>
+  window.COWABUNGA_POPUP_CONFIG = { delayMs: 2000 };
+</script>
+<script src="cowabunga-popup.js"></script>
+</body>
+</html>

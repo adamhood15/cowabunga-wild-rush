@@ -1,0 +1,270 @@
+/* Cowabunga: Wild Rush promo popup — standalone, embeddable snippet.
+   Scoped under .cwr-popup so it can be dropped onto any cowabungavegas.com
+   page without its custom properties or resets leaking into host styles.
+
+   Tokens and component recipes below are copied directly from index.html's
+   :root custom properties, .ride (title), .btn (CTA), and .panel
+   (dialog background) — see ARCHITECTURE.md — so this reads as the same
+   game, not a reskin of a different site's popup. Re-sync these if any of
+   those change in index.html.
+
+   Every rule that sets font-family is written as an ancestor-class +
+   tag-name + own-class compound selector (leaning on #cwrPopupTitle's id
+   too, where the element sits inside it) rather than the bare BEM class
+   alone. This is embedded on a live WordPress/Oxygen page whose own
+   generated CSS can otherwise carry higher specificity (Oxygen frequently
+   scopes element styles through ids) and win the cascade on the plain
+   tags (button, p, a, span) these elements are. No property values
+   change here — only selector specificity. */
+
+div.cwr-popup{
+  --cwr-sky:     #068af6;
+  --cwr-yellow:  #fcea00;
+  --cwr-orange:  #fc901e;
+  --cwr-white:   #fcf6f0;
+  --cwr-pale:    #e4f6f6;
+  --cwr-navy:    #1e3048;
+  --cwr-ink:     #0a0a0a;
+  --cwr-red:     #e8432b;
+
+  /* Same two stops + alphas .panel (index.html) draws its background
+     gradient from — keeps the dialog reading as one of the game's own
+     panels rather than a bespoke card. */
+  --cwr-panel-glow-rgb:  73 85 255;
+  --cwr-panel-shade-rgb: 30 48 72;
+  --cwr-panel-glow-a:  .99;
+  --cwr-panel-shade-a: .7;
+
+  --cwr-display: "Luckiest Guy","Haettenschweiler","Arial Narrow","Impact",
+                 "Franklin Gothic Bold","Helvetica Neue",Arial,sans-serif;
+  --cwr-display-card: "Grandstander","Franklin Gothic Bold","Helvetica Neue",Arial,sans-serif;
+  --cwr-copy:    "Quicksand","Helvetica Neue",Arial,sans-serif;
+
+  position:fixed;
+  inset:0;
+  z-index:2147483000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  font-family:var(--cwr-copy);
+  font-weight:500;
+  box-sizing:border-box;
+}
+
+.cwr-popup,
+.cwr-popup *,
+.cwr-popup *::before,
+.cwr-popup *::after{
+  box-sizing:border-box;
+}
+
+.cwr-popup[hidden]{
+  display:none;
+}
+
+.cwr-popup__backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(10,10,10,.72);
+  animation:cwrFadeIn .25s ease-out;
+}
+
+.cwr-popup__dialog{
+  position:relative;
+  width:100%;
+  max-width:420px;
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  background:radial-gradient(130% 100% at 50% 15%,rgb(var(--cwr-panel-glow-rgb) / var(--cwr-panel-glow-a)),rgb(var(--cwr-panel-shade-rgb) / var(--cwr-panel-shade-a))),var(--cwr-navy);
+  border:3px solid var(--cwr-ink);
+  border-radius:10px;
+  box-shadow:8px 8px 0 var(--cwr-ink);
+  padding:28px 22px 24px;
+  text-align:center;
+  color:var(--cwr-white);
+  animation:cwrPopIn .3s cubic-bezier(.2,.9,.3,1.2);
+}
+
+.cwr-popup button.cwr-popup__close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  width:32px;
+  height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--cwr-white);
+  color:var(--cwr-ink);
+  border:3px solid var(--cwr-ink);
+  border-radius:50%;
+  font-family:var(--cwr-copy);
+  font-size:16px;
+  line-height:1;
+  cursor:pointer;
+  padding:0;
+}
+
+.cwr-popup__close:hover{
+  background:var(--cwr-yellow);
+}
+
+.cwr-popup__close:focus-visible{
+  outline:3px solid var(--cwr-yellow);
+  outline-offset:2px;
+}
+
+.cwr-popup__content{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+
+.cwr-popup__media{
+  flex:none;
+}
+
+.cwr-popup__copy{
+  min-width:0;
+}
+
+.cwr-popup__phone{
+  width:min(34vw,140px);
+  height:auto;
+  margin:2px auto 10px;
+  display:block;
+  filter:drop-shadow(4px 6px 0 rgba(10,10,10,.35));
+}
+
+/* Side-by-side (copy left, phone right) once there's room for both
+   columns without cramming — below this the stacked, centered layout
+   (image on top) reads better on phones. */
+@media (min-width:560px){
+  .cwr-popup__dialog{
+    max-width:600px;
+  }
+  .cwr-popup__content{
+    flex-direction:row-reverse;
+    align-items:center;
+    gap:24px;
+    text-align:left;
+  }
+  .cwr-popup__copy{
+    text-align:left;
+  }
+  .cwr-popup__phone{
+    width:160px;
+    margin:0;
+  }
+}
+
+.cwr-popup__title{
+  margin:0 0 14px;
+}
+
+/* Same single-layer recipe index.html's .ride uses (Luckiest Guy is
+   already a solid display face, unlike the old sutro-deluxe stroke/fill
+   pair this popup used to need two layers to fake) — a transparent stroke
+   over a solid fill via paint-order, no ::before duplicate layer needed. */
+.cwr-popup #cwrPopupTitle span.cwr-popup__rideLine{
+  font-family:var(--cwr-display);
+  text-transform:uppercase;
+  transform:skewX(-7deg);
+  font-weight:400;
+  font-size:clamp(30px,8vw,42px);
+  line-height:.84;
+  color:var(--cwr-yellow);
+  margin:0;
+  -webkit-text-stroke:3px var(--cwr-ink);
+  paint-order:stroke fill;
+}
+
+.cwr-popup p.cwr-popup__body{
+  font-family:var(--cwr-copy);
+  font-size:14px;
+  line-height:1.6;
+  color:var(--cwr-pale);
+  margin:0 0 18px;
+}
+
+.cwr-popup p.cwr-popup__body strong{
+  font-family:var(--cwr-copy);
+  color:var(--cwr-yellow);
+}
+
+/* index.html's .btn recipe (text-shadow, not a stroke — .btn's
+   display-card font isn't a stroke/fill pair either), just full-width and
+   scaled down to fit a dialog rather than a fixed 27px/34px desktop
+   button. */
+.cwr-popup a.cwr-popup__cta{
+  display:block;
+  width:100%;
+  cursor:pointer;
+  font-family:var(--cwr-display-card);
+  text-transform:uppercase;
+  transform:skewX(-7deg);
+  font-size:clamp(13px,calc(6vw - 5px),22px);
+  white-space:nowrap;
+  letter-spacing:.03em;
+  color:var(--cwr-white);
+  text-shadow:3px 3px 0 var(--cwr-ink);
+  background:var(--cwr-red);
+  border:3px solid var(--cwr-ink);
+  border-radius:4px;
+  padding:13px 10px 15px;
+  margin-top:20px;
+  box-shadow:0 6px 0 rgba(10,10,10,.35);
+  text-decoration:none;
+  text-align:center;
+  transition:transform .08s,box-shadow .08s;
+}
+
+.cwr-popup__cta:active{
+  transform:skewX(-7deg) translate(0,4px);
+  box-shadow:0 2px 0 rgba(10,10,10,.35);
+}
+
+/* Same pressed-down look on hover, gated to real pointers: a touch tap on
+   Android Chrome can leave :hover stuck after release with no mouse to
+   clear it, which would leave the button looking permanently half-pressed
+   on a phone. skewX(-7deg) has to stay in the transform here too, or the
+   hover state would snap the button upright for as long as it's hovered. */
+@media (hover:hover) and (pointer:fine){
+  .cwr-popup__cta:hover{
+    transform:skewX(-7deg) translate(0,4px);
+    box-shadow:0 2px 0 rgba(10,10,10,.35);
+  }
+}
+
+.cwr-popup__cta:focus-visible{
+  outline:3px solid var(--cwr-yellow);
+  outline-offset:4px;
+}
+
+.cwr-popup p.cwr-popup__fine{
+  font-family:var(--cwr-copy);
+  margin:14px 0 0;
+  font-size:10px;
+  line-height:1.6;
+  letter-spacing:.02em;
+  color:rgba(252,246,240,.6);
+}
+
+@keyframes cwrFadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+@keyframes cwrPopIn{
+  from{opacity:0;transform:translateY(14px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .cwr-popup__backdrop,
+  .cwr-popup__dialog{
+    animation:none;
+  }
+}

@@ -24,13 +24,14 @@ class Waterpark_Leaderboard_Game_Router {
     // seconds apart returning different tokens).
     const GATE_ENABLED = false;
 
-    // Matches the real production path (Adam's call, 2026-09-03):
-    // typhoontexas.com/stampede-wild-rush/play/ — dropped the houston/
-    // prefix used until now. Bump WATERPARK_LEADERBOARD_ROUTES_VERSION
-    // whenever this changes again — maybe_flush() only re-flushes rewrite
-    // rules on a version bump, not on every plugin load.
+    // Matches the Cowabunga Vegas production path (2026-09-21):
+    // env-cowabungavegasnew-cbvdev.kinsta.cloud/cowabunga-wild-rush/play/ —
+    // this repo now targets that site, not Typhoon Texas (see AGENTS.md).
+    // Bump WATERPARK_LEADERBOARD_ROUTES_VERSION whenever this changes again
+    // — maybe_flush() only re-flushes rewrite rules on a version bump, not
+    // on every plugin load.
     public static function register_routes() {
-        add_rewrite_rule('^stampede-wild-rush/play/?$', 'index.php?' . self::QUERY_VAR . '=1', 'top');
+        add_rewrite_rule('^cowabunga-wild-rush/play/?$', 'index.php?' . self::QUERY_VAR . '=1', 'top');
     }
 
     public static function query_vars($vars) {

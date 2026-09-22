@@ -7,7 +7,6 @@
   var successEl = document.getElementById('mce-success-response');
   var emailInput = document.getElementById('mce-EMAIL');
   var ackCheckbox = document.getElementById('mc-SMSPHONE-ack');
-  var parkRadios = form.querySelectorAll('input[name="MMERGE13"]');
 
   // Mailchimp's SMS field wants the submitted value in E.164
   // (+15555550100), not the local display format we mask the input to —
@@ -104,13 +103,6 @@
       message: 'Please enter a valid 10-digit phone number.',
     },
     {
-      groupEl: fieldGroup(parkRadios[0]),
-      check: function () {
-        return Array.prototype.some.call(parkRadios, function (r) { return r.checked; });
-      },
-      message: 'Please select a park.',
-    },
-    {
       groupEl: fieldGroup(ackCheckbox),
       check: function () {
         return ackCheckbox.checked;
@@ -141,9 +133,6 @@
     if (emailInput.value.trim() !== '' && emailInput.checkValidity()) {
       clearFieldError(fieldGroup(emailInput));
     }
-  });
-  Array.prototype.forEach.call(parkRadios, function (r) {
-    r.addEventListener('change', function () { clearFieldError(fieldGroup(parkRadios[0])); });
   });
   ackCheckbox.addEventListener('change', function () {
     if (ackCheckbox.checked) clearFieldError(fieldGroup(ackCheckbox));

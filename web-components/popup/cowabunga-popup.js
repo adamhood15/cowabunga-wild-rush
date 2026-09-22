@@ -1,27 +1,56 @@
 /**
  * Cowabunga: Wild Rush promo popup — standalone, embeddable snippet.
  *
- * Drop `stampede-popup.css` + this file onto any typhoontexas.com page
- * (e.g. via a plain <link>/<script> pair, or through GTM) and it injects
- * itself — no markup needs to exist on the host page already.
- *
- * Assumes the site's Typekit kit (cmv0fio.css — sutro-deluxe-primary,
- * sutro-open-fill, sutro) is already loaded site-wide; this snippet does
- * not load it itself. Note the kit does not include sutro-deluxe-fill, so
- * the .swr-popup__rideLine::before fill layer (see stampede-popup.css)
- * falls back to sutro-deluxe-primary too.
+ * Drop this one file onto any cowabungavegas.com page as a plain
+ * <script src>, or paste `oxygen-code-block.html`'s tiny wrapper into an
+ * Oxygen Code Block — no markup needs to exist on the host page already,
+ * and it loads its own CSS (`cowabunga-popup.css`, expected alongside this
+ * file — override via config.cssUrl if it's hosted somewhere else) and its
+ * own Google Fonts (Luckiest Guy / Grandstander / Quicksand — the same
+ * family index.html loads) rather than assuming the host page already has
+ * either, since this popup can be embedded on pages outside the game
+ * itself where that isn't guaranteed.
  *
  * Optional config — set before this script runs:
- *   window.STAMPEDE_POPUP_CONFIG = {
- *     ctaUrl: 'https://typhoontexas.com/stampede-wild-rush/',
+ *   window.COWABUNGA_POPUP_CONFIG = {
+ *     ctaUrl: '/cowabunga-wild-rush/',
  *     delayMs: 6000,
  *     suppressDays: 1,
+ *     cssUrl: '...',
  *     phoneImageUrl: '...',
  *     phoneImageWebpUrl: '...'
  *   };
  */
 (function () {
   'use strict';
+
+  var FONTS_HREF = 'https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Grandstander:wght@700;800&family=Quicksand:wght@500;600&display=swap';
+
+  function ensureFontsLoaded() {
+    if (document.querySelector('link[href="' + FONTS_HREF + '"]')) return;
+    var preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = 'https://fonts.gstatic.com';
+    preconnect.crossOrigin = 'anonymous';
+    document.head.appendChild(preconnect);
+
+    var stylesheet = document.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = FONTS_HREF;
+    document.head.appendChild(stylesheet);
+  }
+
+  // Keeps this file and cowabunga-popup.css as one thing to re-sync instead
+  // of two separate <link>/<script> tags a host page has to remember to
+  // keep paired — inject it the same way ensureFontsLoaded() injects the
+  // Google Fonts link.
+  function ensurePopupCssLoaded(href) {
+    if (document.querySelector('link[href="' + href + '"]')) return;
+    var stylesheet = document.createElement('link');
+    stylesheet.rel = 'stylesheet';
+    stylesheet.href = href;
+    document.head.appendChild(stylesheet);
+  }
 
   // document.currentScript is only valid during this script's own
   // synchronous execution, so grab it now — by the time init() runs
@@ -31,17 +60,18 @@
     : '';
 
   var config = Object.assign({
-    ctaUrl: 'https://typhoontexas.com/stampede-wild-rush/',
+    ctaUrl: '/cowabunga-wild-rush/',
     delayMs: 6000,
     suppressDays: 1,
     // Defaults assume the repo's own web-components/popup + assets/popup
     // layout is preserved on deploy; a host page elsewhere on
-    // typhoontexas.com should pass the uploaded media URLs instead.
+    // cowabungavegas.com should pass the uploaded media URLs instead.
+    cssUrl: scriptDir + 'cowabunga-popup.css',
     phoneImageUrl: scriptDir + '../../assets/popup/Phone.png',
     phoneImageWebpUrl: scriptDir + '../../assets/popup/Phone.webp'
-  }, window.STAMPEDE_POPUP_CONFIG || {});
+  }, window.COWABUNGA_POPUP_CONFIG || {});
 
-  var STORAGE_KEY = 'swrPopupLastShown';
+  var STORAGE_KEY = 'cwrPopupLastShown';
 
   function alreadyShownRecently() {
     var raw;
@@ -69,30 +99,30 @@
 
   function buildPopup() {
     var root = document.createElement('div');
-    root.className = 'swr-popup';
+    root.className = 'cwr-popup';
     root.setAttribute('hidden', '');
     root.innerHTML =
-      '<div class="swr-popup__backdrop" data-swr-dismiss></div>' +
-      '<div class="swr-popup__dialog" role="dialog" aria-modal="true" aria-labelledby="swrPopupTitle">' +
-      '  <button type="button" class="swr-popup__close" data-swr-dismiss aria-label="Close">&times;</button>' +
-      '  <div class="swr-popup__content">' +
-      '    <div class="swr-popup__media">' +
+      '<div class="cwr-popup__backdrop" data-cwr-dismiss></div>' +
+      '<div class="cwr-popup__dialog" role="dialog" aria-modal="true" aria-labelledby="cwrPopupTitle">' +
+      '  <button type="button" class="cwr-popup__close" data-cwr-dismiss aria-label="Close">&times;</button>' +
+      '  <div class="cwr-popup__content">' +
+      '    <div class="cwr-popup__media">' +
       '      <picture>' +
       '        <source srcset="' + config.phoneImageWebpUrl + '" type="image/webp">' +
-      '        <img class="swr-popup__phone" src="' + config.phoneImageUrl + '" width="400" height="681" ' +
+      '        <img class="cwr-popup__phone" src="' + config.phoneImageUrl + '" width="400" height="681" ' +
       '             alt="Cowabunga: Wild Rush gameplay preview on a phone" loading="lazy">' +
       '      </picture>' +
       '    </div>' +
-      '    <div class="swr-popup__copy">' +
-      '      <h2 class="swr-popup__title" id="swrPopupTitle">' +
-      '        <span class="swr-popup__rideLine" data-text="Join.">Join.</span>' +
-      '        <span class="swr-popup__rideLine" data-text="Play.">Play.</span>' +
-      '        <span class="swr-popup__rideLine" data-text="Save.">Save.</span>' +
+      '    <div class="cwr-popup__copy">' +
+      '      <h2 class="cwr-popup__title" id="cwrPopupTitle">' +
+      '        <span class="cwr-popup__rideLine">Join.</span>' +
+      '        <span class="cwr-popup__rideLine">Play.</span>' +
+      '        <span class="cwr-popup__rideLine">Save.</span>' +
       '      </h2>' +
-      '      <p class="swr-popup__body">Sign up for email &amp; SMS and get instant access to the official Typhoon Texas water slide game, ' +
-      '<strong>plus $10 off</strong> your next Typhoon Texas online purchase.</p>' +
-      '      <a class="swr-popup__cta" href="' + config.ctaUrl + '">Play Now &amp; Save $10</a>' +
-      '      <p class="swr-popup__fine">Msg &amp; data rates may apply for SMS. Unsubscribe anytime.</p>' +
+      '      <p class="cwr-popup__body">Sign up for email &amp; SMS and get instant access to the official Cowabunga: Wild Rush game, ' +
+      '<strong>plus $10 off</strong> your next Cowabunga Vegas online purchase.</p>' +
+      '      <a class="cwr-popup__cta" href="' + config.ctaUrl + '">Play Now &amp; Save $10</a>' +
+      '      <p class="cwr-popup__fine">Msg &amp; data rates may apply for SMS. Unsubscribe anytime.</p>' +
       '    </div>' +
       '  </div>' +
       '</div>';
@@ -100,10 +130,13 @@
   }
 
   function init() {
+    ensureFontsLoaded();
+    ensurePopupCssLoaded(config.cssUrl);
+
     var popup = buildPopup();
     document.body.appendChild(popup);
 
-    var dialog = popup.querySelector('.swr-popup__dialog');
+    var dialog = popup.querySelector('.cwr-popup__dialog');
     var focusableSelector = 'a[href], button:not([disabled])';
     var previouslyFocused = null;
 
@@ -154,14 +187,14 @@
     }
 
     popup.addEventListener('click', function (e) {
-      if (e.target.hasAttribute('data-swr-dismiss')) close();
+      if (e.target.hasAttribute('data-cwr-dismiss')) close();
     });
 
     // Exposed for manual testing / re-triggering from other UI (e.g. a
     // "get $10 off" link elsewhere on the page) — available regardless of
     // whether the automatic auto-open below is suppressed, so a manual
     // trigger always works even on a repeat visit within suppressDays.
-    window.StampedePopup = { open: open, close: close };
+    window.CowabungaPopup = { open: open, close: close };
 
     if (!alreadyShownRecently()) {
       window.setTimeout(open, config.delayMs);

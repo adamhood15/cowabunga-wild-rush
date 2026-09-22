@@ -184,7 +184,7 @@ writing a new one.
   to survive.
 - [`perf-hud-check.js`](tools/perf-hud-check.js) — verifies the opt-in
   perf-debug HUD renders only when armed and reports sane numbers.
-- [`stampede-popup-check.js`](tools/stampede-popup-check.js) — verifies the
+- [`cowabunga-popup-check.js`](tools/cowabunga-popup-check.js) — verifies the
   promo popup's timing, focus trap, dismissal, and once-per-day suppression.
 - [`deploy.sh`](tools/deploy.sh) — deploys the plugin + a WordPress-ready
   copy of the game to Kinsta staging or production.
